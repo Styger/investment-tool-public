@@ -1,0 +1,24 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Distribution / Packaging
+build/
+dist/
+old/
+*.spec
+
+# Konfigurationsdateien, falls du sie nicht mittracken willst
+*.log
+
+# VSCode & andere IDEs (optional)
+.vscode/
+.idea/
+
+
+# Mac/Windows system files (optional)
+.DS_Store
+Thumbs.db

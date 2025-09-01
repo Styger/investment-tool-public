@@ -1,0 +1,32 @@
+{
+    "LANGUAGE": "en",
+    "persist": {
+        "CAGR": {
+            "ticker": "AAPL",
+            "start_year": "2015",
+            "end_year": "2024",
+            "period_years": "5"
+        },
+        "MOS": {
+            "ticker": "MSFT",
+            "year": "2023",
+            "growth_rate": "4.6"
+        },
+        "PBT": {
+            "ticker": "PYPL",
+            "year": "2024",
+            "growth_rate": "15.0"
+        },
+        "TenCap": {
+            "ticker": "PYPL",
+            "multi_year": false,
+            "show_details": false,
+            "single_year": "2023",
+            "start_year": "2020",
+            "end_year": "2026"
+        },
+        "DCF_LITE": {
+            "ticker": "FIVE"
+        }
+    }
+}
