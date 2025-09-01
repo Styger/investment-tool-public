@@ -8,52 +8,6 @@ def show_settings_page():
     st.header(f"⚙️ {get_text('settings_title')}")
     st.write(get_text("settings_description"))
 
-    # API Key Section
-    st.subheader(get_text("api_configuration"))
-
-    current_config = st.session_state.get("config", {})
-    current_key = current_config.get("FMP_API_KEY", "")
-
-    col1, col2 = st.columns([3, 1])
-
-    with col1:
-        api_key = st.text_input(
-            get_text("financial_modeling_prep_api_key"),
-            value=current_key,
-            type="password",
-            help=get_text("api_key_help"),
-            key="api_key_input",
-        )
-
-    with col2:
-        show_key = st.checkbox(get_text("show_key"), key="show_api_key")
-        if show_key and api_key:
-            st.text_input(
-                get_text("current_key"),
-                value=api_key,
-                disabled=True,
-                key="visible_api_key",
-            )
-
-    if st.button(get_text("save_button"), key="save_api_key"):
-        if not api_key.strip():
-            st.error(get_text("api_key_empty"))
-        else:
-            try:
-                # Update session state config
-                if "config" not in st.session_state:
-                    st.session_state.config = {}
-                st.session_state.config["FMP_API_KEY"] = api_key.strip()
-
-                # Save to file
-                success = config_load._save_config(st.session_state.config)
-                if success:
-                    st.success(get_text("api_key_saved"))
-                else:
-                    st.error(get_text("api_key_not_saved"))
-            except Exception as e:
-                st.error(get_text("error_saving_api_key") + f": {str(e)}")
-
     st.divider()
 
     # Language Section
