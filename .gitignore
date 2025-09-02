@@ -24,6 +24,6 @@ old/
 Thumbs.db
 
 # Streamlit secrets files
-.streamlit/secrets.toml
+.streamlit_modules/secrets.toml
 secrets.toml
 local_secrets.json
