@@ -22,3 +22,8 @@ old/
 # Mac/Windows system files (optional)
 .DS_Store
 Thumbs.db
+
+# Streamlit secrets files
+.streamlit/secrets.toml
+secrets.toml
+local_secrets.json
