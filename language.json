@@ -96,8 +96,8 @@
     "pbt_price": "PBT Kaufpreis",
     "pbt_buy_price": "PBT Kaufpreis",
     "based_on_8_year_payback": "Basierend auf 8-jähriger Amortisationszeit",
-    "revenue": "Einnahme",
-    "income": "Einnahme", 
+    "revenue": "Umsatz",
+    "income": "Einkommen",
     "cumulative": "Kumuliert",
     
     "ten_cap_calc_title": "TEN CAP Analyse für",
@@ -233,7 +233,7 @@
     "pbt_price": "PBT Purchase Price (after 8 years):",
     "pbt_buy_price": "PBT Buy Price",
     "based_on_8_year_payback": "Based on 8-year payback period",
-    "revenue": "Income",
+    "revenue": "Revenue",
     "income": "Income",
     "cumulative": "Cumulative",
     

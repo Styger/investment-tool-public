@@ -1,6 +1,7 @@
 import streamlit as st
 from ..config import get_text, save_persistence_data, capture_output
 import logic.cagr as cagr_logic
+import pandas as pd
 
 
 def show_cagr_analysis():
@@ -73,7 +74,41 @@ def show_cagr_analysis():
 
                     if output.strip():
                         st.success(get_text("analysis_completed").format(ticker))
-                        st.text(output)
+
+                        # Parse the output to create a proper table
+                        lines = output.strip().split("\n")
+                        data_rows = []
+
+                        for line in lines:
+                            if line.strip() and any(char.isdigit() for char in line):
+                                parts = line.split()
+                                if len(parts) >= 7 and parts[0].isdigit():
+                                    try:
+                                        data_rows.append(
+                                            {
+                                                get_text("from_year", "From"): int(
+                                                    parts[0]
+                                                ),
+                                                get_text("to_year", "To"): int(
+                                                    parts[1]
+                                                ),
+                                                "Book": f"{float(parts[2]):.2f}%",
+                                                "EPS": f"{float(parts[3]):.2f}%",
+                                                get_text(
+                                                    "revenue", "Revenue"
+                                                ): f"{float(parts[4]):.2f}%",
+                                                "Cashflow": f"{float(parts[5]):.2f}%",
+                                                "Average": f"{float(parts[6]):.2f}%",
+                                            }
+                                        )
+                                    except (ValueError, IndexError):
+                                        continue
+
+                        if data_rows:
+                            df = pd.DataFrame(data_rows)
+                            st.dataframe(df, use_container_width=True)
+                        else:
+                            st.text(output)
                     else:
                         st.warning(get_text("no_output_generated"))
 
