@@ -4,15 +4,19 @@ import streamlit as st
 def load_user_credentials():
     """Load user credentials from Streamlit secrets"""
     try:
+        # Debug: Secrets anzeigen
+        st.write("DEBUG: Secrets verfügbar:", hasattr(st, "secrets"))
+        if hasattr(st, "secrets"):
+            st.write("DEBUG: Secrets keys:", list(st.secrets.keys()))
+
         if hasattr(st, "secrets") and "users" in st.secrets:
+            st.write("DEBUG: Users gefunden:", dict(st.secrets["users"]))
             return dict(st.secrets["users"])
         else:
-            st.error(
-                "Authentication configuration not found. Please contact administrator."
-            )
+            st.error("No user configuration found.")
             return {}
     except Exception as e:
-        st.error("Error loading authentication configuration.")
+        st.error(f"Error loading authentication: {str(e)}")
         return {}
 
 

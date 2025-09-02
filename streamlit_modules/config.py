@@ -2,10 +2,17 @@ import streamlit as st
 import pandas as pd
 import io
 import sys
+import os
 import utils.config_load as config_load
 
 
 def load_app_config():
+    # Zuerst lokale Streamlit secrets prüfen
+    secrets_path = ".streamlit/secrets.toml"
+    if os.path.exists(secrets_path):
+        # Streamlit lädt automatisch .streamlit/secrets.toml
+        pass
+
     """Load configuration and initialize session state"""
     if "config_loaded" not in st.session_state:
         try:
