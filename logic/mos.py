@@ -1,8 +1,5 @@
 from typing import Dict
-from api import fmp_api
-
-# from ten_cap import calculate_ten_cap_price  # optional
-# from mos import mos_growth_estimate  # optional
+import api.fmp_api
 
 
 def calculate_mos_value_from_ticker(
@@ -10,19 +7,10 @@ def calculate_mos_value_from_ticker(
 ) -> Dict:
     """
     Calculates the intrinsic value and MOS price based on EPS fetched from FMP and user-defined growth.
-
-    Args:
-        ticker: Stock ticker symbol
-        year: Starting year to fetch EPS
-        growth_rate: Expected growth rate (decimal)
-        discount_rate: Discount rate for present value (default: 15%)
-        mos: Margin of Safety (default: 50%)
-
-    Returns:
-        Dictionary with intrinsic value calculation
+    Also fetches current stock price for comparison.
     """
     # Fetch EPS from financial data
-    data, _ = fmp_api.get_year_data_by_range(ticker, start_year=year, years=0)
+    data, _ = api.fmp_api.get_year_data_by_range(ticker, start_year=year, years=0)
     if not data or "EPS" not in data[0] or data[0]["EPS"] <= 0:
         print(f"No valid EPS data found for {ticker} in year {year}")
         return {
@@ -30,15 +18,48 @@ def calculate_mos_value_from_ticker(
             "Future Value": 0,
             "Fair Value Today": 0,
             "MOS Price (50%)": 0,
+            "Current Stock Price": 0,
+            "Price vs Fair Value": "N/A",
+            "Percentage Difference": 0,
         }
 
     eps_now = data[0]["EPS"]
 
+    # Calculate intrinsic values
     eps_10y = eps_now * ((1 + growth_rate) ** 10)
     future_pe = growth_rate * 200
     future_value = eps_10y * future_pe
     fair_value_today = future_value / ((1 + discount_rate) ** 10)
     mos_price = fair_value_today * (1 - mos)
+
+    # Get current stock price - KORRIGIERT für neue Funktion
+    current_price = 0
+    price_comparison = "N/A"
+    percentage_diff = 0
+
+    try:
+        # Neue Signatur: get_current_price gibt direkt float oder None zurück
+        current_price = api.fmp_api.get_current_price(ticker)
+
+        # Prüfe ob ein gültiger Preis zurückgegeben wurde
+        if current_price is not None:
+            # Calculate comparison with fair value
+            if fair_value_today > 0:
+                percentage_diff = (
+                    (current_price - fair_value_today) / fair_value_today
+                ) * 100
+                if current_price > fair_value_today:
+                    price_comparison = f"Overvalued by {abs(percentage_diff):.1f}%"
+                elif current_price < fair_value_today:
+                    price_comparison = f"Undervalued by {abs(percentage_diff):.1f}%"
+                else:
+                    price_comparison = "Fair valued"
+        else:
+            current_price = 0  # Fallback falls None
+
+    except Exception as e:
+        print(f"Could not fetch current price for {ticker}: {e}")
+        current_price = 0
 
     result = {
         "Ticker": ticker.upper(),
@@ -49,6 +70,9 @@ def calculate_mos_value_from_ticker(
         "Future Value": round(future_value, 2),
         "Fair Value Today": round(fair_value_today, 2),
         "MOS Price (50%)": round(mos_price, 2),
+        "Current Stock Price": round(current_price, 2) if current_price else 0.0,
+        "Price vs Fair Value": price_comparison,
+        "Percentage Difference": round(percentage_diff, 2),
     }
 
     print("Intrinsic Value Result: %s", result)

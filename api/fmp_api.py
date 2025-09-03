@@ -150,3 +150,54 @@ def get_valid_price(
         f"No valid stock price found for {ticker} from {base_date_str} within 14 days"
     )
     return None, None
+
+
+def fetch_quote_short(ticker: str):
+    """Low-level HTTP: holt einfache Quote-Daten (/v3/quote-short)."""
+    api_key = get_api_key()
+    url = f"https://financialmodelingprep.com/api/v3/quote-short/{ticker}?apikey={api_key}"
+    resp = requests.get(url, timeout=15)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def fetch_quote(ticker: str):
+    """Low-level HTTP: holt detailierte Quote-Daten (/v3/quote)."""
+    api_key = get_api_key()
+    url = f"https://financialmodelingprep.com/api/v3/quote/{ticker}?apikey={api_key}"
+    resp = requests.get(url, timeout=15)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def get_current_price(ticker: str) -> Optional[float]:
+    """
+    Liefert den aktuellen/letzten verfügbaren Preis.
+    Versucht zuerst /v3/quote-short (schnell, nur Preis),
+    fällt dann zurück auf /v3/quote (nur Preis extrahiert).
+
+    Returns:
+        Optional[float]: Aktueller Preis oder None falls nicht verfügbar
+    """
+    # 1. Versuch: quote-short
+    try:
+        data = fetch_quote_short(ticker)
+        if isinstance(data, list) and data:
+            price = data[0].get("price")
+            if price is not None:
+                return float(price)
+    except Exception as e:
+        print(f"[get_current_price] quote-short error: {e}")
+
+    # 2. Versuch: detailierte quote
+    try:
+        data2 = fetch_quote(ticker)
+        if isinstance(data2, list) and data2:
+            item = data2[0]
+            price = item.get("price")
+            if price is not None:
+                return float(price)
+    except Exception as e:
+        print(f"[get_current_price] quote error: {e}")
+
+    return None

@@ -5,7 +5,6 @@ import logic.mos as mos_logic
 
 def show_mos_analysis():
     """Margin of Safety Analysis Interface"""
-    # Ihre bestehende mos_analysis Funktion hier
     st.header(f"🛡️ {get_text('mos_title')}")
     st.write(get_text("mos_description"))
 
@@ -61,8 +60,8 @@ def show_mos_analysis():
                     if result:
                         st.success(get_text("mos_analysis_completed").format(ticker))
 
-                        # Display results in a nice format
-                        col1, col2 = st.columns(2)
+                        # Display results in three columns for better layout
+                        col1, col2, col3 = st.columns(3)
 
                         with col1:
                             st.metric(
@@ -73,24 +72,40 @@ def show_mos_analysis():
                                 get_text("future_eps_10y"),
                                 f"${result.get('EPS_10y', 0):.2f}",
                             )
+
+                        with col2:
                             st.metric(
                                 get_text("future_value"),
                                 f"${result.get('Future Value', 0):,.2f}",
                             )
-
-                        with col2:
                             st.metric(
                                 get_text("fair_value_today"),
                                 f"${result.get('Fair Value Today', 0):,.2f}",
                             )
+
+                        with col3:
                             st.metric(
                                 get_text("mos_price_50"),
                                 f"${result.get('MOS Price (50%)', 0):,.2f}",
                             )
                             st.metric(
-                                get_text("growth_rate_used"),
-                                f"{result.get('Growth Rate', 0)}%",
+                                get_text("current_stock_price", "Current Stock Price"),
+                                f"${result.get('Current Stock Price', 0):,.2f}",
                             )
+
+                        # Price comparison section
+                        price_comparison = result.get("Price vs Fair Value", "N/A")
+                        if "Overvalued" in price_comparison:
+                            st.warning(f"📈 {price_comparison}")
+                        elif "Undervalued" in price_comparison:
+                            st.success(f"📉 {price_comparison}")
+                        else:
+                            st.info(f"📊 {price_comparison}")
+
+                        # Growth rate used
+                        st.info(
+                            f"{get_text('growth_rate_used')}: {result.get('Growth Rate', 0)}%"
+                        )
                     else:
                         st.warning(get_text("no_valid_data"))
 

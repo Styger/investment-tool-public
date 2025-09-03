@@ -1,5 +1,5 @@
 # logic/dcf_lite.py
-import api.fmp_api as fmp_api
+import api.fmp_api
 
 
 def _extract_current_dcf(payload):
@@ -46,18 +46,28 @@ def get_dcf_lite(ticker):
     }
     """
     res = {"ticker": ticker.upper(), "dcf": None, "stock_price": None, "as_of": None}
+
+    # 1. Hole DCF-Daten
     try:
-        payload = fmp_api.get_dcf(ticker)
+        payload = api.fmp_api.get_dcf(ticker)
     except Exception:
         payload = None
 
-    dcf, price, as_of = _extract_current_dcf(payload)
+    # 2. Extrahiere DCF (so wie bisher)
+    dcf, _, as_of = _extract_current_dcf(payload)
     if dcf is not None:
         res["dcf"] = dcf
-    if price is not None:
-        res["stock_price"] = price
     if as_of:
         res["as_of"] = as_of
+
+    # 3. Hole Stock-Preis über unsere neue Funktion (nur Preis, kein Timestamp)
+    try:
+        price = api.fmp_api.get_current_price(ticker)
+        if price is not None:
+            res["stock_price"] = price
+    except Exception as e:
+        print(f"[get_dcf_lite] price fetch error: {e}")
+
     return res
 
 

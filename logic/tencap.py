@@ -1,6 +1,4 @@
 from api import fmp_api
-
-
 from typing import Optional
 
 language = {
@@ -13,6 +11,8 @@ language = {
     "ten_cap_shares": "Aktien (Mio):",
     "ten_cap_eps": "Earnings per Share:",
     "ten_cap_price": "TEN CAP Buy Price:",
+    "current_stock_price": "Current Stock Price:",
+    "price_comparison": "Price vs TEN CAP:",
 }
 
 
@@ -116,6 +116,16 @@ def _format_ten_cap_report(data: dict, language: dict) -> str:
     report.append(
         f"{language['ten_cap_price']:25} ${data['ten_cap_buy_price']:>10,.2f}"
     )
+
+    # Current Price und Vergleich hinzufügen
+    if data.get("current_stock_price") is not None:
+        report.append(
+            f"{language['current_stock_price']:25} ${data['current_stock_price']:>10,.2f}"
+        )
+        report.append(
+            f"{language['price_comparison']:25} {data['price_vs_ten_cap']:>15}"
+        )
+
     return "\n".join(report)
 
 
@@ -177,6 +187,27 @@ def _get_ten_cap_result(ticker: str, year: int) -> Optional[dict]:
         eps = owner_earnings / shares_outstanding if shares_outstanding > 0 else 0
         ten_cap_price = eps / 0.10
 
+        # Current Stock Price holen
+        current_price = None
+        price_comparison = "N/A"
+
+        try:
+            current_price = fmp_api.get_current_price(ticker)
+
+            if current_price is not None and ten_cap_price > 0:
+                percentage_diff = (
+                    (current_price - ten_cap_price) / ten_cap_price
+                ) * 100
+                if current_price > ten_cap_price:
+                    price_comparison = f"Overvalued by {abs(percentage_diff):.1f}%"
+                elif current_price < ten_cap_price:
+                    price_comparison = f"Undervalued by {abs(percentage_diff):.1f}%"
+                else:
+                    price_comparison = "Fair valued"
+
+        except Exception as e:
+            print(f"Could not fetch current price for {ticker}: {e}")
+
         return {
             "ticker": ticker,
             "year": year,
@@ -188,6 +219,8 @@ def _get_ten_cap_result(ticker: str, year: int) -> Optional[dict]:
             "shares_outstanding": shares_outstanding,
             "earnings_per_share": eps,
             "ten_cap_buy_price": ten_cap_price,
+            "current_stock_price": current_price,
+            "price_vs_ten_cap": price_comparison,
             "wc_components": wc_components,
         }
 
@@ -208,6 +241,13 @@ def print_ten_cap_analysis(ticker: str, year: int, language: dict):
 def calculate_ten_cap_price(ticker: str, year: int = None) -> Optional[float]:
     result = _get_ten_cap_result(ticker, year)
     return result["ten_cap_buy_price"] if result else None
+
+
+def calculate_ten_cap_with_comparison(ticker: str, year: int = None) -> Optional[dict]:
+    """
+    Neue Funktion die sowohl TEN CAP Preis als auch Current Price mit Vergleich zurückgibt
+    """
+    return _get_ten_cap_result(ticker, year)
 
 
 def _run():

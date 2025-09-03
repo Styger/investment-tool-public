@@ -1,5 +1,5 @@
-from api import fmp_api
-
+from matplotlib import ticker
+import api.fmp_api
 from typing import List, Dict, Tuple, Optional
 
 
@@ -8,11 +8,6 @@ def _calculate_pbt_price(
 ) -> Tuple[float, Optional[List[Dict]]]:
     """
     Berechnet den maximalen Kaufpreis einer Aktie basierend auf der Payback Time Methode.
-
-    :param fcf: Free Cashflow pro Aktie (float)
-    :param growth_rate: Wachstum pro Jahr als Dezimalzahl (z. B. 0.13 für 13 %)
-    :param return_full_table: Wenn True, gibt zusätzlich Tabelle mit Jahr, Einnahme, kumuliertem CF zurück
-    :return: float (PBT-Kaufpreis), optional: list of dicts
     """
     years = 16
     total = 0.0
@@ -45,18 +40,16 @@ def calculate_pbt_from_ticker(
     year: int,
     growth_estimate: float,
     return_full_table: bool = False,
-) -> Tuple[float, Optional[List[Dict]]]:
+) -> Tuple[float, Optional[List[Dict]], Dict]:
     """
     Holt den FCF pro Aktie für ein bestimmtes Jahr und berechnet die Payback Time.
+    Zusätzlich wird der aktuelle Aktienkurs geholt für Vergleiche.
 
-    :param ticker: Aktienkürzel
-    :param year: Basisjahr für den FCF
-    :param growth_estimate: erwartetes Wachstum pro Jahr (z. B. 0.13 für 13 %)
-    :param return_full_table: gibt vollständige Tabelle zurück
-    :return: PBT-Preis, optional: Tabelle
+    :return: PBT-Preis, optional: Tabelle, Preisvergleich-Dict
     """
     try:
-        key_metrics = fmp_api.get_key_metrics(ticker, limit=20)
+        # FCF pro Aktie holen
+        key_metrics = api.fmp_api.get_key_metrics(ticker, limit=20)
         fcf = None
 
         for entry in key_metrics:
@@ -67,7 +60,42 @@ def calculate_pbt_from_ticker(
         if fcf is None:
             raise ValueError(f"Kein FCF pro Aktie für Jahr {year} gefunden.")
 
-        return _calculate_pbt_price(fcf, growth_estimate, return_full_table)
+        # PBT-Preis berechnen
+        pbt_price, table = _calculate_pbt_price(fcf, growth_estimate, return_full_table)
+
+        # Aktuellen Aktienkurs holen
+        current_price = 0
+        price_comparison = "N/A"
+        percentage_diff = 0
+
+        try:
+            current_price = api.fmp_api.get_current_price(ticker)
+            # Vergleich mit PBT-Preis nur wenn beide Preise verfügbar sind
+            if current_price is not None and pbt_price > 0:
+                percentage_diff = ((current_price - pbt_price) / pbt_price) * 100
+                if current_price > pbt_price:
+                    price_comparison = f"Overvalued by {abs(percentage_diff):.1f}%"
+                elif current_price < pbt_price:
+                    price_comparison = f"Undervalued by {abs(percentage_diff):.1f}%"
+                else:
+                    price_comparison = "Fair valued"
+            else:
+                current_price = 0  # Fallback falls None
+
+        except Exception as e:
+            print(f"Could not fetch current price for {ticker}: {e}")
+            current_price = 0
+
+        # Preisvergleich-Daten
+        price_info = {
+            "Current Stock Price": round(current_price, 2) if current_price else 0.0,
+            "PBT Price": round(pbt_price, 2),
+            "Price vs PBT": price_comparison,
+            "Percentage Difference": round(percentage_diff, 2),
+            "FCF per Share": round(fcf, 2),
+        }
+
+        return pbt_price, table, price_info
 
     except Exception as e:
         print(f"PBT-Berechnung für {ticker.upper()} fehlgeschlagen: {e}")
@@ -75,15 +103,13 @@ def calculate_pbt_from_ticker(
 
 
 if __name__ == "__main__":
-    # Beispiel: Berechne PBT für evvty im Jahr 2024 mit 20 % Wachstum
-    ticker = "evvty"
+    ticker = "aapl"
     year = 2024
     growth = 0.2
 
-    price, table = calculate_pbt_from_ticker(
-        ticker, year, growth, return_full_table=False
+    price, table, price_info = calculate_pbt_from_ticker(
+        ticker, year, growth, return_full_table=True
     )
     print(f"PBT-Kaufpreis: {price:.2f}")
-    if table:
-        for row in table:
-            print(row)
+    print(f"Aktueller Preis: {price_info['Current Stock Price']:.2f}")
+    print(f"Bewertung: {price_info['Price vs PBT']}")

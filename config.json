@@ -8,9 +8,9 @@
             "period_years": "5"
         },
         "MOS": {
-            "ticker": "MSFT",
-            "year": "2023",
-            "growth_rate": "4.6"
+            "ticker": "AAPL",
+            "year": "2024",
+            "growth_rate": "7.099999999999991"
         },
         "PBT": {
             "ticker": "PYPL",
@@ -20,10 +20,10 @@
         "TenCap": {
             "ticker": "PYPL",
             "multi_year": false,
-            "show_details": false,
+            "show_details": true,
             "single_year": "2023",
-            "start_year": "2020",
-            "end_year": "2026"
+            "start_year": "2022",
+            "end_year": "2024"
         },
         "DCF_LITE": {
             "ticker": "FIVE"

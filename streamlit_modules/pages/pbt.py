@@ -55,37 +55,71 @@ def show_pbt_analysis():
                     st.session_state.persist.setdefault("PBT", {}).update(persist_data)
                     save_persistence_data()
 
-                    price, table = pbt_logic.calculate_pbt_from_ticker(
+                    # Neue Funktion gibt 3 Werte zurück: price, table, price_info
+                    price, table, price_info = pbt_logic.calculate_pbt_from_ticker(
                         ticker, year, growth_rate / 100, return_full_table=True
                     )
 
                     st.success(get_text("pbt_analysis_completed").format(ticker))
 
-                    col1, col2 = st.columns([1, 2])
+                    # Erweiterte Metriken mit Preisvergleich
+                    col1, col2, col3 = st.columns(3)
 
                     with col1:
                         st.metric(get_text("pbt_buy_price"), f"${price:,.2f}")
                         st.info(get_text("based_on_8_year_payback"))
 
                     with col2:
-                        if table:
-                            df = pd.DataFrame(table)
-                            df["Jahr"] = df["Jahr"].astype(int)
-                            df = df.rename(
-                                columns={
-                                    "Jahr": get_text("year"),
-                                    "Einnahme": get_text("income"),
-                                    "Summe_Cashflows": get_text("cumulative"),
-                                }
-                            )
-                            df[get_text("income")] = df[get_text("income")].apply(
-                                lambda x: f"${x:,.2f}"
-                            )
-                            df[get_text("cumulative")] = df[
-                                get_text("cumulative")
-                            ].apply(lambda x: f"${x:,.2f}")
+                        st.metric(
+                            "Current Stock Price",
+                            f"${price_info['Current Stock Price']:,.2f}",
+                        )
+                        st.metric(
+                            "FCF per Share", f"${price_info['FCF per Share']:,.2f}"
+                        )
 
-                            st.dataframe(df, use_container_width=True)
+                    with col3:
+                        # Bewertung anzeigen
+                        valuation = price_info["Price vs PBT"]
+                        if "Undervalued" in valuation:
+                            st.success(f"📈 {valuation}")
+                        elif "Overvalued" in valuation:
+                            st.warning(f"📉 {valuation}")
+                        else:
+                            st.info(f"⚖️ {valuation}")
+
+                        st.metric(
+                            "Percentage Difference",
+                            f"{price_info['Percentage Difference']:+.1f}%",
+                        )
+
+                    # Tabelle anzeigen
+                    if table:
+                        st.subheader("Payback Time Calculation")
+                        df = pd.DataFrame(table)
+                        df["Jahr"] = df["Jahr"].astype(int)
+                        df = df.rename(
+                            columns={
+                                "Jahr": get_text("year"),
+                                "Einnahme": get_text("income"),
+                                "Summe_Cashflows": get_text("cumulative"),
+                                "PBT_Preis": "PBT Price",
+                            }
+                        )
+
+                        # Formatierung der Geldbeträge
+                        for col in [get_text("income"), get_text("cumulative")]:
+                            if col in df.columns:
+                                df[col] = df[col].apply(
+                                    lambda x: f"${x:,.2f}" if pd.notna(x) else ""
+                                )
+
+                        if "PBT Price" in df.columns:
+                            df["PBT Price"] = df["PBT Price"].apply(
+                                lambda x: f"${x:,.2f}" if pd.notna(x) else ""
+                            )
+
+                        st.dataframe(df, use_container_width=True)
 
                 except Exception as e:
                     st.error(get_text("pbt_analysis_failed").format(str(e)))

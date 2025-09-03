@@ -90,43 +90,135 @@ def show_tencap_analysis():
                     )
                     save_persistence_data()
 
-                    results = []
-                    for year in years:
-                        try:
-                            if show_details:
+                    if show_details:
+                        # Details anzeigen - zurück zur ursprünglichen Methode mit capture_output
+                        for year in years:
+                            try:
                                 _, output = capture_output(
                                     tencap_logic.print_ten_cap_analysis,
                                     ticker,
                                     year,
-                                    st.session_state.language,
+                                    tencap_logic.language,  # Verwende das language dict aus tencap_logic
                                 )
                                 if output.strip():
-                                    st.text(output)
-                            else:
-                                price = tencap_logic.calculate_ten_cap_price(
-                                    ticker, year
+                                    st.code(
+                                        output, language=None
+                                    )  # st.code statt st.text für bessere Formatierung
+                                else:
+                                    st.warning(f"Keine Details für {year} verfügbar")
+                            except Exception as e:
+                                st.error(f"Fehler bei {year}: {str(e)}")
+                    else:
+                        # Tabellen-Ansicht
+                        results = []
+                        latest_year = max(years)
+                        current_price_data = None
+
+                        # Hole Current Price vom neuesten Jahr
+                        try:
+                            latest_result = (
+                                tencap_logic.calculate_ten_cap_with_comparison(
+                                    ticker, latest_year
                                 )
+                            )
+                            if (
+                                latest_result
+                                and latest_result.get("current_stock_price") is not None
+                            ):
+                                current_price_data = {
+                                    "price": latest_result["current_stock_price"],
+                                    "comparison": latest_result.get(
+                                        "price_vs_ten_cap", "N/A"
+                                    ),
+                                }
+                        except Exception as e:
+                            st.warning(f"Could not fetch current price: {str(e)}")
+
+                        # Sammle alle Ergebnisse
+                        for year in years:
+                            try:
+                                result_data = (
+                                    tencap_logic.calculate_ten_cap_with_comparison(
+                                        ticker, year
+                                    )
+                                )
+
+                                if result_data:
+                                    ten_cap_price = result_data.get("ten_cap_buy_price")
+
+                                    row = {
+                                        get_text("year"): year,
+                                        get_text(
+                                            "ten_cap_price"
+                                        ): f"${ten_cap_price:,.2f}"
+                                        if ten_cap_price
+                                        else "N/A",
+                                    }
+
+                                    # Current Price nur beim neuesten Jahr hinzufügen
+                                    if year == latest_year and current_price_data:
+                                        row["Current Price"] = (
+                                            f"${current_price_data['price']:,.2f}"
+                                        )
+                                        row["Price vs TEN CAP"] = current_price_data[
+                                            "comparison"
+                                        ]
+
+                                    results.append(row)
+                                else:
+                                    results.append(
+                                        {
+                                            get_text("year"): year,
+                                            get_text("ten_cap_price"): "N/A",
+                                        }
+                                    )
+
+                            except Exception as e:
                                 results.append(
                                     {
                                         get_text("year"): year,
-                                        get_text("ten_cap_price"): f"${price:,.2f}"
-                                        if price
-                                        else "N/A",
+                                        get_text("ten_cap_price"): f"Error: {str(e)}",
                                     }
                                 )
-                        except Exception as e:
-                            results.append(
-                                {
-                                    get_text("year"): year,
-                                    get_text(
-                                        "ten_cap_price"
-                                    ): f"{get_text('error')}: {str(e)}",
-                                }
-                            )
 
-                    if results and not show_details:
-                        df = pd.DataFrame(results)
-                        st.dataframe(df, use_container_width=True)
+                        if results:
+                            # Spezielle Anzeige für Single Year
+                            if len(years) == 1 and current_price_data:
+                                st.subheader(f"TEN CAP Analysis for {ticker}")
+
+                                # Metriken in Spalten anzeigen
+                                col1, col2, col3 = st.columns(3)
+
+                                with col1:
+                                    st.metric(
+                                        "TEN CAP Buy Price",
+                                        results[0][get_text("ten_cap_price")],
+                                    )
+
+                                with col2:
+                                    st.metric(
+                                        "Current Stock Price",
+                                        f"${current_price_data['price']:,.2f}",
+                                    )
+
+                                with col3:
+                                    valuation = current_price_data["comparison"]
+                                    if "Undervalued" in valuation:
+                                        st.success(f"📈 {valuation}")
+                                    elif "Overvalued" in valuation:
+                                        st.warning(f"📉 {valuation}")
+                                    else:
+                                        st.info(f"⚖️ {valuation}")
+
+                            # Tabelle für alle Fälle anzeigen
+                            df = pd.DataFrame(results)
+                            st.dataframe(df, use_container_width=True)
+
+                            # Zusätzliche Info bei Multi-Year
+                            if multi_year and current_price_data:
+                                st.info(
+                                    f"Current price comparison is based on the latest year ({latest_year}) data."
+                                )
 
                     st.success(get_text("tencap_analysis_completed").format(ticker))
 
