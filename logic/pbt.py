@@ -1,4 +1,3 @@
-from matplotlib import ticker
 import api.fmp_api
 from typing import List, Dict, Tuple, Optional
 
