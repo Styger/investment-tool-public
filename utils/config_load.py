@@ -14,16 +14,16 @@ def _resource_path(relative_path: str) -> Path:
 
 
 def get_config_path() -> str:
-    return str(_resource_path("config.json"))
+    return str(_resource_path("config/config.json"))  # GEÄNDERT: config/ hinzugefügt
 
 
 def get_language_path() -> str:
-    return str(_resource_path("language.json"))
+    return str(_resource_path("config/language.json"))  # GEÄNDERT: config/ hinzugefügt
 
 
 def load_config():
     try:
-        cfg_path = _resource_path("config.json")
+        cfg_path = _resource_path("config/config.json")  # GEÄNDERT: config/ hinzugefügt
         with open(cfg_path, "r", encoding="utf-8") as f:
             config = json.load(f)
 
@@ -41,7 +41,7 @@ def load_config():
 
 def _save_config(new_config):
     try:
-        cfg_path = _resource_path("config.json")
+        cfg_path = _resource_path("config/config.json")  # GEÄNDERT: config/ hinzugefügt
         with open(cfg_path, "w", encoding="utf-8") as f:
             json.dump(new_config, f, indent=4, ensure_ascii=False)
         return True
@@ -50,17 +50,15 @@ def _save_config(new_config):
 
 
 def load_language():
-    with open(_resource_path("language.json"), "r", encoding="utf-8") as f:
+    with open(
+        _resource_path("config/language.json"), "r", encoding="utf-8"
+    ) as f:  # GEÄNDERT: config/ hinzugefügt
         all_languages = json.load(f)
 
     config = load_config()
     current_language = config.get("LANGUAGE", "de")
     language = all_languages.get(current_language, all_languages["de"])
     return language, current_language, all_languages
-
-
-# Entfernen Sie alle Tkinter-abhängigen Funktionen:
-# save_new_key, on_language_change (nicht mehr benötigt)
 
 
 def save_persist_mode(mode_name, data, global_state=None):

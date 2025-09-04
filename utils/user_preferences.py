@@ -17,7 +17,9 @@ def _resource_path(relative_path: str) -> Path:
 def get_user_filename(file_type):
     """Erstellt benutzerspezifische Dateinamen"""
     username = st.session_state.get("username", "default")
-    return str(_resource_path(f"{username}_{file_type}.json"))
+    return str(
+        _resource_path(f"config/{username}_{file_type}.json")
+    )  # GEÄNDERT: config/ hinzugefügt
 
 
 def load_user_language():
@@ -37,6 +39,9 @@ def load_user_language():
 def save_user_language(language):
     """Speichert benutzerspezifische Spracheinstellung"""
     pref_file = get_user_filename("preferences")
+
+    # Stelle sicher, dass der config/ Ordner existiert
+    os.makedirs(os.path.dirname(pref_file), exist_ok=True)  # HINZUGEFÜGT
 
     # Lade existierende Präferenzen
     prefs = {}
@@ -75,6 +80,9 @@ def load_user_persistence():
 def save_user_persistence(data):
     """Speichert benutzerspezifische letzte Eingaben"""
     persist_file = get_user_filename("persistence")
+
+    # Stelle sicher, dass der config/ Ordner existiert
+    os.makedirs(os.path.dirname(persist_file), exist_ok=True)  # HINZUGEFÜGT
 
     try:
         with open(persist_file, "w", encoding="utf-8") as f:
