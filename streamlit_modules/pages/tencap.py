@@ -91,23 +91,25 @@ def show_tencap_analysis():
                     save_persistence_data()
 
                     if show_details:
-                        # Details anzeigen - zurück zur ursprünglichen Methode mit capture_output
+                        # Details anzeigen - formatierte Reports
                         for year in years:
                             try:
                                 _, output = capture_output(
                                     tencap_logic.print_ten_cap_analysis,
                                     ticker,
                                     year,
-                                    tencap_logic.language,  # Verwende das language dict aus tencap_logic
+                                    tencap_logic.language,
                                 )
                                 if output.strip():
-                                    st.code(
-                                        output, language=None
-                                    )  # st.code statt st.text für bessere Formatierung
+                                    st.code(output, language=None)
                                 else:
-                                    st.warning(f"Keine Details für {year} verfügbar")
+                                    st.warning(
+                                        get_text("no_details_available").format(year)
+                                    )
                             except Exception as e:
-                                st.error(f"Fehler bei {year}: {str(e)}")
+                                st.error(
+                                    get_text("error_for_year").format(year, str(e))
+                                )
                     else:
                         # Tabellen-Ansicht
                         results = []
@@ -127,12 +129,21 @@ def show_tencap_analysis():
                             ):
                                 current_price_data = {
                                     "price": latest_result["current_stock_price"],
+                                    "fair_value": latest_result.get(
+                                        "ten_cap_fair_value"
+                                    ),
+                                    "buy_price": latest_result.get("ten_cap_buy_price"),
                                     "comparison": latest_result.get(
-                                        "price_vs_ten_cap", "N/A"
+                                        "price_vs_fair_value_tencap", "N/A"
+                                    ),
+                                    "recommendation": latest_result.get(
+                                        "investment_recommendation", "N/A"
                                     ),
                                 }
                         except Exception as e:
-                            st.warning(f"Could not fetch current price: {str(e)}")
+                            st.warning(
+                                get_text("could_not_fetch_current_price").format(str(e))
+                            )
 
                         # Sammle alle Ergebnisse
                         for year in years:
@@ -144,32 +155,37 @@ def show_tencap_analysis():
                                 )
 
                                 if result_data:
-                                    ten_cap_price = result_data.get("ten_cap_buy_price")
+                                    fair_value = result_data.get("ten_cap_fair_value")
+                                    buy_price = result_data.get("ten_cap_buy_price")
 
                                     row = {
                                         get_text("year"): year,
                                         get_text(
-                                            "ten_cap_price"
-                                        ): f"${ten_cap_price:,.2f}"
-                                        if ten_cap_price
+                                            "ten_cap_fair_value"
+                                        ): f"${fair_value:,.2f}"
+                                        if fair_value
                                         else "N/A",
+                                        get_text(
+                                            "ten_cap_buy_price"
+                                        ): f"${buy_price:,.2f}" if buy_price else "N/A",
                                     }
 
                                     # Current Price nur beim neuesten Jahr hinzufügen
                                     if year == latest_year and current_price_data:
-                                        row["Current Price"] = (
+                                        row[get_text("current_stock_price")] = (
                                             f"${current_price_data['price']:,.2f}"
                                         )
-                                        row["Price vs TEN CAP"] = current_price_data[
-                                            "comparison"
-                                        ]
+                                        row[get_text("price_vs_fair_value_tencap")] = (
+                                            current_price_data["comparison"]
+                                        )
 
                                     results.append(row)
                                 else:
                                     results.append(
                                         {
                                             get_text("year"): year,
-                                            get_text("ten_cap_price"): "N/A",
+                                            get_text("ten_cap_fair_value"): "N/A",
+                                            get_text("ten_cap_buy_price"): "N/A",
                                         }
                                     )
 
@@ -177,31 +193,45 @@ def show_tencap_analysis():
                                 results.append(
                                     {
                                         get_text("year"): year,
-                                        get_text("ten_cap_price"): f"Error: {str(e)}",
+                                        get_text(
+                                            "ten_cap_fair_value"
+                                        ): f"{get_text('error')}: {str(e)}",
+                                        get_text(
+                                            "ten_cap_buy_price"
+                                        ): f"{get_text('error')}: {str(e)}",
                                     }
                                 )
 
                         if results:
                             # Spezielle Anzeige für Single Year
                             if len(years) == 1 and current_price_data:
-                                st.subheader(f"TEN CAP Analysis for {ticker}")
+                                st.subheader(
+                                    get_text("ten_cap_analysis_for").format(ticker)
+                                )
 
-                                # Metriken in Spalten anzeigen
-                                col1, col2, col3 = st.columns(3)
+                                # Metriken in 4 Spalten anzeigen
+                                col1, col2, col3, col4 = st.columns(4)
 
                                 with col1:
                                     st.metric(
-                                        "TEN CAP Buy Price",
-                                        results[0][get_text("ten_cap_price")],
+                                        get_text("ten_cap_fair_value"),
+                                        f"${current_price_data['fair_value']:,.2f}",
                                     )
 
                                 with col2:
                                     st.metric(
-                                        "Current Stock Price",
-                                        f"${current_price_data['price']:,.2f}",
+                                        get_text("ten_cap_buy_price"),
+                                        f"${current_price_data['buy_price']:,.2f}",
                                     )
 
                                 with col3:
+                                    st.metric(
+                                        get_text("current_stock_price"),
+                                        f"${current_price_data['price']:,.2f}",
+                                    )
+
+                                with col4:
+                                    # Bewertung basierend auf Fair Value
                                     valuation = current_price_data["comparison"]
                                     if "Undervalued" in valuation:
                                         st.success(f"📈 {valuation}")
@@ -210,6 +240,22 @@ def show_tencap_analysis():
                                     else:
                                         st.info(f"⚖️ {valuation}")
 
+                                    # Investment Recommendation
+                                    recommendation = current_price_data[
+                                        "recommendation"
+                                    ]
+                                    if "Strong Buy" in recommendation:
+                                        st.success(f"🚀 {recommendation}")
+                                    elif "Buy" in recommendation:
+                                        st.success(f"✅ {recommendation}")
+                                    elif "Hold" in recommendation:
+                                        st.warning(f"⚖️ {recommendation}")
+                                    else:
+                                        st.error(f"❌ {recommendation}")
+
+                                # Zentrale Info-Box
+                                st.info(f"💡 {get_text('ten_cap_calculation_info')}")
+
                             # Tabelle für alle Fälle anzeigen
                             df = pd.DataFrame(results)
                             st.dataframe(df, use_container_width=True)
@@ -217,7 +263,9 @@ def show_tencap_analysis():
                             # Zusätzliche Info bei Multi-Year
                             if multi_year and current_price_data:
                                 st.info(
-                                    f"Current price comparison is based on the latest year ({latest_year}) data."
+                                    get_text("current_price_comparison_info").format(
+                                        latest_year
+                                    )
                                 )
 
                     st.success(get_text("tencap_analysis_completed").format(ticker))

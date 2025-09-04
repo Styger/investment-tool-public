@@ -11,8 +11,9 @@ language = {
     "ten_cap_shares": "Aktien (Mio):",
     "ten_cap_eps": "Earnings per Share:",
     "ten_cap_price": "TEN CAP Buy Price:",
+    "ten_cap_fair_value": "TEN CAP Fair Value:",
     "current_stock_price": "Current Stock Price:",
-    "price_comparison": "Price vs TEN CAP:",
+    "price_comparison": "Price vs Fair Value:",
 }
 
 
@@ -114,6 +115,9 @@ def _format_ten_cap_report(data: dict, language: dict) -> str:
     report.append(f"{language['ten_cap_eps']:25} ${data['earnings_per_share']:>10,.2f}")
     report.append("=" * 50)
     report.append(
+        f"{language['ten_cap_fair_value']:25} ${data['ten_cap_fair_value']:>10,.2f}"
+    )
+    report.append(
         f"{language['ten_cap_price']:25} ${data['ten_cap_buy_price']:>10,.2f}"
     )
 
@@ -123,7 +127,7 @@ def _format_ten_cap_report(data: dict, language: dict) -> str:
             f"{language['current_stock_price']:25} ${data['current_stock_price']:>10,.2f}"
         )
         report.append(
-            f"{language['price_comparison']:25} {data['price_vs_ten_cap']:>15}"
+            f"{language['price_comparison']:25} {data['price_vs_fair_value_tencap']:>15}"
         )
 
     return "\n".join(report)
@@ -185,7 +189,8 @@ def _get_ten_cap_result(ticker: str, year: int) -> Optional[dict]:
         )
 
         eps = owner_earnings / shares_outstanding if shares_outstanding > 0 else 0
-        ten_cap_price = eps / 0.10
+        ten_cap_price = eps / 0.10  # Buy Price mit 50% MOS eingebaut
+        ten_cap_fair_value = ten_cap_price * 2  # Fair Value = 2 × Buy Price
 
         # Current Stock Price holen
         current_price = None
@@ -194,19 +199,25 @@ def _get_ten_cap_result(ticker: str, year: int) -> Optional[dict]:
         try:
             current_price = fmp_api.get_current_price(ticker)
 
-            if current_price is not None and ten_cap_price > 0:
+            if current_price is not None and ten_cap_fair_value > 0:
+                # Vergleich mit Fair Value, nicht mit TEN CAP Buy Price
                 percentage_diff = (
-                    (current_price - ten_cap_price) / ten_cap_price
+                    (current_price - ten_cap_fair_value) / ten_cap_fair_value
                 ) * 100
-                if current_price > ten_cap_price:
+                if current_price > ten_cap_fair_value:
                     price_comparison = f"Overvalued by {abs(percentage_diff):.1f}%"
-                elif current_price < ten_cap_price:
+                elif current_price < ten_cap_fair_value:
                     price_comparison = f"Undervalued by {abs(percentage_diff):.1f}%"
                 else:
                     price_comparison = "Fair valued"
 
         except Exception as e:
             print(f"Could not fetch current price for {ticker}: {e}")
+
+        # Investment Recommendation hinzufügen
+        investment_recommendation = _get_investment_recommendation(
+            current_price, ten_cap_fair_value, ten_cap_price
+        )
 
         return {
             "ticker": ticker,
@@ -219,14 +230,35 @@ def _get_ten_cap_result(ticker: str, year: int) -> Optional[dict]:
             "shares_outstanding": shares_outstanding,
             "earnings_per_share": eps,
             "ten_cap_buy_price": ten_cap_price,
+            "ten_cap_fair_value": ten_cap_fair_value,
             "current_stock_price": current_price,
-            "price_vs_ten_cap": price_comparison,
+            "price_vs_fair_value_tencap": price_comparison,  # KORRIGIERT: Konsistenter Key
+            "investment_recommendation": investment_recommendation,
             "wc_components": wc_components,
         }
 
     except Exception as e:
         print(f"Error in get_ten_cap_result: {e}")
         return None
+
+
+def _get_investment_recommendation(
+    current_price: float, fair_value: float, buy_price: float
+) -> str:
+    """
+    Gibt eine Investitionsempfehlung basierend auf den Preisvergleichen.
+    """
+    if current_price is None or current_price <= 0:
+        return "No price data available"
+
+    if current_price <= buy_price:
+        return "Strong Buy (Below TEN CAP price)"
+    elif current_price <= fair_value:
+        return "Buy (Below fair value)"
+    elif current_price <= fair_value * 1.1:
+        return "Hold (Near fair value)"
+    else:
+        return "Avoid (Overvalued)"
 
 
 def print_ten_cap_analysis(ticker: str, year: int, language: dict):
