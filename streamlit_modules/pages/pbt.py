@@ -10,7 +10,7 @@ def show_pbt_analysis():
     st.header(f"⏰ {get_text('pbt_title')}")
     st.write(get_text("pbt_description"))
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
 
     persist_data = st.session_state.persist.get("PBT", {})
 
@@ -40,6 +40,16 @@ def show_pbt_analysis():
             key="pbt_growth",
         )
 
+    with col4:
+        margin_of_safety = st.number_input(
+            get_text("margin_of_safety"),
+            min_value=0.0,
+            max_value=100.0,
+            value=float(persist_data.get("margin_of_safety", 25.0)),
+            step=1.0,
+            key="pbt_mos",
+        )
+
     if st.button(get_text("run_pbt_analysis"), key="pbt_run_button"):
         if not ticker:
             st.error(get_text("please_enter_ticker"))
@@ -51,36 +61,48 @@ def show_pbt_analysis():
                         "ticker": ticker,
                         "year": str(year),
                         "growth_rate": str(growth_rate),
+                        "margin_of_safety": str(margin_of_safety),
                     }
                     st.session_state.persist.setdefault("PBT", {}).update(persist_data)
                     save_persistence_data()
 
-                    # Neue Funktion gibt 3 Werte zurück: price, table, price_info
-                    price, table, price_info = pbt_logic.calculate_pbt_from_ticker(
-                        ticker, year, growth_rate / 100, return_full_table=True
+                    # Neue Funktion gibt 4 Werte zurück: fair_value, buy_price, table, price_info
+                    fair_value, buy_price, table, price_info = (
+                        pbt_logic.calculate_pbt_from_ticker(
+                            ticker,
+                            year,
+                            growth_rate / 100,
+                            margin_of_safety / 100,
+                            return_full_table=True,
+                        )
                     )
 
                     st.success(get_text("pbt_analysis_completed").format(ticker))
 
                     # Erweiterte Metriken mit Preisvergleich
-                    col1, col2, col3 = st.columns(3)
+                    col1, col2, col3, col4 = st.columns(4)
 
                     with col1:
-                        st.metric(get_text("pbt_buy_price"), f"${price:,.2f}")
-                        st.info(get_text("based_on_8_year_payback"))
+                        st.metric(
+                            get_text("fair_value_8y_payback"), f"${fair_value:,.2f}"
+                        )
 
                     with col2:
+                        st.metric(get_text("buy_price_with_mos"), f"${buy_price:,.2f}")
+
+                    with col3:
                         st.metric(
-                            "Current Stock Price",
+                            get_text("current_stock_price"),
                             f"${price_info['Current Stock Price']:,.2f}",
                         )
                         st.metric(
-                            "FCF per Share", f"${price_info['FCF per Share']:,.2f}"
+                            get_text("fcf_per_share"),
+                            f"${price_info['FCF per Share']:,.2f}",
                         )
 
-                    with col3:
-                        # Bewertung anzeigen
-                        valuation = price_info["Price vs PBT"]
+                    with col4:
+                        # Bewertung anzeigen (basiert jetzt auf Fair Value)
+                        valuation = price_info["Price vs Fair Value"]
                         if "Undervalued" in valuation:
                             st.success(f"📈 {valuation}")
                         elif "Overvalued" in valuation:
@@ -88,14 +110,23 @@ def show_pbt_analysis():
                         else:
                             st.info(f"⚖️ {valuation}")
 
-                        st.metric(
-                            "Percentage Difference",
-                            f"{price_info['Percentage Difference']:+.1f}%",
-                        )
+                        # Investment Recommendation anzeigen
+                        recommendation = price_info["Investment Recommendation"]
+                        if "Strong Buy" in recommendation:
+                            st.success(f"🚀 {recommendation}")
+                        elif "Buy" in recommendation:
+                            st.success(f"✅ {recommendation}")
+                        elif "Hold" in recommendation:
+                            st.warning(f"⚖️ {recommendation}")
+                        else:
+                            st.error(f"❌ {recommendation}")
+
+                    # Zentrale Info-Box mit wichtigen Erklärungen
+                    st.info(get_text("pbt_calculation_info").format(margin_of_safety))
 
                     # Tabelle anzeigen
                     if table:
-                        st.subheader("Payback Time Calculation")
+                        st.subheader(get_text("payback_time_calculation"))
                         df = pd.DataFrame(table)
                         df["Jahr"] = df["Jahr"].astype(int)
                         df = df.rename(
@@ -103,7 +134,7 @@ def show_pbt_analysis():
                                 "Jahr": get_text("year"),
                                 "Einnahme": get_text("income"),
                                 "Summe_Cashflows": get_text("cumulative"),
-                                "PBT_Preis": "PBT Price",
+                                "Fair_Value": get_text("fair_value_8y"),
                             }
                         )
 
@@ -114,10 +145,10 @@ def show_pbt_analysis():
                                     lambda x: f"${x:,.2f}" if pd.notna(x) else ""
                                 )
 
-                        if "PBT Price" in df.columns:
-                            df["PBT Price"] = df["PBT Price"].apply(
-                                lambda x: f"${x:,.2f}" if pd.notna(x) else ""
-                            )
+                        if get_text("fair_value_8y") in df.columns:
+                            df[get_text("fair_value_8y")] = df[
+                                get_text("fair_value_8y")
+                            ].apply(lambda x: f"${x:,.2f}" if pd.notna(x) else "")
 
                         st.dataframe(df, use_container_width=True)
 

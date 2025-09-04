@@ -6,7 +6,7 @@ def _calculate_pbt_price(
     fcf: float, growth_rate: float, return_full_table: bool = False
 ) -> Tuple[float, Optional[List[Dict]]]:
     """
-    Berechnet den maximalen Kaufpreis einer Aktie basierend auf der Payback Time Methode.
+    Berechnet den fairen Wert (8-Jahres-Payback) ohne MOS.
     """
     years = 16
     total = 0.0
@@ -25,26 +25,36 @@ def _calculate_pbt_price(
             "Jahr": year,
             "Einnahme": round(income, 2),
             "Summe_Cashflows": round(total, 2),
-            "PBT_Preis": round(total, 2) if year == 8 else None,
+            "Fair_Value": round(total, 2) if year == 8 else None,
         }
         table.append(row)
 
+    fair_value = round(table[8]["Summe_Cashflows"], 2)
+
     if return_full_table:
-        return round(table[8]["Summe_Cashflows"], 2), table
-    return round(table[8]["Summe_Cashflows"], 2), None
+        return fair_value, table
+    return fair_value, None
 
 
 def calculate_pbt_from_ticker(
     ticker: str,
     year: int,
     growth_estimate: float,
+    margin_of_safety: float = 0.25,  # Standard 25% MOS
     return_full_table: bool = False,
-) -> Tuple[float, Optional[List[Dict]], Dict]:
+) -> Tuple[float, float, Optional[List[Dict]], Dict]:
     """
     Holt den FCF pro Aktie für ein bestimmtes Jahr und berechnet die Payback Time.
-    Zusätzlich wird der aktuelle Aktienkurs geholt für Vergleiche.
 
-    :return: PBT-Preis, optional: Tabelle, Preisvergleich-Dict
+    Args:
+        ticker: Aktien-Symbol
+        year: Bezugsjahr für FCF
+        growth_estimate: Wachstumsrate (z.B. 0.2 für 20%)
+        margin_of_safety: Sicherheitsmarge (z.B. 0.25 für 25%)
+        return_full_table: Ob die vollständige Tabelle zurückgegeben werden soll
+
+    Returns:
+        fair_value, buy_price_with_mos, optional_table, price_comparison_dict
     """
     try:
         # FCF pro Aktie holen
@@ -59,56 +69,101 @@ def calculate_pbt_from_ticker(
         if fcf is None:
             raise ValueError(f"Kein FCF pro Aktie für Jahr {year} gefunden.")
 
-        # PBT-Preis berechnen
-        pbt_price, table = _calculate_pbt_price(fcf, growth_estimate, return_full_table)
+        # Fairen Wert berechnen (ohne MOS)
+        fair_value, table = _calculate_pbt_price(
+            fcf, growth_estimate, return_full_table
+        )
+
+        # Kaufpreis mit MOS berechnen
+        buy_price_with_mos = fair_value * (1 - margin_of_safety)
 
         # Aktuellen Aktienkurs holen
         current_price = 0
         price_comparison = "N/A"
-        percentage_diff = 0
+        percentage_diff_fair = 0
+        percentage_diff_buy = 0
 
         try:
             current_price = api.fmp_api.get_current_price(ticker)
-            # Vergleich mit PBT-Preis nur wenn beide Preise verfügbar sind
-            if current_price is not None and pbt_price > 0:
-                percentage_diff = ((current_price - pbt_price) / pbt_price) * 100
-                if current_price > pbt_price:
-                    price_comparison = f"Overvalued by {abs(percentage_diff):.1f}%"
-                elif current_price < pbt_price:
-                    price_comparison = f"Undervalued by {abs(percentage_diff):.1f}%"
+
+            if current_price is not None and fair_value > 0:
+                # Vergleich mit fairem Wert (ohne MOS)
+                percentage_diff_fair = ((current_price - fair_value) / fair_value) * 100
+                if current_price > fair_value:
+                    price_comparison = f"Overvalued by {abs(percentage_diff_fair):.1f}%"
+                elif current_price < fair_value:
+                    price_comparison = (
+                        f"Undervalued by {abs(percentage_diff_fair):.1f}%"
+                    )
                 else:
                     price_comparison = "Fair valued"
+
+                # Zusätzlicher Vergleich mit Kaufpreis (mit MOS)
+                percentage_diff_buy = (
+                    (current_price - buy_price_with_mos) / buy_price_with_mos
+                ) * 100
+
             else:
-                current_price = 0  # Fallback falls None
+                current_price = 0
 
         except Exception as e:
             print(f"Could not fetch current price for {ticker}: {e}")
             current_price = 0
 
-        # Preisvergleich-Daten
+        # Erweiterte Preisvergleich-Daten
         price_info = {
             "Current Stock Price": round(current_price, 2) if current_price else 0.0,
-            "PBT Price": round(pbt_price, 2),
-            "Price vs PBT": price_comparison,
-            "Percentage Difference": round(percentage_diff, 2),
+            "Fair Value (8Y Payback)": round(fair_value, 2),
+            "Buy Price (with MOS)": round(buy_price_with_mos, 2),
+            "Margin of Safety": f"{margin_of_safety * 100:.1f}%",
+            "Price vs Fair Value": price_comparison,
+            "Percentage Diff (Fair)": round(percentage_diff_fair, 2),
+            "Percentage Diff (Buy)": round(percentage_diff_buy, 2),
             "FCF per Share": round(fcf, 2),
+            "Investment Recommendation": _get_investment_recommendation(
+                current_price, fair_value, buy_price_with_mos
+            ),
         }
 
-        return pbt_price, table, price_info
+        return fair_value, buy_price_with_mos, table, price_info
 
     except Exception as e:
         print(f"PBT-Berechnung für {ticker.upper()} fehlgeschlagen: {e}")
         raise
 
 
+def _get_investment_recommendation(
+    current_price: float, fair_value: float, buy_price: float
+) -> str:
+    """
+    Gibt eine Investitionsempfehlung basierend auf den Preisvergleichen.
+    """
+    if current_price <= 0:
+        return "No price data available"
+
+    if current_price <= buy_price:
+        return "Strong Buy (Below MOS price)"
+    elif current_price <= fair_value:
+        return "Buy (Below fair value)"
+    elif current_price <= fair_value * 1.1:
+        return "Hold (Near fair value)"
+    else:
+        return "Avoid (Overvalued)"
+
+
 if __name__ == "__main__":
     ticker = "aapl"
     year = 2024
     growth = 0.2
+    mos = 0.5  # 25% Sicherheitsmarge
 
-    price, table, price_info = calculate_pbt_from_ticker(
-        ticker, year, growth, return_full_table=True
+    fair_value, buy_price, table, price_info = calculate_pbt_from_ticker(
+        ticker, year, growth, mos, return_full_table=True
     )
-    print(f"PBT-Kaufpreis: {price:.2f}")
-    print(f"Aktueller Preis: {price_info['Current Stock Price']:.2f}")
-    print(f"Bewertung: {price_info['Price vs PBT']}")
+
+    print(f"=== PBT Analysis for {ticker.upper()} ===")
+    print(f"Fair Value (8Y Payback): ${fair_value:.2f}")
+    print(f"Buy Price (with {mos * 100:.0f}% MOS): ${buy_price:.2f}")
+    print(f"Current Price: ${price_info['Current Stock Price']:.2f}")
+    print(f"Bewertung: {price_info['Price vs Fair Value']}")
+    print(f"Empfehlung: {price_info['Investment Recommendation']}")

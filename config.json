@@ -1,33 +1,18 @@
 {
-    "LANGUAGE": "de",
     "persist": {
         "CAGR": {
-            "ticker": "AAPL",
-            "start_year": "2015",
+            "ticker": "FIVE",
+            "start_year": "2017",
             "end_year": "2024",
             "period_years": "5"
         },
-        "MOS": {
-            "ticker": "AAPL",
-            "year": "2024",
-            "growth_rate": "7.099999999999991"
-        },
         "PBT": {
-            "ticker": "PYPL",
+            "ticker": "NOV",
             "year": "2024",
-            "growth_rate": "15.0"
-        },
-        "TenCap": {
-            "ticker": "PYPL",
-            "multi_year": false,
-            "show_details": true,
-            "single_year": "2023",
-            "start_year": "2022",
-            "end_year": "2024"
-        },
-        "DCF_LITE": {
-            "ticker": "FIVE"
+            "growth_rate": "13.0",
+            "margin_of_safety": "56.0"
         }
     },
-    "FMP_API_KEY": "0nck2JozLUMlVC0XtEXAIjwh8d7hwL8G"
+    "FMP_API_KEY": "0nck2JozLUMlVC0XtEXAIjwh8d7hwL8G",
+    "LANGUAGE": "de"
 }
