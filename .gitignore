@@ -18,7 +18,6 @@ old/
 .vscode/
 .idea/
 
-
 # Mac/Windows system files (optional)
 .DS_Store
 Thumbs.db
@@ -29,3 +28,17 @@ Thumbs.db
 secrets.toml
 *.toml
 local_secrets.json
+
+# Benutzerspezifische Einstellungen und Daten
+*_preferences.json
+*_persistence.json
+*_config.json
+
+# Falls jemand die alten Pattern verwendet
+user_*.json
+admin_*.json
+
+# Backup-Dateien von Konfigurationen
+config.json.bak
+language.json.bak
+*.json.backup

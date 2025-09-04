@@ -4,5 +4,23 @@
     "start_year": "2017",
     "end_year": "2024",
     "period_years": "5"
+  },
+  "MOS": {
+    "ticker": "AAPL",
+    "year": "2024",
+    "growth_rate": "15.0",
+    "margin_of_safety": "50.0"
+  },
+  "PBT": {
+    "ticker": "AAPL",
+    "year": "2024",
+    "growth_rate": "13.0",
+    "margin_of_safety": "25.0"
+  },
+  "TenCap": {
+    "ticker": "AAPL",
+    "multi_year": false,
+    "show_details": false,
+    "single_year": "2024"
   }
 }
