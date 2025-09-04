@@ -73,6 +73,10 @@
     "mos_price_50": "MOS Preis (50%)",
     "growth_rate_used": "Verwendete Wachstumsrate",
     "no_valid_data": "Keine gültigen Daten für die Analyse gefunden.",
+    "mos_fair_value_today": "MOS-Fairer Wert heute",
+    "mos_buy_price_with_margin": "MOS-Kaufpreis ({:.0f}%)",
+    "mos_calculation_info": "MOS-Berechnung: Basierend auf {:.1f}% Wachstumsrate über 10 Jahre | MOS-Preis = Fairer Wert × (1 - {:.0f}%)",
+    "mos_detailed_calculations": "Detaillierte Berechnungen",
     
     "ten_cap_title": "TenCap-Berechnung",
     "ten_cap_description": "Berechnet den TEN CAP Preis einer Aktie.",
@@ -225,7 +229,11 @@
     "mos_price_50": "MOS Price (50%)",
     "growth_rate_used": "Growth Rate Used",
     "no_valid_data": "No valid data found for the analysis.",
-    
+    "mos_fair_value_today": "MOS Fair Value Today",
+    "mos_buy_price_with_margin": "MOS Buy Price ({:.0f}%)",
+    "mos_calculation_info": "MOS Calculation: Based on {:.1f}% growth rate over 10 years | MOS Price = Fair Value × (1 - {:.0f}%)",
+    "mos_detailed_calculations": "Detailed Calculations",
+
     "ten_cap_title": "TenCap Calculation",
     "ten_cap_description": "Calculates the TEN CAP price of a stock.",
     "run_tencap_analysis": "Run TEN CAP Analysis",

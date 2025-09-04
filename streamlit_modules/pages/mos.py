@@ -8,7 +8,7 @@ def show_mos_analysis():
     st.header(f"🛡️ {get_text('mos_title')}")
     st.write(get_text("mos_description"))
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
 
     persist_data = st.session_state.persist.get("MOS", {})
 
@@ -38,6 +38,16 @@ def show_mos_analysis():
             key="mos_growth",
         )
 
+    with col4:
+        margin_of_safety = st.number_input(
+            get_text("margin_of_safety"),
+            min_value=0.0,
+            max_value=75.0,
+            value=float(persist_data.get("margin_of_safety", 50.0)),
+            step=1.0,
+            key="mos_margin",
+        )
+
     if st.button(get_text("run_mos_analysis"), key="mos_run"):
         if not ticker:
             st.error(get_text("please_enter_ticker"))
@@ -49,63 +59,100 @@ def show_mos_analysis():
                         "ticker": ticker,
                         "year": str(year),
                         "growth_rate": str(growth_rate),
+                        "margin_of_safety": str(margin_of_safety),
                     }
                     st.session_state.persist.setdefault("MOS", {}).update(persist_data)
                     save_persistence_data()
 
                     result = mos_logic.calculate_mos_value_from_ticker(
-                        ticker, year, growth_rate / 100
+                        ticker,
+                        year,
+                        growth_rate / 100,
+                        margin_of_safety=margin_of_safety / 100,
                     )
 
                     if result:
                         st.success(get_text("mos_analysis_completed").format(ticker))
 
-                        # Display results in three columns for better layout
-                        col1, col2, col3 = st.columns(3)
+                        # Hauptmetriken in 4 sauberen Spalten
+                        col1, col2, col3, col4 = st.columns(4)
 
                         with col1:
                             st.metric(
-                                get_text("current_eps"),
-                                f"${result.get('EPS_now', 0):.2f}",
-                            )
-                            st.metric(
-                                get_text("future_eps_10y"),
-                                f"${result.get('EPS_10y', 0):.2f}",
+                                get_text("mos_fair_value_today"),
+                                f"${result.get('Fair Value Today', 0):,.2f}",
                             )
 
                         with col2:
                             st.metric(
-                                get_text("future_value"),
-                                f"${result.get('Future Value', 0):,.2f}",
-                            )
-                            st.metric(
-                                get_text("fair_value_today"),
-                                f"${result.get('Fair Value Today', 0):,.2f}",
+                                get_text("mos_buy_price_with_margin").format(
+                                    margin_of_safety
+                                ),
+                                f"${result.get('MOS Price', 0):,.2f}",
                             )
 
                         with col3:
                             st.metric(
-                                get_text("mos_price_50"),
-                                f"${result.get('MOS Price (50%)', 0):,.2f}",
-                            )
-                            st.metric(
-                                get_text("current_stock_price", "Current Stock Price"),
+                                get_text("current_stock_price"),
                                 f"${result.get('Current Stock Price', 0):,.2f}",
                             )
+                            st.metric(
+                                get_text("current_eps"),
+                                f"${result.get('EPS_now', 0):.2f}",
+                            )
 
-                        # Price comparison section
-                        price_comparison = result.get("Price vs Fair Value", "N/A")
-                        if "Overvalued" in price_comparison:
-                            st.warning(f"📈 {price_comparison}")
-                        elif "Undervalued" in price_comparison:
-                            st.success(f"📉 {price_comparison}")
-                        else:
-                            st.info(f"📊 {price_comparison}")
+                        with col4:
+                            # Bewertung basierend auf Fair Value
+                            price_comparison = result.get("Price vs Fair Value", "N/A")
+                            if "Undervalued" in price_comparison:
+                                st.success(f"📈 {price_comparison}")
+                            elif "Overvalued" in price_comparison:
+                                st.warning(f"📉 {price_comparison}")
+                            else:
+                                st.info(f"⚖️ {price_comparison}")
 
-                        # Growth rate used
+                            # Investment Empfehlung
+                            recommendation = result.get(
+                                "Investment Recommendation", "N/A"
+                            )
+                            if "Strong Buy" in recommendation:
+                                st.success(f"🚀 {recommendation}")
+                            elif "Buy" in recommendation:
+                                st.success(f"✅ {recommendation}")
+                            elif "Hold" in recommendation:
+                                st.warning(f"⚖️ {recommendation}")
+                            else:
+                                st.error(f"❌ {recommendation}")
+
+                        # Zentrale Info-Box
                         st.info(
-                            f"{get_text('growth_rate_used')}: {result.get('Growth Rate', 0)}%"
+                            f"💡 {get_text('mos_calculation_info').format(growth_rate, margin_of_safety)}"
                         )
+
+                        # Detailwerte in ausklappbarer Sektion
+                        with st.expander(f"📊 {get_text('mos_detailed_calculations')}"):
+                            detail_col1, detail_col2 = st.columns(2)
+
+                            with detail_col1:
+                                st.metric(
+                                    get_text("current_eps"),
+                                    f"${result.get('EPS_now', 0):.2f}",
+                                )
+                                st.metric(
+                                    get_text("future_eps_10y"),
+                                    f"${result.get('EPS_10y', 0):.2f}",
+                                )
+
+                            with detail_col2:
+                                st.metric(
+                                    get_text("future_value"),
+                                    f"${result.get('Future Value', 0):,.2f}",
+                                )
+                                st.metric(
+                                    get_text("growth_rate_used"),
+                                    f"{result.get('Growth Rate', 0):.1f}%",
+                                )
+
                     else:
                         st.warning(get_text("no_valid_data"))
 
