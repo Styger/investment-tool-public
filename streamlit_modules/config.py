@@ -4,6 +4,12 @@ import io
 import sys
 import os
 import utils.config_load as config_load
+from utils.user_preferences import (
+    load_user_language,
+    save_user_language,
+    load_user_persistence,
+    save_user_persistence,
+)
 
 
 def load_app_config():
@@ -16,13 +22,30 @@ def load_app_config():
     """Load configuration and initialize session state"""
     if "config_loaded" not in st.session_state:
         try:
-            language, current_language, all_languages = config_load.load_language()
+            # Zentrale Konfiguration laden (API Key etc.)
             cfg = config_load.load_config()
+
+            # Benutzerspezifische Sprache laden
+            user_language_code = load_user_language()
+
+            # Language-Dateien laden
+            language, current_language, all_languages = config_load.load_language()
+
+            # Override mit benutzerspezifischer Sprache
+            if user_language_code in all_languages:
+                language = all_languages[user_language_code]
+                current_language = user_language_code
 
             st.session_state.language = language
             st.session_state.current_language = current_language
             st.session_state.all_languages = all_languages
-            st.session_state.persist = cfg.get("persist", {})
+
+            # Benutzerspezifische Persistence laden (falls angemeldet)
+            if st.session_state.get("authenticated", False):
+                st.session_state.persist = load_user_persistence()
+            else:
+                st.session_state.persist = {}
+
             st.session_state.config = cfg
             st.session_state.config_loaded = True
         except Exception as e:
@@ -42,6 +65,28 @@ def load_app_config():
             st.session_state.config = {}
 
 
+def reload_user_config():
+    """Lädt benutzerspezifische Einstellungen nach Login/Logout neu"""
+    try:
+        # Benutzerspezifische Sprache laden
+        user_language_code = load_user_language()
+        all_languages = st.session_state.get("all_languages", {})
+
+        # Sprache aktualisieren
+        if user_language_code in all_languages:
+            st.session_state.language = all_languages[user_language_code]
+            st.session_state.current_language = user_language_code
+
+        # Benutzerspezifische Persistence laden
+        if st.session_state.get("authenticated", False):
+            st.session_state.persist = load_user_persistence()
+        else:
+            st.session_state.persist = {}
+
+    except Exception as e:
+        print(f"Error reloading user config: {e}")
+
+
 def get_text(key, fallback=None):
     """Get localized text from language JSON"""
     language_data = st.session_state.get("language", {})
@@ -58,13 +103,29 @@ def get_text(key, fallback=None):
 
 
 def save_persistence_data():
-    """Save current persistence data to config"""
+    """Save current persistence data benutzerspezifisch"""
     try:
-        current_config = st.session_state.get("config", {})
-        current_config["persist"] = st.session_state.get("persist", {})
-        config_load._save_config(current_config)
+        if st.session_state.get("authenticated", False):
+            persist_data = st.session_state.get("persist", {})
+            save_user_persistence(persist_data)
     except Exception:
         pass  # Fail silently
+
+
+def change_language(new_language):
+    """Ändert die Sprache und speichert sie benutzerspezifisch"""
+    try:
+        # Speichere neue Sprache benutzerspezifisch
+        if save_user_language(new_language):
+            # Aktualisiere Session State
+            all_languages = st.session_state.get("all_languages", {})
+            if new_language in all_languages:
+                st.session_state.language = all_languages[new_language]
+                st.session_state.current_language = new_language
+                return True
+    except Exception as e:
+        print(f"Error changing language: {e}")
+    return False
 
 
 def capture_output(func, *args, **kwargs):

@@ -41,6 +41,12 @@ def simple_auth():
                 st.session_state["authenticated"] = True
                 st.session_state["username"] = username
                 st.success("Erfolgreich angemeldet!")
+
+                # Import NACH dem Setzen des usernames
+                from streamlit_modules.config import reload_user_config
+
+                reload_user_config()
+
                 st.rerun()
             else:
                 st.error("Falscher Username oder Passwort")
@@ -58,4 +64,10 @@ def show_logout():
         if st.sidebar.button("Logout", key="logout_button"):
             st.session_state["authenticated"] = False
             st.session_state["username"] = None
+
+            # Import und Aufruf nach dem Zurücksetzen
+            from streamlit_modules.config import reload_user_config
+
+            reload_user_config()
+
             st.rerun()
