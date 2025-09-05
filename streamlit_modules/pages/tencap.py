@@ -91,14 +91,17 @@ def show_tencap_analysis():
                     save_persistence_data()
 
                     if show_details:
-                        # Details anzeigen - formatierte Reports
+                        # GEÄNDERT: Lade die aktuelle Sprache aus Session State
+                        current_language_data = st.session_state.get("language", {})
+
+                        # Details anzeigen - formatierte Reports mit korrekter Sprache
                         for year in years:
                             try:
                                 _, output = capture_output(
                                     tencap_logic.print_ten_cap_analysis,
                                     ticker,
                                     year,
-                                    tencap_logic.language,
+                                    current_language_data,  # GEÄNDERT: Verwende aktuelle Sprache
                                 )
                                 if output.strip():
                                     st.code(output, language=None)
@@ -111,7 +114,7 @@ def show_tencap_analysis():
                                     get_text("error_for_year").format(year, str(e))
                                 )
                     else:
-                        # Tabellen-Ansicht
+                        # Tabellen-Ansicht (bleibt unverändert)
                         results = []
                         latest_year = max(years)
                         current_price_data = None

@@ -1,7 +1,8 @@
 from api import fmp_api
 from typing import Optional
 
-language = {
+# Nur für direktes Ausführen des Skripts (Fallback)
+default_language = {
     "ten_cap_calc_title": "TEN CAP Analyse für",
     "ten_cap_profit_before_tax": "Gewinn vor Steuern:",
     "ten_cap_depreciation": "+ Abschreibungen:",
@@ -13,7 +14,8 @@ language = {
     "ten_cap_price": "TEN CAP Buy Price:",
     "ten_cap_fair_value": "TEN CAP Fair Value:",
     "current_stock_price": "Current Stock Price:",
-    "price_comparison": "Price vs Fair Value:",
+    "price_comparison": "Price vs. Fair Value:",
+    "price_vs_fair_value_tencap": "Preis vs. Fair Value:",  # KORRIGIERT: Deutscher Text für lokale Ausführung
 }
 
 
@@ -89,42 +91,45 @@ def _calculate_working_capital_change(cashflow_data: dict) -> tuple:
 
 
 def _format_ten_cap_report(data: dict, language: dict) -> str:
+    """
+    GEÄNDERT: Nimmt jetzt language als Parameter entgegen
+    """
     report = []
     report.append(
         f"\n{language['ten_cap_calc_title']} {data['ticker'].upper()} ({data['year']})"
     )
     report.append("-" * 50)
     report.append(
-        f"{language['ten_cap_profit_before_tax']:25} ${data['profit_before_tax']:>10,.2f}M"
+        f"{language['ten_cap_profit_before_tax']:25}  {data['profit_before_tax']:>10,.2f}M"
     )
     report.append(
-        f"{language['ten_cap_depreciation']:25} ${data['depreciation']:>10,.2f}M"
+        f"{language['ten_cap_depreciation']:25}  {data['depreciation']:>10,.2f}M"
     )
     wc = data["working_capital_change"]
-    report.append(f"{language['ten_cap_working_capital']:25} ${wc:>10,.2f}M")
+    report.append(f"{language['ten_cap_working_capital']:25}  {wc:>10,.2f}M")
     report.append(
-        f"{language['ten_cap_capex']:25} ${data['maintenance_capex'] * 0.5:>10,.2f}M"
+        f"{language['ten_cap_capex']:25}  {data['maintenance_capex'] * 0.5:>10,.2f}M"
     )
     report.append("-" * 50)
     report.append(
-        f"{language['ten_cap_owner_earnings']:25} ${data['owner_earnings']:>10,.2f}M"
+        f"{language['ten_cap_owner_earnings']:25}  {data['owner_earnings']:>10,.2f}M"
     )
     report.append(
         f"{language['ten_cap_shares']:25} {data['shares_outstanding']:>10,.2f}"
     )
-    report.append(f"{language['ten_cap_eps']:25} ${data['earnings_per_share']:>10,.2f}")
+    report.append(f"{language['ten_cap_eps']:25}  {data['earnings_per_share']:>10,.2f}")
     report.append("=" * 50)
     report.append(
-        f"{language['ten_cap_fair_value']:25} ${data['ten_cap_fair_value']:>10,.2f}"
+        f"{language['ten_cap_fair_value']:25}  {data['ten_cap_fair_value']:>10,.2f}"
     )
     report.append(
-        f"{language['ten_cap_price']:25} ${data['ten_cap_buy_price']:>10,.2f}"
+        f"{language['ten_cap_price']:25}  {data['ten_cap_buy_price']:>10,.2f}"
     )
 
     # Current Price und Vergleich hinzufügen
     if data.get("current_stock_price") is not None:
         report.append(
-            f"{language['current_stock_price']:25} ${data['current_stock_price']:>10,.2f}"
+            f"{language['current_stock_price']:25}  {data['current_stock_price']:>10,.2f}"
         )
         report.append(
             f"{language['price_comparison']:25} {data['price_vs_fair_value_tencap']:>15}"
@@ -232,7 +237,7 @@ def _get_ten_cap_result(ticker: str, year: int) -> Optional[dict]:
             "ten_cap_buy_price": ten_cap_price,
             "ten_cap_fair_value": ten_cap_fair_value,
             "current_stock_price": current_price,
-            "price_vs_fair_value_tencap": price_comparison,  # KORRIGIERT: Konsistenter Key
+            "price_vs_fair_value_tencap": price_comparison,
             "investment_recommendation": investment_recommendation,
             "wc_components": wc_components,
         }
@@ -261,7 +266,14 @@ def _get_investment_recommendation(
         return "Avoid (Overvalued)"
 
 
-def print_ten_cap_analysis(ticker: str, year: int, language: dict):
+def print_ten_cap_analysis(ticker: str, year: int, language: dict = None):
+    """
+    GEÄNDERT: Nimmt jetzt language als optionalen Parameter entgegen
+    Falls None, verwendet es die default_language für direktes Ausführen
+    """
+    if language is None:
+        language = default_language
+
     data = _get_ten_cap_result(ticker, year)
     if not data:
         print(f"[ERROR] Could not find complete data for {ticker.upper()} in {year}")
@@ -283,6 +295,9 @@ def calculate_ten_cap_with_comparison(ticker: str, year: int = None) -> Optional
 
 
 def _run():
+    """
+    Für direktes Ausführen des Skripts - verwendet default_language (Deutsch)
+    """
     ticker = "evvty"
     test_years = [2022, 2023, 2024, 2025]
 
@@ -291,7 +306,9 @@ def _run():
     for year in test_years:
         result = _get_ten_cap_result(ticker, year)
         if result:
-            print(_format_ten_cap_report(result, language))  # Nur diese Ausgabe
+            print(
+                _format_ten_cap_report(result, default_language)
+            )  # Verwendet default_language
         else:
             print(f"Could not find complete data for {year}")
             print(f"{year}: N/A")
