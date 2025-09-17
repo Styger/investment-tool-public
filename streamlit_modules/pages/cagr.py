@@ -6,7 +6,7 @@ import pandas as pd
 
 def show_cagr_analysis():
     """CAGR Analysis Interface"""
-    st.header(f"📊 {get_text('cagr_title')}")
+    st.header(f"📈 {get_text('cagr_title')}")
     st.write(get_text("cagr_description"))
 
     col1, col2, col3, col4 = st.columns(4)

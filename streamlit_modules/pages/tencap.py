@@ -6,7 +6,7 @@ import logic.tencap as tencap_logic
 
 def show_tencap_analysis():
     """Ten Cap Analysis Interface"""
-    st.header(f"💰 {get_text('ten_cap_title')}")
+    st.header(f"🔟 {get_text('ten_cap_title')}")
     st.write(get_text("ten_cap_description"))
 
     col1, col2, col3 = st.columns(3)

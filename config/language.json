@@ -163,7 +163,66 @@
     "pbt_analysis_failed": "PBT-Analyse fehlgeschlagen: {}",
     "tencap_analysis_failed": "TEN CAP-Analyse fehlgeschlagen: {}",
     "dcf_analysis_failed": "DCF-Analyse fehlgeschlagen: {}",
-    "config_file_location_not_available": "Konfigurationsdateipfad: Nicht verfügbar"
+    "config_file_location_not_available": "Konfigurationsdateipfad: Nicht verfügbar",
+
+    "info_help_title": "Info & Hilfe",
+    "info_page_title": "Good Value Analyse - Methodenübersicht",
+    "info_page_intro": "Willkommen zur Übersicht aller verfügbaren Analysemethoden. Hier erfahren Sie, wie jede Methode funktioniert und wann Sie sie am besten einsetzen.",
+    
+    "mos_tab": "MOS",
+    "dcf_tab": "DCF",
+    "tencap_tab": "TEN CAP",
+    "pbt_tab": "Pay Back Time",
+    "cagr_tab": "CAGR",
+    "usage_tab": "Nutzung",
+    
+    "mos_method_title": "Margin of Safety (MOS)",
+    "mos_description": "The Margin of Safety method calculates a stock's intrinsic value based on projected EPS growth over 10 years with subsequent safety margin application.",
+    "mos_how_it_works": "- Projects EPS growth over 10 years\n- Calculates future value with dynamic P/E ratio\n- Discounts to present value (15% discount rate)\n- Applies safety margin (typically 25-50%)",
+    "mos_when_to_use": "- For value investing strategies\n- When you want to invest conservatively\n- For long-term investments\n- During uncertain market phases",
+    "mos_formula_explanation": "Where the P/E ratio is dynamically calculated from the growth rate (growth_rate × 200) and a 15% discount rate is used.",
+  
+    "dcf_method_title": "Discounted Cash Flow (DCF)",
+    "dcf_description": "DCF bewertet ein Unternehmen basierend auf seinen zukünftigen Cashflows, die auf den heutigen Wert abgezinst werden.",
+    "dcf_how_it_works": "- Prognostiziert zukünftige Free Cash Flows\n- Diskontiert diese auf den Gegenwartswert\n- Berücksichtigt Wachstumsraten und Risiko",
+    "dcf_when_to_use": "- Für reife Unternehmen mit stabilen Cashflows\n- Bei langfristiger Bewertung\n- Wenn Sie fundamentale Analyse bevorzugen\n- Für Dividenden-Aktien",
+    "dcf_formula_explanation": "Wobei FCF = Free Cash Flow, r = Diskontierungsrate, t = Jahre",
+    
+    "tencap_method_title": "Ten Cap Analyse",
+    "tencap_description": "TEN CAP berechnet den fairen Wert basierend auf Owner Earnings (bereinigten Gewinnen) mit einer 10% Renditeerwartung.",
+    "tencap_how_it_works": "- Berechnet Owner Earnings (Gewinn + Abschreibungen ± Working Capital - 50% CapEx)\n- Teilt durch Aktienanzahl für Earnings per Share\n- Dividiert durch 10% für fairen Wert\n- Buy Price enthält bereits 50% Sicherheitsmarge",
+    "tencap_when_to_use": "- Bei profitablen, etablierten Unternehmen\n- Für konservative Bewertung mit Sicherheitsmarge\n- Wenn Sie Owner Earnings bevorzugen\n- Für schnelle Fundamentalanalyse",
+    "tencap_formula_explanation": "Buy Price = (Owner Earnings / Shares) ÷ 10% | Fair Value = 2 × Buy Price",
+
+    "pbt_method_title": "Payback Time (PBT)",
+    "pbt_description": "PBT berechnet, wie lange es dauert, bis sich eine Investition durch die Free Cash Flows amortisiert hat (Standardberechnung: 8 Jahre).",
+    "pbt_how_it_works": "- Verwendet Free Cash Flow pro Aktie\n- Berechnet Wachstum über mehrere Jahre\n- Summiert Cashflows bis zur Amortisation\n- Wendet Sicherheitsmarge an",
+    "pbt_when_to_use": "- Bei cashflow-starken Unternehmen\n- Für langfristige Investitionen\n- Wenn Sie konservativ bewerten möchten\n- Bei etablierten, profitablen Firmen",
+    "pbt_formula_explanation": "Fair Value basiert auf kumulierten FCF über 8 Jahre. Buy Price = Fair Value × (1 - MOS%). Standard MOS ist 25%.",
+
+    "cagr_method_title": "Durchschnittliche jährliche Wachstumsrate (CAGR)",
+    "cagr_description": "CAGR misst die durchschnittliche jährliche Wachstumsrate verschiedener Kennzahlen pro Aktie über einen bestimmten Zeitraum (Buchwert, EPS, Umsatz, Cashflow).",
+    "cagr_how_it_works": "- Analysiert 4 Kennzahlen pro Aktie über gewählte Zeiträume\n- Berechnet CAGR für Buchwert, EPS, Umsatz und Cashflow\n- Glättet Schwankungen durch Zinseszinseffekt\n- Zeigt Durchschnittswachstum aller Kennzahlen",
+    "cagr_when_to_use": "- Für Performance-Vergleiche\n- Bei Langzeit-Investments\n- Zur Bewertung von Wachstumsraten\n- Für Portfolio-Analyse",
+    "cagr_formula_explanation": "Perfekt für den Vergleich verschiedener Investments über gleiche Zeiträume.",
+
+    
+    "usage_guide_title": "Anwendungsleitfaden",
+    "usage_guide_intro": "So verwenden Sie das Good Value Analyse Tool optimal:",
+    "getting_started": "Erste Schritte",
+    "getting_started_steps": "1. **Analyse wählen**: Beginnen Sie mit MOS für eine konservative Bewertung\n2. **Aktien-Ticker eingeben**: Verwenden Sie Standard-Ticker wie AAPL, MSFT, etc.\n3. **Parameter anpassen**: Passen Sie Wachstumsraten und Sicherheitsmargen an Ihre Strategie an\n4. **Ergebnisse interpretieren**: Grüne Werte = potentiell unterbewertet, Rote Werte = potentiell überbewertet",
+    "tips_and_tricks": "Tipps & Tricks",
+    "tips_and_tricks_content": "- **Kombinieren Sie Methoden**: Verwenden Sie mehrere Analysen für ein vollständiges Bild\n- **Historische Trends**: Schauen Sie sich mehrjährige Entwicklungen an, nicht nur Momentaufnahmen\n- **Branchenvergleich**: Vergleichen Sie ähnliche Unternehmen derselben Branche\n- **Vorsicht bei Wachstumsaktien**: Junge, schnell wachsende Unternehmen sind schwerer zu bewerten\n- **Konservativ bleiben**: Lieber eine verpasste Chance als ein großer Verlust",
+ 
+    "suffix_tab": "Ticker",
+    "suffix_guide_title": "Internationale Ticker-Suffixe",
+    "suffix_guide_intro": "Hier finden Sie alle unterstützten Länderkürzel für internationale Aktien-Ticker.",
+    "suffix_usage_tip": "Geben Sie Ticker immer mit dem entsprechenden Suffix ein, z.B. 'NESN.SW' für Nestlé an der Schweizer Börse.",
+    "no_suffix_note": "US-Aktien (NYSE, NASDAQ) benötigen kein Suffix",
+
+    "how_it_works": "Funktionsweise",
+    "when_to_use": "Wann verwenden",
+    "formula": "Formel"
   },
   "en": {
     "window_title": "Investment Tool",
@@ -330,6 +389,64 @@
     "pbt_analysis_failed": "PBT analysis failed: {}",
     "tencap_analysis_failed": "TEN CAP analysis failed: {}",
     "dcf_analysis_failed": "DCF analysis failed: {}",
-    "config_file_location_not_available": "Config file location: Not available"
+    "config_file_location_not_available": "Config file location: Not available",
+
+    "info_help_title": "Info & Help",
+    "info_page_title": "Good Value Analysis - Method Overview",
+    "info_page_intro": "Welcome to the overview of all available analysis methods. Here you'll learn how each method works and when to use them effectively.",
+    
+    "mos_tab": "MOS",
+    "dcf_tab": "DCF",
+    "tencap_tab": "TEN CAP",
+    "pbt_tab": "Pay Back Time",
+    "cagr_tab": "CAGR",
+    "usage_tab": "Usage",
+    
+    "mos_method_title": "Margin of Safety (MOS)",
+    "mos_description": "The Margin of Safety method calculates a stock's intrinsic value based on projected EPS growth over 10 years with subsequent safety margin application.",
+    "mos_how_it_works": "- Projects EPS growth over 10 years\n- Calculates future value with dynamic P/E ratio\n- Discounts to present value (15% discount rate)\n- Applies safety margin (typically 25-50%)",
+    "mos_when_to_use": "- For value investing strategies\n- When you want to invest conservatively\n- For long-term investments\n- During uncertain market phases",
+    "mos_formula_explanation": "Where the P/E ratio is dynamically calculated from the growth rate (growth_rate × 200) and a 15% discount rate is used.",
+     
+    "dcf_method_title": "Discounted Cash Flow (DCF)",
+    "dcf_description": "DCF values a company based on its future cash flows, discounted to present value.",
+    "dcf_how_it_works": "- Forecasts future free cash flows\n- Discounts them to present value\n- Considers growth rates and risk",
+    "dcf_when_to_use": "- For mature companies with stable cash flows\n- For long-term valuation\n- When you prefer fundamental analysis\n- For dividend stocks",
+    "dcf_formula_explanation": "Where FCF = Free Cash Flow, r = discount rate, t = years",
+    
+    "tencap_method_title": "Ten Cap Analysis",
+    "tencap_description": "TEN CAP calculates fair value based on Owner Earnings (adjusted profits) with a 10% return expectation.",
+    "tencap_how_it_works": "- Calculates Owner Earnings (Profit + Depreciation ± Working Capital - 50% CapEx)\n- Divides by share count for Earnings per Share\n- Divides by 10% for fair value\n- Buy Price already includes 50% safety margin",
+    "tencap_when_to_use": "- For profitable, established companies\n- For conservative valuation with safety margin\n- When you prefer Owner Earnings approach\n- For quick fundamental analysis",
+    "tencap_formula_explanation": "Buy Price = (Owner Earnings / Shares) ÷ 10% | Fair Value = 2 × Buy Price",
+    
+    "pbt_method_title": "Payback Time (PBT)",
+    "pbt_description": "PBT calculates how long it takes for an investment to pay back through free cash flows (standard calculation: 8 years).",
+    "pbt_how_it_works": "- Uses free cash flow per share\n- Calculates growth over multiple years\n- Sums cash flows until payback\n- Applies safety margin",
+    "pbt_when_to_use": "- For cash flow strong companies\n- For long-term investments\n- When you want conservative valuation\n- With established, profitable firms",
+    "pbt_formula_explanation": "Fair Value based on cumulative FCF over 8 years. Buy Price = Fair Value × (1 - MOS%). Standard MOS is 25%.",
+
+    "cagr_method_title": "Compound Annual Growth Rate (CAGR)",
+    "cagr_description": "CAGR measures the average annual growth rate of various per-share metrics over a specific time period (Book Value, EPS, Revenue, Cash Flow).",
+    "cagr_how_it_works": "- Analyzes 4 per-share metrics over chosen periods\n- Calculates CAGR for Book Value, EPS, Revenue and Cash Flow\n- Smooths fluctuations through compound interest effect\n- Shows average growth across all metrics",
+    "cagr_when_to_use": "- For performance comparisons\n- With long-term investments\n- To evaluate growth rates\n- For portfolio analysis",
+    "cagr_formula_explanation": "Perfect for comparing different investments over equal time periods.",
+
+    "usage_guide_title": "Usage Guide",
+    "usage_guide_intro": "How to use the Good Value Analysis Tool optimally:",
+    "getting_started": "Getting Started",
+    "getting_started_steps": "1. **Choose Analysis**: Start with MOS for a conservative valuation\n2. **Enter Stock Ticker**: Use standard tickers like AAPL, MSFT, etc.\n3. **Adjust Parameters**: Tailor growth rates and safety margins to your strategy\n4. **Interpret Results**: Green values = potentially undervalued, Red values = potentially overvalued",
+    "tips_and_tricks": "Tips & Tricks",
+    "tips_and_tricks_content": "- **Combine Methods**: Use multiple analyses for a complete picture\n- **Historical Trends**: Look at multi-year developments, not just snapshots\n- **Industry Comparison**: Compare similar companies within the same industry\n- **Caution with Growth Stocks**: Young, fast-growing companies are harder to value\n- **Stay Conservative**: Better a missed opportunity than a big loss",
+   
+    "suffix_tab": "Ticker",
+    "suffix_guide_title": "International Ticker Suffixes",
+    "suffix_guide_intro": "Here you'll find all supported country codes for international stock tickers.",
+    "suffix_usage_tip": "Always enter tickers with the appropriate suffix, e.g. 'NESN.SW' for Nestlé on the Swiss exchange.",
+    "no_suffix_note": "US stocks (NYSE, NASDAQ) don't require a suffix",
+
+    "how_it_works": "How it Works",
+    "when_to_use": "When to Use",
+    "formula": "Formula"
   }
 }

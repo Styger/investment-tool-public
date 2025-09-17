@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit_modules.auth import simple_auth, show_logout
 from streamlit_modules.config import load_app_config, get_text, save_persistence_data
-from streamlit_modules.pages import cagr, mos, pbt, tencap, dcf_lite, settings
+from streamlit_modules.pages import cagr, mos, pbt, tencap, dcf_lite, settings, info
 
 # Page configuration
 st.set_page_config(
@@ -28,12 +28,13 @@ def main():
     st.sidebar.title(f"📈 {get_text('window_title')}")
 
     analysis_modes = {
-        get_text("cagr_title"): cagr.show_cagr_analysis,
-        get_text("mos_title"): mos.show_mos_analysis,
-        get_text("pbt_title"): pbt.show_pbt_analysis,
-        get_text("ten_cap_title"): tencap.show_tencap_analysis,
-        get_text("dcf_lite_title"): dcf_lite.show_dcf_lite_analysis,
-        get_text("settings_title"): settings.show_settings_page,
+        f"💡 {get_text('info_help_title')}": info.show_info,
+        f"📈 {get_text('cagr_title')}": cagr.show_cagr_analysis,
+        f"🛡️ {get_text('mos_title')}": mos.show_mos_analysis,
+        f"⏰ {get_text('pbt_title')}": pbt.show_pbt_analysis,
+        f"🔟 {get_text('ten_cap_title')}": tencap.show_tencap_analysis,
+        f"💰 {get_text('dcf_lite_title')}": dcf_lite.show_dcf_lite_analysis,
+        f"⚙️ {get_text('settings_title')}": settings.show_settings_page,
     }
 
     selected_mode = st.sidebar.selectbox(

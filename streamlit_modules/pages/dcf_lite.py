@@ -5,7 +5,7 @@ import logic.dcf_lite as dcf_lite_logic
 
 def show_dcf_lite_analysis():
     """DCF Lite Analysis Interface"""
-    st.header("💼 DCF Lite Analysis")
+    st.header("💰 DCF Lite Analysis")
     st.write("Get current DCF valuation from Financial Modeling Prep.")
 
     persist_data = st.session_state.persist.get("DCF_LITE", {})
