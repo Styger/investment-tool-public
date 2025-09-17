@@ -24,7 +24,7 @@ def show_cagr_analysis():
             get_text("start_year"),
             min_value=1990,
             max_value=2030,
-            value=int(persist_data.get("start_year", 2020)),
+            value=int(persist_data.get("start_year", 2018)),
             key="cagr_start",
         )
 
