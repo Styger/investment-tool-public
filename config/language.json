@@ -177,11 +177,11 @@
     "usage_tab": "Nutzung",
     
     "mos_method_title": "Margin of Safety (MOS)",
-    "mos_description": "The Margin of Safety method calculates a stock's intrinsic value based on projected EPS growth over 10 years with subsequent safety margin application.",
-    "mos_how_it_works": "- Projects EPS growth over 10 years\n- Calculates future value with dynamic P/E ratio\n- Discounts to present value (15% discount rate)\n- Applies safety margin (typically 25-50%)",
-    "mos_when_to_use": "- For value investing strategies\n- When you want to invest conservatively\n- For long-term investments\n- During uncertain market phases",
-    "mos_formula_explanation": "Where the P/E ratio is dynamically calculated from the growth rate (growth_rate × 200) and a 15% discount rate is used.",
-  
+    "mos_description": "Die Margin of Safety Methode berechnet den intrinsischen Wert einer Aktie basierend auf projiziertem EPS-Wachstum über 10 Jahre mit anschließender Sicherheitsmarge.",
+    "mos_how_it_works": "- Projiziert EPS-Wachstum über 10 Jahre\n- Berechnet zukünftigen Wert mit dynamischem P/E-Ratio\n- Diskontiert auf Gegenwartswert (15% Diskontrate)\n- Wendet Sicherheitsmarge an (meist 25-50%)",
+    "mos_when_to_use": "- Bei Value-Investing Strategien\n- Wenn Sie konservativ investieren möchten\n- Für langfristige Investments\n- Bei unsicheren Marktphasen",
+    "mos_formula_explanation": "Wobei das P/E-Ratio dynamisch aus der Wachstumsrate berechnet wird (growth_rate × 200) und eine 15% Diskontrate verwendet wird.",
+
     "dcf_method_title": "Discounted Cash Flow (DCF)",
     "dcf_description": "DCF bewertet ein Unternehmen basierend auf seinen zukünftigen Cashflows, die auf den heutigen Wert abgezinst werden.",
     "dcf_how_it_works": "- Prognostiziert zukünftige Free Cash Flows\n- Diskontiert diese auf den Gegenwartswert\n- Berücksichtigt Wachstumsraten und Risiko",
