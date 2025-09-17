@@ -45,7 +45,7 @@ def show_pbt_analysis():
             get_text("margin_of_safety"),
             min_value=0.0,
             max_value=100.0,
-            value=float(persist_data.get("margin_of_safety", 25.0)),
+            value=float(persist_data.get("margin_of_safety", 50.0)),
             step=1.0,
             key="pbt_mos",
         )
