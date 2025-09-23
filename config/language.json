@@ -142,8 +142,8 @@
     "ratios_title": "Ratios",
     "ratios_description": "Hier kannst du verschiedene finanzielle Ratios berechnen.",
     
-    "dcf_lite_title": "DCF (aktueller Wert)",
-    "dcf_lite_description": "Ermittelt den aktuellen DCF-Wert (unlevered) für einen Ticker.",
+    "dcf_fmp_title": "DCF",
+    "dcf_fmp_description": "Ermittelt den aktuellen DCF-Wert (unlevered) für einen Ticker.",
     "get_dcf_analysis": "DCF-Analyse abrufen",
     "fetching_dcf_data": "Lade DCF-Daten für {}...",
     "dcf_analysis_completed": "DCF-Analyse für {} abgeschlossen",
@@ -182,12 +182,24 @@
     "mos_when_to_use": "- Bei Value-Investing Strategien\n- Wenn Sie konservativ investieren möchten\n- Für langfristige Investments\n- Bei unsicheren Marktphasen",
     "mos_formula_explanation": "Wobei das P/E-Ratio dynamisch aus der Wachstumsrate berechnet wird (growth_rate × 200) und eine 15% Diskontrate verwendet wird.",
 
-    "dcf_method_title": "Discounted Cash Flow (DCF)",
-    "dcf_description": "DCF bewertet ein Unternehmen basierend auf seinen zukünftigen Cashflows, die auf den heutigen Wert abgezinst werden.",
-    "dcf_how_it_works": "- Prognostiziert zukünftige Free Cash Flows\n- Diskontiert diese auf den Gegenwartswert\n- Berücksichtigt Wachstumsraten und Risiko",
-    "dcf_when_to_use": "- Für reife Unternehmen mit stabilen Cashflows\n- Bei langfristiger Bewertung\n- Wenn Sie fundamentale Analyse bevorzugen\n- Für Dividenden-Aktien",
-    "dcf_formula_explanation": "Wobei FCF = Free Cash Flow, r = Diskontierungsrate, t = Jahre",
-    
+    "dcf_fmp_method_title": "DCF - FMP Bewertung",
+    "dcf_fmp_method_description": "Schnelle DCF-Analyse mit Financial Modeling Prep's aktuellen Bewertungen.",
+    "dcf_fmp_how_it_works": "- Holt aktuelle DCF-Bewertung direkt von FMP\n- Verwendet professionelle Finanzmodelle\n- Wendet Ihre individuelle Sicherheitsmarge an\n- Vergleicht mit aktuellem Marktpreis\n- Liefert sofortige Investitionsempfehlung",
+    "dcf_fmp_when_to_use": "- Schnelle Bewertungschecks\n- Wenn Sie professionelle Analyse wollen\n- Überprüfung eigener Berechnungen\n- Zeitkritische Investitionsentscheidungen\n- Ermittlung der Marktkonsens-Sicht",
+    "dcf_fmp_formula_explanation": "Einfach und schnell: Verwendet externe DCF-Berechnung mit Ihrer Sicherheitsmarge.",
+
+    "dcf_unlevered_method_title": "Unlevered DCF (FCFF) - Unternehmensbewertung",
+    "dcf_unlevered_method_description": "Free Cash Flow to Firm - bewertet das gesamte Unternehmen vor Berücksichtigung der Schuldenstruktur.",
+    "dcf_unlevered_how_it_works": "- Berechnet Free Cash Flow to Firm (FCFF)\n- FCFF = EBIT × (1 - Steuersatz) + Abschreibungen - CapEx - ΔNWC\n- Projiziert FCFF-Wachstum über Prognosezeitraum\n- Diskontiert mit WACC (Weighted Average Cost of Capital)\n- Subtrahiert Nettoschulden für Eigenkapitalwert",
+    "dcf_unlevered_when_to_use": "- Umfassende Unternehmensbewertung\n- Vergleich von Unternehmen mit unterschiedlichen Kapitalstrukturen\n- M&A-Analyse und Unternehmenstransaktionen\n- Wenn Schuldenniveau signifikant ist\n- Professionelle Investmentanalyse",
+    "dcf_unlevered_formula_explanation": "Umfassendste Methode: Vollständige Unternehmensanalyse unter Berücksichtigung aller Stakeholder.",
+
+    "dcf_levered_method_title": "Levered DCF (FCFE) - Direkte Eigenkapitalbewertung",
+    "dcf_levered_method_description": "Free Cash Flow to Equity - bewertet Eigenkapital direkt, einschließlich Schuldeneffekte.",
+    "dcf_levered_how_it_works": "- Berechnet Free Cash Flow to Equity (FCFE)\n- FCFE = Operating Cash Flow - CapEx + Nettokreditaufnahme\n- Projiziert FCFE-Wachstum über Prognosezeitraum\n- Diskontiert mit Eigenkapitalkosten (kein WACC nötig)\n- Direkte Eigenkapitalbewertung pro Aktie",
+    "dcf_levered_when_to_use": "- Direkte Eigenkapital-Investitionsentscheidungen\n- Wenn Schuldenstruktur stabil ist\n- Einfacher als Unlevered DCF\n- Fokus auf Aktionärswert\n- Alternative zum Dividendendiskontierungsmodell",
+    "dcf_levered_formula_explanation": "Eigenkapital-fokussiert: Direkte Bewertung der Aktionärsansprüche mit eingebauten Schuldeneffekten.",
+
     "tencap_method_title": "Ten Cap Analyse",
     "tencap_description": "TEN CAP berechnet den fairen Wert basierend auf Owner Earnings (bereinigten Gewinnen) mit einer 10% Renditeerwartung.",
     "tencap_how_it_works": "- Berechnet Owner Earnings (Gewinn + Abschreibungen ± Working Capital - 50% CapEx)\n- Teilt durch Aktienanzahl für Earnings per Share\n- Dividiert durch 10% für fairen Wert\n- Buy Price enthält bereits 50% Sicherheitsmarge",
@@ -366,10 +378,10 @@
     
     "ratios_title": "Ratios",
     "ratios_description": "Here you can calculate various financial ratios.",
-    
-    "dcf_lite_title": "DCF (current value)",
-    "dcf_lite_description": "Fetches the current DCF value (unlevered) for a ticker.",
-    "get_dcf_analysis": "Get DCF Analysis", 
+
+    "dcf_fmp_title": "DCF",
+    "dcf_fmp_description": "Fetches the current DCF value (unlevered) for a ticker.",
+    "get_dcf_analysis": "Get DCF Analysis",
     "fetching_dcf_data": "Fetching DCF data for {}...",
     "dcf_analysis_completed": "DCF analysis completed for {}",
     "dcf_value": "DCF Value",
@@ -407,12 +419,24 @@
     "mos_how_it_works": "- Projects EPS growth over 10 years\n- Calculates future value with dynamic P/E ratio\n- Discounts to present value (15% discount rate)\n- Applies safety margin (typically 25-50%)",
     "mos_when_to_use": "- For value investing strategies\n- When you want to invest conservatively\n- For long-term investments\n- During uncertain market phases",
     "mos_formula_explanation": "Where the P/E ratio is dynamically calculated from the growth rate (growth_rate × 200) and a 15% discount rate is used.",
-     
-    "dcf_method_title": "Discounted Cash Flow (DCF)",
-    "dcf_description": "DCF values a company based on its future cash flows, discounted to present value.",
-    "dcf_how_it_works": "- Forecasts future free cash flows\n- Discounts them to present value\n- Considers growth rates and risk",
-    "dcf_when_to_use": "- For mature companies with stable cash flows\n- For long-term valuation\n- When you prefer fundamental analysis\n- For dividend stocks",
-    "dcf_formula_explanation": "Where FCF = Free Cash Flow, r = discount rate, t = years",
+
+    "dcf_fmp_method_title": "DCF - FMP Valuation",
+    "dcf_fmp_method_description": "Quick DCF analysis using Financial Modeling Prep's current valuations.",
+    "dcf_fmp_how_it_works": "- Fetches current DCF valuation directly from FMP\n- Uses professional-grade financial models\n- Applies your custom Margin of Safety\n- Compares with current market price\n- Provides immediate investment recommendation",
+    "dcf_fmp_when_to_use": "- Quick valuation checks\n- When you want professional analysis\n- Cross-checking your own calculations\n- Time-sensitive investment decisions\n- Getting market consensus view",
+    "dcf_fmp_formula_explanation": "Simple and fast: Uses external DCF calculation with your safety margin.",
+
+    "dcf_unlevered_method_title": "Unlevered DCF (FCFF) - Enterprise Valuation",
+    "dcf_unlevered_method_description": "Free Cash Flow to Firm - values the entire company before considering debt structure.",
+    "dcf_unlevered_how_it_works": "- Calculates Free Cash Flow to Firm (FCFF)\n- FCFF = EBIT × (1 - Tax Rate) + Depreciation - CapEx - ΔNWC\n- Projects FCFF growth over forecast period\n- Discounts with WACC (Weighted Average Cost of Capital)\n- Subtracts net debt to get equity value",
+    "dcf_unlevered_when_to_use": "- Comprehensive enterprise valuation\n- Comparing companies with different capital structures\n- M&A analysis and enterprise transactions\n- When debt levels are significant\n- Professional investment analysis",
+    "dcf_unlevered_formula_explanation": "Most comprehensive: Full enterprise analysis considering all stakeholders.",
+
+    "dcf_levered_method_title": "Levered DCF (FCFE) - Direct Equity Valuation",
+    "dcf_levered_method_description": "Free Cash Flow to Equity - values equity directly, including debt effects.",
+    "dcf_levered_how_it_works": "- Calculates Free Cash Flow to Equity (FCFE)\n- FCFE = Operating Cash Flow - CapEx + Net Borrowing\n- Projects FCFE growth over forecast period\n- Discounts with Cost of Equity (no WACC needed)\n- Direct equity valuation per share",
+    "dcf_levered_when_to_use": "- Direct equity investment decisions\n- When debt structure is stable\n- Simpler than unlevered DCF\n- Focus on shareholder value\n- Dividend discount model alternative",
+    "dcf_levered_formula_explanation": "Equity-focused: Direct valuation of shareholder claims with debt effects included.",
     
     "tencap_method_title": "Ten Cap Analysis",
     "tencap_description": "TEN CAP calculates fair value based on Owner Earnings (adjusted profits) with a 10% return expectation.",

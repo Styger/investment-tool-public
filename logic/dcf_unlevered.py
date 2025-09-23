@@ -50,6 +50,21 @@ def _terminal_value_gordon(last_fcff, wacc, perp_growth):
     return last_fcff * (1.0 + g) / (wacc - g)
 
 
+def _get_investment_recommendation(current_price, fair_value, buy_price):
+    """Gibt eine Investitionsempfehlung basierend auf den Preisvergleichen."""
+    if current_price is None or current_price <= 0:
+        return "No price data available"
+
+    if current_price <= buy_price:
+        return "Strong Buy (Below MOS price)"
+    elif current_price <= fair_value:
+        return "Buy (Below fair value)"
+    elif current_price <= fair_value * 1.1:
+        return "Hold (Near fair value)"
+    else:
+        return "Avoid (Overvalued)"
+
+
 # -----------------------------
 # Data collection
 # -----------------------------
@@ -140,7 +155,8 @@ def dcf_unlevered(
     tax_rate=None,
     mid_year=True,
     shares_override=None,
-    base_year=None,  # <-- NEW: compute “as of” this fiscal year
+    base_year=None,
+    mos_percent=0.25,  # NEW: MOS parameter
 ):
     base = _fetch_financials(ticker, base_year=base_year)
     if base.get("EBIT") is None:
@@ -183,6 +199,44 @@ def dcf_unlevered(
     shares = shares_override if shares_override else (base.get("shares") or 0.0)
     fair_value_per_share = (equity_value / shares) if shares > 0 else None
 
+    # NEW: Calculate buy price with MOS
+    buy_price_per_share = (
+        (fair_value_per_share * (1 - mos_percent)) if fair_value_per_share else None
+    )
+
+    # NEW: Get current stock price and calculate comparisons
+    current_price = None
+    price_vs_fair = None
+    price_vs_buy = None
+    investment_recommendation = None
+
+    try:
+        current_price = fmp.get_current_price(ticker)
+
+        if current_price and fair_value_per_share:
+            # Fair Value Vergleich
+            fair_ratio = (current_price / fair_value_per_share - 1) * 100
+            if fair_ratio > 0:
+                price_vs_fair = f"Overvalued by {fair_ratio:.1f}%"
+            else:
+                price_vs_fair = f"Undervalued by {abs(fair_ratio):.1f}%"
+
+            # Buy Price Vergleich
+            if buy_price_per_share:
+                buy_ratio = (current_price / buy_price_per_share - 1) * 100
+                if buy_ratio > 0:
+                    price_vs_buy = f"Above buy price by {buy_ratio:.1f}%"
+                else:
+                    price_vs_buy = f"Below buy price by {abs(buy_ratio):.1f}%"
+
+            # Investment Empfehlung
+            investment_recommendation = _get_investment_recommendation(
+                current_price, fair_value_per_share, buy_price_per_share
+            )
+
+    except Exception as e:
+        print(f"Could not fetch current price for {ticker}: {e}")
+
     return {
         "ticker": ticker.upper(),
         "as_of": base.get("asOf"),
@@ -194,6 +248,7 @@ def dcf_unlevered(
         "tax_rate_used": tr,
         "forecast_years": forecast_years,
         "mid_year": bool(mid_year),
+        "mos_percent": mos_percent,  # NEW
         "EBIT": base["EBIT"],
         "depreciation": base["depreciation"],
         "capex": base["capex"],
@@ -211,6 +266,11 @@ def dcf_unlevered(
         "equity_value": equity_value,
         "shares": shares,
         "fair_value_per_share": fair_value_per_share,
+        "buy_price_per_share": buy_price_per_share,  # NEW
+        "current_stock_price": current_price,  # NEW
+        "price_vs_fair": price_vs_fair,  # NEW
+        "price_vs_buy": price_vs_buy,  # NEW
+        "investment_recommendation": investment_recommendation,  # NEW
     }
 
 
@@ -223,8 +283,8 @@ def _print_dcf_unlevered(
     tax_rate=None,
     mid_year=True,
     shares_override=None,
-    mos_percent=0.5,
-    base_year=None,  # <-- NEW
+    mos_percent=0.25,
+    base_year=None,
 ):
     r = dcf_unlevered(
         ticker=ticker,
@@ -236,6 +296,7 @@ def _print_dcf_unlevered(
         mid_year=mid_year,
         shares_override=shares_override,
         base_year=base_year,
+        mos_percent=mos_percent,
     )
 
     print(
@@ -260,15 +321,26 @@ def _print_dcf_unlevered(
     print(f"Enterprise Value (EV):  {r['enterprise_value']:,.0f} {r['currency']}")
     print(f"Net Debt:               {r['net_debt']:,.0f} {r['currency']}")
     print(f"Equity Value:           {r['equity_value']:,.0f} {r['currency']}")
+
     if r["shares"] > 0 and r["fair_value_per_share"] is not None:
         fv = r["fair_value_per_share"]
+        buy = r["buy_price_per_share"]
         print(f"Shares (diluted):       {r['shares']:,.0f}")
         print(f"Fair Value / Share:     {fv:,.2f} {r['currency']}")
-        if mos_percent is not None:
-            buy = fv * (1.0 - mos_percent)
+        print(
+            f"Buy Price ({int(r['mos_percent'] * 100)}% MOS): {buy:,.2f} {r['currency']}"
+        )
+
+        if r["current_stock_price"]:
             print(
-                f"MOS ({int(mos_percent * 100)}%) Buy Price: {buy:,.2f} {r['currency']}"
+                f"Current Stock Price:    {r['current_stock_price']:,.2f} {r['currency']}"
             )
+            if r["price_vs_fair"]:
+                print(f"vs Fair Value:          {r['price_vs_fair']}")
+            if r["price_vs_buy"]:
+                print(f"vs Buy Price:           {r['price_vs_buy']}")
+            if r["investment_recommendation"]:
+                print(f"Recommendation:         {r['investment_recommendation']}")
     print()
 
 
@@ -282,6 +354,6 @@ if __name__ == "__main__":
         tax_rate=None,
         mid_year=True,
         shares_override=None,
-        mos_percent=0.5,
-        base_year=2024,  # <--- setze None für "letztes verfügbares Jahr"
+        mos_percent=0.25,
+        base_year=2024,
     )

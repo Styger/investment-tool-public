@@ -52,18 +52,71 @@ def show_info():
         st.header(f"💰 {get_text('dcf_method_title')}")
         st.markdown(get_text("dcf_description"))
 
-        col1, col2 = st.columns(2)
-        with col1:
-            st.subheader(get_text("how_it_works"))
-            st.markdown(get_text("dcf_how_it_works"))
+        # Sub-tabs for the three DCF methods
+        dcf_tab1, dcf_tab2, dcf_tab3 = st.tabs(
+            ["📊 DCF fmp", "🏭 Unlevered (FCFF)", "🏦 Levered (FCFE)"]
+        )
 
-        with col2:
-            st.subheader(get_text("when_to_use"))
-            st.markdown(get_text("dcf_when_to_use"))
+        with dcf_tab1:
+            st.subheader(f"📊 {get_text('dcf_fmp_method_title')}")
+            st.markdown(get_text("dcf_fmp_method_description"))
 
-        st.subheader(get_text("formula"))
-        st.latex(r"DCF = \sum_{t=1}^{n} \frac{FCF_t}{(1 + r)^t}")
-        st.markdown(get_text("dcf_formula_explanation"))
+            col1, col2 = st.columns(2)
+            with col1:
+                st.subheader(get_text("how_it_works"))
+                st.markdown(get_text("dcf_fmp_how_it_works"))
+
+            with col2:
+                st.subheader(get_text("when_to_use"))
+                st.markdown(get_text("dcf_fmp_when_to_use"))
+
+            st.subheader(get_text("formula"))
+            st.latex(r"Buy\_Price = FMP\_DCF \times (1 - MOS\_Rate)")
+            st.markdown(get_text("dcf_fmp_formula_explanation"))
+
+        with dcf_tab2:
+            st.subheader(f"🏭 {get_text('dcf_unlevered_method_title')}")
+            st.markdown(get_text("dcf_unlevered_method_description"))
+
+            col1, col2 = st.columns(2)
+            with col1:
+                st.subheader(get_text("how_it_works"))
+                st.markdown(get_text("dcf_unlevered_how_it_works"))
+
+            with col2:
+                st.subheader(get_text("when_to_use"))
+                st.markdown(get_text("dcf_unlevered_when_to_use"))
+
+            st.subheader(get_text("formula"))
+            st.latex(r"FCFF = EBIT \times (1 - Tax) + D\&A - CapEx - \Delta NWC")
+            st.latex(
+                r"Enterprise\_Value = \sum_{t=1}^{n} \frac{FCFF_t}{(1 + WACC)^t} + \frac{Terminal\_Value}{(1 + WACC)^n}"
+            )
+            st.latex(r"Equity\_Value = Enterprise\_Value - Net\_Debt")
+            st.markdown(get_text("dcf_unlevered_formula_explanation"))
+
+        with dcf_tab3:
+            st.subheader(f"🏦 {get_text('dcf_levered_method_title')}")
+            st.markdown(get_text("dcf_levered_method_description"))
+
+            col1, col2 = st.columns(2)
+            with col1:
+                st.subheader(get_text("how_it_works"))
+                st.markdown(get_text("dcf_levered_how_it_works"))
+
+            with col2:
+                st.subheader(get_text("when_to_use"))
+                st.markdown(get_text("dcf_levered_when_to_use"))
+
+            st.subheader(get_text("formula"))
+            st.latex(r"FCFE = CFO - CapEx + Net\_Borrowing")
+            st.latex(
+                r"Equity\_Value = \sum_{t=1}^{n} \frac{FCFE_t}{(1 + Cost\_of\_Equity)^t} + \frac{Terminal\_Value}{(1 + Cost\_of\_Equity)^n}"
+            )
+            st.latex(
+                r"Fair\_Value\_per\_Share = \frac{Equity\_Value}{Shares\_Outstanding}"
+            )
+            st.markdown(get_text("dcf_levered_formula_explanation"))
 
     with tab3:
         st.header(f"🔟 {get_text('tencap_method_title')}")

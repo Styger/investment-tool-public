@@ -1,17 +1,27 @@
 import streamlit as st
+import streamlit_modules.config
 
 
 def load_user_credentials():
     """Load user credentials from Streamlit secrets"""
-    try:
-        if hasattr(st, "secrets") and "users" in st.secrets:
-            return dict(st.secrets["users"])
-        else:
-            st.error("No user configuration found.")
-            return {}
-    except Exception as e:
-        st.error(f"Error loading authentication: {str(e)}")
+    if not hasattr(st, "secrets") or "users" not in st.secrets:
         return {}
+    return dict(st.secrets["users"])
+
+
+def load_user_credentials_eafp():
+    """Load user credentials from Streamlit secrets"""
+    if not hasattr(st, "secrets") or "users" not in st.secrets:
+        raise Exception("No user credentials found")
+    return dict(st.secrets["users"])
+
+
+def load_user_credentials_3():
+    """Load user credentials from Streamlit secrets"""
+    if not hasattr(st, "secrets") or "users" not in st.secrets:
+        st.warning("No user credentials found in secrets. Authentication disabled.")
+        return
+    return dict(st.secrets["users"])
 
 
 def simple_auth():
@@ -20,54 +30,54 @@ def simple_auth():
         st.session_state["authenticated"] = False
         st.session_state["username"] = None
 
-    if not st.session_state["authenticated"]:
-        st.title("Investment Tool - Login")
-        st.write("Bitte melden Sie sich an, um fortzufahren.")
+    if st.session_state["authenticated"]:
+        return True
 
-        col1, col2 = st.columns(2)
-        with col1:
-            username = st.text_input("Username", key="login_user")
-        with col2:
-            password = st.text_input("Password", type="password", key="login_pass")
+    st.title("Investment Tool - Login")
+    st.write("Bitte melden Sie sich an, um fortzufahren.")
 
-        if st.button("Login", key="login_button"):
-            valid_users = load_user_credentials()
+    col1, col2 = st.columns(2)
+    with col1:
+        username = st.text_input("Username", key="login_user")
+    with col2:
+        password = st.text_input("Password", type="password", key="login_pass")
 
-            if not valid_users:
-                st.error("System configuration error. Please contact administrator.")
-                return False
+    if st.button("Login", key="login_button"):
+        valid_users = load_user_credentials()
 
-            if username in valid_users and valid_users[username] == password:
-                st.session_state["authenticated"] = True
-                st.session_state["username"] = username
-                st.success("Erfolgreich angemeldet!")
+        if not valid_users:
+            st.error("System configuration error. Please contact administrator.")
+            return False
+        if username not in valid_users or valid_users[username] != password:
+            st.error("Falscher Username oder Passwort")
+            return False
 
-                # Import NACH dem Setzen des usernames
-                from streamlit_modules.config import reload_user_config
+        st.session_state["authenticated"] = True
+        st.session_state["username"] = username
+        st.success("Erfolgreich angemeldet!")
 
-                reload_user_config()
+        # Import NACH dem Setzen des usernames
 
-                st.rerun()
-            else:
-                st.error("Falscher Username oder Passwort")
+        streamlit_modules.config.reload_user_config()
 
-        return False
-    return True
+        st.rerun()
+
+    return False
 
 
 def show_logout():
     """Logout-Button in der Sidebar"""
-    if st.session_state.get("authenticated", False):
-        st.sidebar.write(
-            f"Angemeldet als: **{st.session_state.get('username', 'User')}**"
-        )
-        if st.sidebar.button("Logout", key="logout_button"):
-            st.session_state["authenticated"] = False
-            st.session_state["username"] = None
+    if st.session_state.get("authenticated", True):
+        return
 
-            # Import und Aufruf nach dem Zurücksetzen
-            from streamlit_modules.config import reload_user_config
+    st.sidebar.write(f"Angemeldet als: **{st.session_state.get('username', 'User')}**")
+    if st.sidebar.button("Logout", key="logout_button"):
+        st.session_state["authenticated"] = False
+        st.session_state["username"] = None
 
-            reload_user_config()
+        # Import und Aufruf nach dem Zurücksetzen
+        from streamlit_modules.config import reload_user_config
 
-            st.rerun()
+        reload_user_config()
+
+        st.rerun()
