@@ -182,6 +182,9 @@
     "mos_when_to_use": "- Bei Value-Investing Strategien\n- Wenn Sie konservativ investieren möchten\n- Für langfristige Investments\n- Bei unsicheren Marktphasen",
     "mos_formula_explanation": "Wobei das P/E-Ratio dynamisch aus der Wachstumsrate berechnet wird (growth_rate × 200) und eine 15% Diskontrate verwendet wird.",
 
+    "dcf_method_title": "Discounted Cash Flow (DCF)",
+    "dcf_description": "DCF bewertet eine Aktie basierend auf ihren projizierten freien Cashflows, die auf den Gegenwartswert mit dem gewichteten durchschnittlichen Kapitalkostensatz (WACC) des Unternehmens abgezinst werden.",
+
     "dcf_fmp_method_title": "DCF - FMP Bewertung",
     "dcf_fmp_method_description": "Schnelle DCF-Analyse mit Financial Modeling Prep's aktuellen Bewertungen.",
     "dcf_fmp_how_it_works": "- Holt aktuelle DCF-Bewertung direkt von FMP\n- Verwendet professionelle Finanzmodelle\n- Wendet Ihre individuelle Sicherheitsmarge an\n- Vergleicht mit aktuellem Marktpreis\n- Liefert sofortige Investitionsempfehlung",
@@ -419,6 +422,9 @@
     "mos_how_it_works": "- Projects EPS growth over 10 years\n- Calculates future value with dynamic P/E ratio\n- Discounts to present value (15% discount rate)\n- Applies safety margin (typically 25-50%)",
     "mos_when_to_use": "- For value investing strategies\n- When you want to invest conservatively\n- For long-term investments\n- During uncertain market phases",
     "mos_formula_explanation": "Where the P/E ratio is dynamically calculated from the growth rate (growth_rate × 200) and a 15% discount rate is used.",
+
+    "dcf_method_title": "Discounted Cash Flow (DCF)",
+    "dcf_description": "DCF values a stock based on its projected free cash flows, discounted to present value using the company's weighted average cost of capital (WACC).",
 
     "dcf_fmp_method_title": "DCF - FMP Valuation",
     "dcf_fmp_method_description": "Quick DCF analysis using Financial Modeling Prep's current valuations.",
