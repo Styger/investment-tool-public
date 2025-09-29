@@ -1,0 +1,24 @@
+# Erstelle und wechsle zum dev Branch
+git checkout -b dev
+
+# Pushe den Branch zum Remote Repository
+git push -u origin dev
+
+
+# Auf dev Branch arbeiten
+git checkout dev
+
+# Änderungen machen, dann committen
+git add .
+git commit -m "Deine Änderung"
+git push origin dev
+
+
+# Wechsle zu main
+git checkout main
+
+# Merge dev in main
+git merge dev
+
+# Pushe main (triggert dann dein Hosting)
+git push origin main
