@@ -57,7 +57,12 @@
     "analyzing": "Analysiere {}...",
     "analysis_completed": "Analyse für {} abgeschlossen",
     "no_output_generated": "Keine Ausgabe generiert. Prüfen Sie, ob der Ticker existiert.",
-    
+    "checkbox_revenue": "Umsatz pro Aktie",
+    "checkbox_eps": "Gewinn pro Aktie",
+    "checkbox_book": "Buchwert pro Aktie",
+    "checkbox_cashflow": "Cashflow pro Aktie",
+    "select_metrics": "Metriken auswählen:",
+
     "mos_title": "MOS-Berechnung",
     "mos_description": "Berechnet den inneren Wert einer Aktie basierend auf dem MOS-Prinzip.",
     "run_mos_analysis": "MOS-Analyse starten",
@@ -297,7 +302,12 @@
     "analyzing": "Analyzing {}...",
     "analysis_completed": "Analysis completed for {}",
     "no_output_generated": "No output generated. Check if ticker exists.",
-    
+    "checkbox_revenue": "Revenue per Share",
+    "checkbox_eps": "Earnings per Share",
+    "checkbox_book": "Book Value per Share",
+    "checkbox_cashflow": "Cash Flow per Share",
+    "select_metrics": "Select Metrics:",
+
     "mos_title": "MOS Calculation",
     "mos_description": "Calculates the intrinsic value of a stock based on the MOS principle.",
     "run_mos_analysis": "Run MOS Analysis",
