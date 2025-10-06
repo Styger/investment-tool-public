@@ -150,7 +150,7 @@ def show_pbt_analysis():
                                 get_text("fair_value_8y")
                             ].apply(lambda x: f"${x:,.2f}" if pd.notna(x) else "")
 
-                        st.dataframe(df, use_container_width=True)
+                        st.dataframe(df, width="stretch")
 
                 except Exception as e:
                     st.error(get_text("pbt_analysis_failed").format(str(e)))
