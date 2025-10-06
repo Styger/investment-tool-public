@@ -67,7 +67,7 @@ def simple_auth():
 
 def show_logout():
     """Logout-Button in der Sidebar"""
-    if st.session_state.get("authenticated", True):
+    if not st.session_state.get("authenticated", False):  # ← FIX
         return
 
     st.sidebar.write(f"Angemeldet als: **{st.session_state.get('username', 'User')}**")
@@ -76,8 +76,8 @@ def show_logout():
         st.session_state["username"] = None
 
         # Import und Aufruf nach dem Zurücksetzen
-        from streamlit_modules.config import reload_user_config
+        from . import config
 
-        reload_user_config()
+        config.reload_user_config()
 
         st.rerun()
