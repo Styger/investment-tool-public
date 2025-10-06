@@ -26,6 +26,12 @@ def load_user_credentials_3():
 
 def simple_auth():
     """Einfache Session-basierte Authentifizierung mit Streamlit Secrets"""
+
+    # Debug-Output
+    st.sidebar.write(
+        f"🐛 Auth Status: {st.session_state.get('authenticated', 'NOT SET')}"
+    )
+
     if "authenticated" not in st.session_state:
         st.session_state["authenticated"] = False
         st.session_state["username"] = None
@@ -52,15 +58,12 @@ def simple_auth():
             st.error("Falscher Username oder Passwort")
             return False
 
+        # Setze Session State und rerun SOFORT
         st.session_state["authenticated"] = True
         st.session_state["username"] = username
-        st.success("Erfolgreich angemeldet!")
-
-        # Import NACH dem Setzen des usernames
-
         config.reload_user_config()
-
         st.rerun()
+        # KEIN Code nach st.rerun()!
 
     return False
 
