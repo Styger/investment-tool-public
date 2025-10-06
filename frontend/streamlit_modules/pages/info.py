@@ -2,15 +2,6 @@ import streamlit as st
 from ..config import get_text
 
 
-# Page configuration
-st.set_page_config(
-    page_title="Stock Analysis Tool",
-    page_icon="📈",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
-
-
 def show_info():
     """Info page explaining all analysis methods"""
     st.title(f"💡 {get_text('info_page_title')}")
