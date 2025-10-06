@@ -30,7 +30,7 @@ st.set_page_config(
 def main():
     """Main application with simple authentication"""
 
-    USE_AUTH = True  # Set to False to disable authentication
+    USE_AUTH = True
 
     if USE_AUTH:
         if not simple_auth():
@@ -39,7 +39,6 @@ def main():
 
     load_app_config()
 
-    # Sidebar navigation
     st.sidebar.title(f"📈 {get_text('window_title')}")
 
     analysis_modes = {
@@ -63,11 +62,7 @@ def main():
     st.sidebar.markdown(f"### {get_text('about')}")
     st.sidebar.info(get_text("about_description"))
 
-    # Run selected analysis
     analysis_modes[selected_mode]()
-
-    if selected_mode != get_text("settings_title"):
-        save_persistence_data()
 
 
 if __name__ == "__main__":
