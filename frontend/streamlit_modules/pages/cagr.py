@@ -168,7 +168,7 @@ def show_cagr_analysis():
 
                         if data_rows:
                             df = pd.DataFrame(data_rows)
-                            st.dataframe(df, use_container_width=True)
+                            st.dataframe(df, width="stretch")
                         else:
                             st.text(output)
                     else:

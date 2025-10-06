@@ -224,9 +224,9 @@ def show_info():
                 lambda x: x.astype(str).str.contains(search_term, case=False, na=False)
             ).any(axis=1)
             df_filtered = df[mask]
-            st.dataframe(df_filtered, use_container_width=True, hide_index=True)
+            st.dataframe(df_filtered, width="stretch", hide_index=True)
         else:
-            st.dataframe(df, use_container_width=True, hide_index=True)
+            st.dataframe(df, width="stretch", hide_index=True)
 
     with tab7:
         st.header(f"💡 {get_text('usage_guide_title')}")

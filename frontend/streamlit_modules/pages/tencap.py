@@ -261,7 +261,7 @@ def show_tencap_analysis():
 
                             # Tabelle für alle Fälle anzeigen
                             df = pd.DataFrame(results)
-                            st.dataframe(df, use_container_width=True)
+                            st.dataframe(df, width="stretch")
 
                             # Zusätzliche Info bei Multi-Year
                             if multi_year and current_price_data:
