@@ -1,7 +1,26 @@
+import sys
+from pathlib import Path
+
+# Füge das Projektverzeichnis zum Python Path hinzu
+project_root = Path(__file__).parent
+sys.path.insert(0, str(project_root))
+
 import streamlit as st
-from streamlit_modules.auth import simple_auth, show_logout
-from streamlit_modules.config import load_app_config, get_text, save_persistence_data
-from streamlit_modules.pages import cagr, mos, pbt, tencap, dcf, settings, info
+from frontend.streamlit_modules.auth import simple_auth, show_logout
+from frontend.streamlit_modules.config import (
+    load_app_config,
+    get_text,
+    save_persistence_data,
+)
+from frontend.streamlit_modules.pages import (
+    cagr,
+    mos,
+    pbt,
+    tencap,
+    dcf,
+    settings,
+    info,
+)
 
 # Page configuration
 st.set_page_config(

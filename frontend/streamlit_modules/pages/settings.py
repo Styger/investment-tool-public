@@ -1,7 +1,7 @@
 import streamlit as st
 from ..config import get_text, change_language
-import utils.config_load as config_load
-from utils.user_preferences import save_user_persistence
+import backend.utils.config_load as config_load
+from backend.utils.user_preferences import save_user_persistence
 
 
 def show_settings_page():

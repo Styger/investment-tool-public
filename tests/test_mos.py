@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
-import logic.mos
+import backend.logic.mos
 
 # Annahme: Der Hauptcode ist in einem Modul namens 'mos_calculator'
 # from mos_calculator import calculate_mos_value_from_ticker, _get_investment_recommendation
@@ -33,7 +33,7 @@ class TestMOSValueCalculator:
         mock_current_price.return_value = sample_data["current_price"]
 
         # Act
-        result = logic.mos.calculate_mos_value_from_ticker(
+        result = backend.logic.mos.calculate_mos_value_from_ticker(
             ticker=sample_data["ticker"],
             year=sample_data["year"],
             growth_rate=sample_data["growth_rate"],
@@ -61,7 +61,7 @@ class TestMOSValueCalculator:
         mock_current_price.return_value = 150.00
 
         # Act
-        result = logic.mos.calculate_mos_value_from_ticker(
+        result = backend.logic.mos.calculate_mos_value_from_ticker(
             ticker="INVALID", year=2024, growth_rate=0.10
         )
 
@@ -81,7 +81,7 @@ class TestMOSValueCalculator:
         mock_current_price.return_value = 50.00
 
         # Act
-        result = logic.mos.calculate_mos_value_from_ticker(
+        result = backend.logic.mos.calculate_mos_value_from_ticker(
             ticker="LOSS", year=2024, growth_rate=0.10
         )
 
@@ -101,7 +101,7 @@ class TestMOSValueCalculator:
         mock_current_price.side_effect = Exception("API Error")
 
         # Act
-        result = logic.mos.calculate_mos_value_from_ticker(
+        result = backend.logic.mos.calculate_mos_value_from_ticker(
             ticker="AAPL", year=2024, growth_rate=0.10
         )
 
@@ -123,10 +123,10 @@ class TestMOSValueCalculator:
         mock_current_price.return_value = 150.00
 
         # Act
-        result_25 = logic.mos.calculate_mos_value_from_ticker(
+        result_25 = backend.logic.mos.calculate_mos_value_from_ticker(
             ticker="AAPL", year=2024, growth_rate=0.10, margin_of_safety=0.25
         )
-        result_75 = logic.mos.calculate_mos_value_from_ticker(
+        result_75 = backend.logic.mos.calculate_mos_value_from_ticker(
             ticker="AAPL", year=2024, growth_rate=0.10, margin_of_safety=0.75
         )
 
@@ -154,7 +154,7 @@ class TestMOSValueCalculator:
         mock_current_price.return_value = 100.0
 
         # Act
-        result = logic.mos.calculate_mos_value_from_ticker("TEST", 2024, 0.10)
+        result = backend.logic.mos.calculate_mos_value_from_ticker("TEST", 2024, 0.10)
 
         # Assert
         if expected_zero_values:
@@ -183,7 +183,7 @@ class TestInvestmentRecommendation:
         self, current_price, fair_value, mos_price, expected
     ):
         """Parametrisierter Test für alle Investitionsempfehlungen"""
-        result = logic.mos._get_investment_recommendation(
+        result = backend.logic.mos._get_investment_recommendation(
             current_price, fair_value, mos_price
         )
         assert result == expected
@@ -201,7 +201,7 @@ class TestEdgeCases:
         mock_current_price.return_value = 100.0
 
         # Act
-        result = logic.mos.calculate_mos_value_from_ticker(
+        result = backend.logic.mos.calculate_mos_value_from_ticker(
             "AAPL", 2024, growth_rate=0.0
         )
 
@@ -218,7 +218,7 @@ class TestEdgeCases:
         mock_current_price.return_value = 100.0
 
         # Act
-        result = logic.mos.calculate_mos_value_from_ticker(
+        result = backend.logic.mos.calculate_mos_value_from_ticker(
             "GROWTH", 2024, growth_rate=0.50
         )
 
@@ -246,7 +246,7 @@ class TestEdgeCases:
         mock_current_price.return_value = 100.0
 
         # Act
-        result = logic.mos.calculate_mos_value_from_ticker(
+        result = backend.logic.mos.calculate_mos_value_from_ticker(
             "TEST", 2024, growth_rate=growth_rate
         )
 
@@ -307,7 +307,7 @@ class TestIntegration:
         mock_current_price.return_value = 50.0  # Niedrig im Vergleich zu fair value
 
         # Act
-        result = logic.mos.calculate_mos_value_from_ticker(
+        result = backend.logic.mos.calculate_mos_value_from_ticker(
             "CHEAP", 2024, 0.10, 0.15, 0.30
         )
 

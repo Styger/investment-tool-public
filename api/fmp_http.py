@@ -1,6 +1,6 @@
 # api/fmp_http.py
 import requests
-from utils.config_load import load_config
+from backend.utils.config_load import load_config
 
 
 def get_api_key():

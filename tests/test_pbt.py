@@ -2,7 +2,7 @@
 import pytest
 import math
 from unittest.mock import patch
-import logic.pbt
+import backend.logic.pbt
 
 # Import der zu testenden Module
 # from logic.pbt import calculate_pbt_from_ticker, _calculate_pbt_price, _get_investment_recommendation
@@ -22,7 +22,7 @@ class TestPBTCore:
         expected_price = round(expected_price, 2)
 
         # Act
-        price, table = logic.pbt._calculate_pbt_price(
+        price, table = backend.logic.pbt._calculate_pbt_price(
             fcf, growth, return_full_table=True
         )
 
@@ -38,7 +38,7 @@ class TestPBTCore:
         growth = 0.10
 
         # Act
-        price, table = logic.pbt._calculate_pbt_price(
+        price, table = backend.logic.pbt._calculate_pbt_price(
             fcf, growth, return_full_table=True
         )
 
@@ -69,7 +69,7 @@ class TestPBTCore:
         growth = 0.15
 
         # Act
-        price, table = logic.pbt._calculate_pbt_price(
+        price, table = backend.logic.pbt._calculate_pbt_price(
             fcf, growth, return_full_table=False
         )
 
@@ -89,7 +89,9 @@ class TestPBTCore:
     def test_calculate_pbt_price_different_scenarios(self, fcf, growth, expected_min):
         """Parametrisierter Test für verschiedene FCF/Wachstum-Szenarien"""
         # Act
-        price, _ = logic.pbt._calculate_pbt_price(fcf, growth, return_full_table=False)
+        price, _ = backend.logic.pbt._calculate_pbt_price(
+            fcf, growth, return_full_table=False
+        )
 
         # Assert - Preis sollte mindestens expected_min sein
         assert price >= expected_min
@@ -135,16 +137,20 @@ class TestPBTFromTicker:
         mos = 0.25
 
         # Erwarteter Preis aus _calculate_pbt_price für fcf=5.0
-        expected_fair_value, _ = logic.pbt._calculate_pbt_price(5.0, growth, False)
+        expected_fair_value, _ = backend.logic.pbt._calculate_pbt_price(
+            5.0, growth, False
+        )
         expected_buy_price = expected_fair_value * (1 - mos)
 
         # Act
-        fair_value, buy_price, table, price_info = logic.pbt.calculate_pbt_from_ticker(
-            ticker="AAPL",
-            year=2024,
-            growth_estimate=growth,
-            margin_of_safety=mos,
-            return_full_table=True,
+        fair_value, buy_price, table, price_info = (
+            backend.logic.pbt.calculate_pbt_from_ticker(
+                ticker="AAPL",
+                year=2024,
+                growth_estimate=growth,
+                margin_of_safety=mos,
+                return_full_table=True,
+            )
         )
 
         # Assert
@@ -175,7 +181,7 @@ class TestPBTFromTicker:
         with pytest.raises(
             ValueError, match=r"Kein FCF pro Aktie für Jahr 2024 gefunden"
         ):
-            logic.pbt.calculate_pbt_from_ticker(
+            backend.logic.pbt.calculate_pbt_from_ticker(
                 ticker="MISSING", year=2024, growth_estimate=0.15
             )
 
@@ -190,8 +196,10 @@ class TestPBTFromTicker:
         mock_current_price.side_effect = Exception("API Error")
 
         # Act
-        fair_value, buy_price, table, price_info = logic.pbt.calculate_pbt_from_ticker(
-            ticker="AAPL", year=2024, growth_estimate=0.15
+        fair_value, buy_price, table, price_info = (
+            backend.logic.pbt.calculate_pbt_from_ticker(
+                ticker="AAPL", year=2024, growth_estimate=0.15
+            )
         )
 
         # Assert
@@ -212,8 +220,10 @@ class TestPBTFromTicker:
         mock_current_price.return_value = 150.0
 
         # Act
-        fair_value, buy_price, table, price_info = logic.pbt.calculate_pbt_from_ticker(
-            ticker="AAPL", year=2024, growth_estimate=0.1, return_full_table=False
+        fair_value, buy_price, table, price_info = (
+            backend.logic.pbt.calculate_pbt_from_ticker(
+                ticker="AAPL", year=2024, growth_estimate=0.1, return_full_table=False
+            )
         )
 
         # Assert
@@ -246,8 +256,10 @@ class TestPBTFromTicker:
         mock_current_price.return_value = 100.0
 
         # Act
-        fair_value, buy_price, _, price_info = logic.pbt.calculate_pbt_from_ticker(
-            ticker="AAPL", year=2024, growth_estimate=0.1, margin_of_safety=mos
+        fair_value, buy_price, _, price_info = (
+            backend.logic.pbt.calculate_pbt_from_ticker(
+                ticker="AAPL", year=2024, growth_estimate=0.1, margin_of_safety=mos
+            )
         )
 
         # Assert
@@ -274,7 +286,7 @@ class TestInvestmentRecommendation:
         self, current_price, fair_value, buy_price, expected
     ):
         """Parametrisierter Test für alle Investitionsempfehlungen"""
-        result = logic.pbt._get_investment_recommendation(
+        result = backend.logic.pbt._get_investment_recommendation(
             current_price, fair_value, buy_price
         )
         assert result == expected
@@ -286,7 +298,7 @@ class TestInvestmentRecommendation:
         buy_price = 75.0
         current_price = 110.0  # Exakt 10% über fair value
 
-        result = logic.pbt._get_investment_recommendation(
+        result = backend.logic.pbt._get_investment_recommendation(
             current_price, fair_value, buy_price
         )
         assert result == "Hold (Near fair value)"
@@ -302,7 +314,7 @@ class TestEdgeCases:
         growth = 0.0
 
         # Act
-        price, table = logic.pbt._calculate_pbt_price(
+        price, table = backend.logic.pbt._calculate_pbt_price(
             fcf, growth, return_full_table=True
         )
 
@@ -322,7 +334,9 @@ class TestEdgeCases:
         growth = 0.50  # 50% Wachstum
 
         # Act
-        price, _ = logic.pbt._calculate_pbt_price(fcf, growth, return_full_table=False)
+        price, _ = backend.logic.pbt._calculate_pbt_price(
+            fcf, growth, return_full_table=False
+        )
 
         # Assert - Bei 50% Wachstum sollte der Wert deutlich höher sein als bei 0%
         zero_growth_price = 8.0  # 8 Jahre à 1.0
@@ -339,7 +353,7 @@ class TestEdgeCases:
         growth = 0.10
 
         # Act
-        price, table = logic.pbt._calculate_pbt_price(
+        price, table = backend.logic.pbt._calculate_pbt_price(
             fcf, growth, return_full_table=True
         )
 
@@ -366,7 +380,7 @@ class TestEdgeCases:
 
         # Act & Assert - sollte nicht fehlschlagen
         try:
-            fair_value, _, _, _ = logic.pbt.calculate_pbt_from_ticker(
+            fair_value, _, _, _ = backend.logic.pbt.calculate_pbt_from_ticker(
                 ticker="TEST", year=year_int, growth_estimate=0.1
             )
             assert fair_value > 0
@@ -390,12 +404,14 @@ class TestIntegration:
         mock_current_price.return_value = 50.0  # Niedrig im Vergleich zu fair value
 
         # Act
-        fair_value, buy_price, table, price_info = logic.pbt.calculate_pbt_from_ticker(
-            ticker="CHEAP",
-            year=2024,
-            growth_estimate=0.15,
-            margin_of_safety=0.30,
-            return_full_table=True,
+        fair_value, buy_price, table, price_info = (
+            backend.logic.pbt.calculate_pbt_from_ticker(
+                ticker="CHEAP",
+                year=2024,
+                growth_estimate=0.15,
+                margin_of_safety=0.30,
+                return_full_table=True,
+            )
         )
 
         # Assert
@@ -420,8 +436,10 @@ class TestIntegration:
         mock_current_price.return_value = 300.0  # Hoch im Vergleich zu fair value
 
         # Act
-        fair_value, buy_price, _, price_info = logic.pbt.calculate_pbt_from_ticker(
-            ticker="EXPENSIVE", year=2024, growth_estimate=0.05
+        fair_value, buy_price, _, price_info = (
+            backend.logic.pbt.calculate_pbt_from_ticker(
+                ticker="EXPENSIVE", year=2024, growth_estimate=0.05
+            )
         )
 
         # Assert

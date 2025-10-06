@@ -1,5 +1,5 @@
 import streamlit as st
-from streamlit_modules.config import get_text
+from ..config import get_text
 
 
 # Page configuration

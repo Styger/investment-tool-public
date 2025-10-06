@@ -1,6 +1,6 @@
 import streamlit as st
 from ..config import get_text, save_persistence_data, capture_output
-import logic.cagr
+import backend.logic.cagr
 import pandas as pd
 
 
@@ -108,7 +108,7 @@ def show_cagr_analysis():
                     save_persistence_data()
 
                     _, output = capture_output(
-                        logic.cagr.run_analysis,
+                        backend.logic.cagr.run_analysis,
                         ticker,
                         start_year,
                         end_year,
@@ -163,7 +163,7 @@ def show_cagr_analysis():
                                         row["Average"] = f"{float(parts[col_idx]):.2f}%"
 
                                         data_rows.append(row)
-                                    except (ValueError, IndexError) as e:
+                                    except (ValueError, IndexError):
                                         continue
 
                         if data_rows:

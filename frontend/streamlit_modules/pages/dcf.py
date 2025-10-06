@@ -1,8 +1,8 @@
 import streamlit as st
 from ..config import get_text, save_persistence_data
-import logic.dcf_fmp as dcf_fmp_logic
-import logic.dcf_unlevered as dcf_unlevered_logic
-import logic.dcf_levered as dcf_levered_logic
+import backend.logic.dcf_fmp as dcf_fmp_logic
+import backend.logic.dcf_unlevered as dcf_unlevered_logic
+import backend.logic.dcf_levered as dcf_levered_logic
 
 
 def show_dcf_analysis():

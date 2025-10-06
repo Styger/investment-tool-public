@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from ..config import get_text, save_persistence_data
-import logic.pbt as pbt_logic
+import backend.logic.pbt as pbt_logic
 
 
 def show_pbt_analysis():

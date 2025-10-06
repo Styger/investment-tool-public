@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Tuple
 import os
 import sys
-from utils.config_load import load_config
+from backend.utils.config_load import load_config
 
 
 def resource_path(relative_path):

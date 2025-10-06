@@ -1,6 +1,6 @@
 import streamlit as st
 from ..config import get_text, save_persistence_data
-import logic.mos as mos_logic
+import backend.logic.mos as mos_logic
 
 
 def show_mos_analysis():

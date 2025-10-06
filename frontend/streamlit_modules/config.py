@@ -2,8 +2,8 @@ import streamlit as st
 import io
 import sys
 import os
-import utils.config_load as config_load
-from utils.user_preferences import (
+import backend.utils.config_load as config_load
+from backend.utils.user_preferences import (
     load_user_language,
     save_user_language,
     load_user_persistence,

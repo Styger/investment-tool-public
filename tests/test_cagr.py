@@ -1,17 +1,17 @@
 # tests/test_cagr_run_analysis.py
 import re
 import pytest
-import logic.cagr
+import backend.logic.cagr
 
 
 def test_compute_cagr_basic():
-    c = logic.cagr.compute_cagr(100, 200, 10)
+    c = backend.logic.cagr.compute_cagr(100, 200, 10)
     expected = (200 / 100) ** (1 / 10) - 1
     assert c == pytest.approx(expected, rel=1e-12)
 
 
 def test_compute_cagr_identity_zero_growth():
-    assert logic.cagr.compute_cagr(100, 100, 5) == pytest.approx(0.0, abs=1e-12)
+    assert backend.logic.cagr.compute_cagr(100, 100, 5) == pytest.approx(0.0, abs=1e-12)
 
 
 @pytest.mark.parametrize(
@@ -20,7 +20,7 @@ def test_compute_cagr_identity_zero_growth():
 )
 def test_compute_cagr_invalid_inputs(start, end, years):
     with pytest.raises(ValueError):
-        logic.cagr.compute_cagr(start, end, years)
+        backend.logic.cagr.compute_cagr(start, end, years)
 
 
 def test_run_analysis_with_stubbed_data(monkeypatch, capsys):
@@ -47,14 +47,14 @@ def test_run_analysis_with_stubbed_data(monkeypatch, capsys):
         "api.fmp_api.get_year_data_by_range", fake_get_year_data_by_range, raising=False
     )
     monkeypatch.setattr(
-        logic.cagr,
+        backend.logic.cagr,
         "get_year_data_by_range",
         fake_get_year_data_by_range,
         raising=False,
     )
 
     period = 4
-    logic.cagr.run_analysis("TEST", 2019, 2024, period)
+    backend.logic.cagr.run_analysis("TEST", 2019, 2024, period)
     out, _ = capsys.readouterr()
 
     assert "==== TEST Yearly CAGR (4y periods) ====" in out

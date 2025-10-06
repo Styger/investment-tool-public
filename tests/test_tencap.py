@@ -1,7 +1,7 @@
 # tests/test_ten_cap_calculator.py
 import pytest
-from unittest.mock import patch, MagicMock
-import logic.tencap
+from unittest.mock import patch
+import backend.logic.tencap
 
 
 class TestTenCapCore:
@@ -17,7 +17,7 @@ class TestTenCapCore:
         }
 
         # Act
-        wc, comps = logic.tencap._calculate_working_capital_change(data)
+        wc, comps = backend.logic.tencap._calculate_working_capital_change(data)
 
         # Assert
         assert wc == pytest.approx(
@@ -35,7 +35,7 @@ class TestTenCapCore:
         maintenance_capex = 20.0
 
         # Act
-        owner_earnings = logic.tencap._calculate_owner_earnings(
+        owner_earnings = backend.logic.tencap._calculate_owner_earnings(
             profit_before_tax, depreciation, working_capital_change, maintenance_capex
         )
 
@@ -62,7 +62,7 @@ class TestTenCapCore:
     ):
         """Test für Warnungen bei ungewöhnlichen Werten"""
         # Act
-        logic.tencap._calculate_owner_earnings(50.0, depreciation, -2.0, 20.0)
+        backend.logic.tencap._calculate_owner_earnings(50.0, depreciation, -2.0, 20.0)
 
         # Assert
         captured = capsys.readouterr()
@@ -113,7 +113,9 @@ class TestTenCapFormatting:
     def test_format_ten_cap_report_basic(self, sample_data, sample_language):
         """Test der grundlegenden Report-Formatierung"""
         # Act
-        output = logic.tencap._format_ten_cap_report(sample_data, sample_language)
+        output = backend.logic.tencap._format_ten_cap_report(
+            sample_data, sample_language
+        )
 
         # Assert - Stichproben auf Struktur & gerundete Formatierung
         assert "TEN CAP Analyse für AAPL (2024)" in output
@@ -139,7 +141,9 @@ class TestTenCapFormatting:
         )
 
         # Act
-        output = logic.tencap._format_ten_cap_report(sample_data, sample_language)
+        output = backend.logic.tencap._format_ten_cap_report(
+            sample_data, sample_language
+        )
 
         # Assert
         assert "Current Stock Price:" in output and "180.50" in output
@@ -173,10 +177,10 @@ class TestTenCapResult:
             "metrics": [{"calendarYear": "2024", "weightedAverageShsOut": 200_000_000}],
         }
 
-    @patch("logic.tencap.fmp_api.get_income_statement")
-    @patch("logic.tencap.fmp_api.get_cashflow_statement")
-    @patch("logic.tencap.fmp_api.get_key_metrics")
-    @patch("logic.tencap.fmp_api.get_current_price")
+    @patch("backend.logic.tencap.fmp_api.get_income_statement")
+    @patch("backend.logic.tencap.fmp_api.get_cashflow_statement")
+    @patch("backend.logic.tencap.fmp_api.get_key_metrics")
+    @patch("backend.logic.tencap.fmp_api.get_current_price")
     def test_get_ten_cap_result_happy_path(
         self, mock_price, mock_metrics, mock_cashflow, mock_income, mock_financial_data
     ):
@@ -199,7 +203,7 @@ class TestTenCapResult:
         fair_value = buy_price * 2  # 4.30
 
         # Act
-        result = logic.tencap._get_ten_cap_result("AAPL", 2024)
+        result = backend.logic.tencap._get_ten_cap_result("AAPL", 2024)
 
         # Assert
         assert result is not None
@@ -223,9 +227,9 @@ class TestTenCapResult:
         # Investment Recommendation sollte vorhanden sein
         assert "investment_recommendation" in result
 
-    @patch("logic.tencap.fmp_api.get_income_statement")
-    @patch("logic.tencap.fmp_api.get_cashflow_statement")
-    @patch("logic.tencap.fmp_api.get_key_metrics")
+    @patch("backend.logic.tencap.fmp_api.get_income_statement")
+    @patch("backend.logic.tencap.fmp_api.get_cashflow_statement")
+    @patch("backend.logic.tencap.fmp_api.get_key_metrics")
     def test_get_ten_cap_result_missing_year_returns_none(
         self, mock_metrics, mock_cashflow, mock_income, capsys
     ):
@@ -236,16 +240,16 @@ class TestTenCapResult:
         mock_metrics.return_value = [{"calendarYear": "2023"}]
 
         # Act
-        result = logic.tencap._get_ten_cap_result("MSFT", 2024)
+        result = backend.logic.tencap._get_ten_cap_result("MSFT", 2024)
 
         # Assert
         assert result is None
         captured = capsys.readouterr()
         assert "Could not find complete data for 2024" in captured.out
 
-    @patch("logic.tencap.fmp_api.get_income_statement")
-    @patch("logic.tencap.fmp_api.get_cashflow_statement")
-    @patch("logic.tencap.fmp_api.get_key_metrics")
+    @patch("backend.logic.tencap.fmp_api.get_income_statement")
+    @patch("backend.logic.tencap.fmp_api.get_cashflow_statement")
+    @patch("backend.logic.tencap.fmp_api.get_key_metrics")
     def test_get_ten_cap_result_invalid_shares_returns_none(
         self, mock_metrics, mock_cashflow, mock_income, capsys
     ):
@@ -272,17 +276,17 @@ class TestTenCapResult:
         ]
 
         # Act
-        result = logic.tencap._get_ten_cap_result("TSLA", 2024)
+        result = backend.logic.tencap._get_ten_cap_result("TSLA", 2024)
 
         # Assert
         assert result is None
         captured = capsys.readouterr()
         assert "No valid shares outstanding" in captured.out
 
-    @patch("logic.tencap.fmp_api.get_income_statement")
-    @patch("logic.tencap.fmp_api.get_cashflow_statement")
-    @patch("logic.tencap.fmp_api.get_key_metrics")
-    @patch("logic.tencap.fmp_api.get_current_price")
+    @patch("backend.logic.tencap.fmp_api.get_income_statement")
+    @patch("backend.logic.tencap.fmp_api.get_cashflow_statement")
+    @patch("backend.logic.tencap.fmp_api.get_key_metrics")
+    @patch("backend.logic.tencap.fmp_api.get_current_price")
     def test_get_ten_cap_result_price_fetch_error(
         self, mock_price, mock_metrics, mock_cashflow, mock_income, mock_financial_data
     ):
@@ -294,7 +298,7 @@ class TestTenCapResult:
         mock_price.side_effect = Exception("API Error")
 
         # Act
-        result = logic.tencap._get_ten_cap_result("AAPL", 2024)
+        result = backend.logic.tencap._get_ten_cap_result("AAPL", 2024)
 
         # Assert
         assert result is not None
@@ -320,7 +324,7 @@ class TestInvestmentRecommendation:
         self, current_price, fair_value, buy_price, expected
     ):
         """Parametrisierter Test für alle Investitionsempfehlungen"""
-        result = logic.tencap._get_investment_recommendation(
+        result = backend.logic.tencap._get_investment_recommendation(
             current_price, fair_value, buy_price
         )
         assert result == expected
@@ -350,7 +354,7 @@ class TestPublicInterface:
             "wc_components": {"accounts_receivable": -3.0, "accounts_payable": 1.0},
         }
 
-    @patch("logic.tencap._get_ten_cap_result")
+    @patch("backend.logic.tencap._get_ten_cap_result")
     def test_print_ten_cap_analysis_success(
         self, mock_get_result, sample_result, capsys
     ):
@@ -359,7 +363,9 @@ class TestPublicInterface:
         mock_get_result.return_value = sample_result
 
         # Act
-        logic.tencap.print_ten_cap_analysis("AAPL", 2024, logic.tencap.default_language)
+        backend.logic.tencap.print_ten_cap_analysis(
+            "AAPL", 2024, backend.logic.tencap.default_language
+        )
 
         # Assert
         captured = capsys.readouterr()
@@ -367,15 +373,15 @@ class TestPublicInterface:
         assert "TEN CAP Buy Price:" in captured.out
         assert "2.15" in captured.out
 
-    @patch("logic.tencap._get_ten_cap_result")
+    @patch("backend.logic.tencap._get_ten_cap_result")
     def test_print_ten_cap_analysis_error(self, mock_get_result, capsys):
         """Test für Fehlerfall bei Analyse"""
         # Arrange
         mock_get_result.return_value = None
 
         # Act
-        logic.tencap.print_ten_cap_analysis(
-            "EVVTY", 2025, logic.tencap.default_language
+        backend.logic.tencap.print_ten_cap_analysis(
+            "EVVTY", 2025, backend.logic.tencap.default_language
         )
 
         # Assert
@@ -383,38 +389,38 @@ class TestPublicInterface:
         assert "[ERROR] Could not find complete data for EVVTY in 2025" in captured.out
         assert "2025: N/A" in captured.out
 
-    @patch("logic.tencap._get_ten_cap_result")
+    @patch("backend.logic.tencap._get_ten_cap_result")
     def test_calculate_ten_cap_price_success(self, mock_get_result):
         """Test für erfolgreiche Preisberechnung"""
         # Arrange
         mock_get_result.return_value = {"ten_cap_buy_price": 3.21}
 
         # Act
-        result = logic.tencap.calculate_ten_cap_price("AAPL", 2024)
+        result = backend.logic.tencap.calculate_ten_cap_price("AAPL", 2024)
 
         # Assert
         assert result == pytest.approx(3.21)
 
-    @patch("logic.tencap._get_ten_cap_result")
+    @patch("backend.logic.tencap._get_ten_cap_result")
     def test_calculate_ten_cap_price_failure(self, mock_get_result):
         """Test für fehlgeschlagene Preisberechnung"""
         # Arrange
         mock_get_result.return_value = None
 
         # Act
-        result = logic.tencap.calculate_ten_cap_price("AAPL", 2024)
+        result = backend.logic.tencap.calculate_ten_cap_price("AAPL", 2024)
 
         # Assert
         assert result is None
 
-    @patch("logic.tencap._get_ten_cap_result")
+    @patch("backend.logic.tencap._get_ten_cap_result")
     def test_calculate_ten_cap_with_comparison(self, mock_get_result, sample_result):
         """Test für TEN CAP mit Preisvergleich"""
         # Arrange
         mock_get_result.return_value = sample_result
 
         # Act
-        result = logic.tencap.calculate_ten_cap_with_comparison("AAPL", 2024)
+        result = backend.logic.tencap.calculate_ten_cap_with_comparison("AAPL", 2024)
 
         # Assert
         assert result == sample_result
@@ -431,7 +437,7 @@ class TestEdgeCases:
         data = {}  # Keine Working Capital Daten
 
         # Act
-        wc, comps = logic.tencap._calculate_working_capital_change(data)
+        wc, comps = backend.logic.tencap._calculate_working_capital_change(data)
 
         # Assert
         assert wc == 0.0
@@ -447,7 +453,7 @@ class TestEdgeCases:
         maintenance_capex = 50.0  # Sehr hoch
 
         # Act
-        owner_earnings = logic.tencap._calculate_owner_earnings(
+        owner_earnings = backend.logic.tencap._calculate_owner_earnings(
             profit_before_tax, depreciation, working_capital_change, maintenance_capex
         )
 
@@ -463,9 +469,9 @@ class TestEdgeCases:
             (2023, "2023"),
         ],
     )
-    @patch("logic.tencap.fmp_api.get_income_statement")
-    @patch("logic.tencap.fmp_api.get_cashflow_statement")
-    @patch("logic.tencap.fmp_api.get_key_metrics")
+    @patch("backend.logic.tencap.fmp_api.get_income_statement")
+    @patch("backend.logic.tencap.fmp_api.get_cashflow_statement")
+    @patch("backend.logic.tencap.fmp_api.get_key_metrics")
     def test_year_conversion_handling(
         self, mock_metrics, mock_cashflow, mock_income, year_input, year_str
     ):
@@ -488,7 +494,7 @@ class TestEdgeCases:
         ]
 
         # Act
-        result = logic.tencap._get_ten_cap_result("TEST", year_input)
+        result = backend.logic.tencap._get_ten_cap_result("TEST", year_input)
 
         # Assert
         assert result is not None

@@ -1,6 +1,5 @@
 # tests/test_fmp_api.py
 import pytest
-import datetime
 
 # >>> Pfad anpassen, falls nötig
 import api.fmp_api

@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from ..config import get_text, save_persistence_data, capture_output
-import logic.tencap as tencap_logic
+import backend.logic.tencap as tencap_logic
 
 
 def show_tencap_analysis():

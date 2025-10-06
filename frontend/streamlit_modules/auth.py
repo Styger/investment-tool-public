@@ -1,5 +1,5 @@
 import streamlit as st
-import streamlit_modules.config
+from . import config
 
 
 def load_user_credentials():
@@ -58,7 +58,7 @@ def simple_auth():
 
         # Import NACH dem Setzen des usernames
 
-        streamlit_modules.config.reload_user_config()
+        config.reload_user_config()
 
         st.rerun()
 
