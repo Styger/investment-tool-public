@@ -1,26 +1,11 @@
 import sys
 from pathlib import Path
 
-# Füge das Projektverzeichnis zum Python Path hinzu
-project_root = Path(__file__).parent
-sys.path.insert(0, str(project_root))
 
 import streamlit as st
-from frontend.streamlit_modules.auth import simple_auth, show_logout
-from frontend.streamlit_modules.config import (
-    load_app_config,
-    get_text,
-    save_persistence_data,
-)
-from frontend.streamlit_modules.pages import (
-    cagr,
-    mos,
-    pbt,
-    tencap,
-    dcf,
-    settings,
-    info,
-)
+import frontend.streamlit_modules.auth
+import frontend.streamlit_modules.config as config
+import frontend.streamlit_modules.pages as pages
 
 # Page configuration
 st.set_page_config(
@@ -37,41 +22,41 @@ def main():
     USE_AUTH = True  # Set to False to disable authentication
 
     if USE_AUTH:
-        if not simple_auth():
+        if not frontend.streamlit_modules.auth.simple_auth():
             return
-        show_logout()
+        frontend.streamlit_modules.auth.show_logout()
 
-    load_app_config()
+    config.load_app_config()
 
     # Sidebar navigation
-    st.sidebar.title(f"📈 {get_text('window_title')}")
+    st.sidebar.title(f"📈 {config.get_text('window_title')}")
 
     analysis_modes = {
-        f"💡 {get_text('info_help_title')}": info.show_info,
-        f"📈 {get_text('cagr_title')}": cagr.show_cagr_analysis,
-        f"🛡️ {get_text('mos_title')}": mos.show_mos_analysis,
-        f"⏰ {get_text('pbt_title')}": pbt.show_pbt_analysis,
-        f"🔟 {get_text('ten_cap_title')}": tencap.show_tencap_analysis,
-        f"💰 {get_text('dcf_fmp_title')}": dcf.show_dcf_analysis,
-        f"⚙️ {get_text('settings_title')}": settings.show_settings_page,
+        f"💡 {config.get_text('info_help_title')}": pages.info.show_info,
+        f"📈 {config.get_text('cagr_title')}": pages.cagr.show_cagr_analysis,
+        f"🛡️ {config.get_text('mos_title')}": pages.mos.show_mos_analysis,
+        f"⏰ {config.get_text('pbt_title')}": pages.pbt.show_pbt_analysis,
+        f"🔟 {config.get_text('ten_cap_title')}": pages.tencap.show_tencap_analysis,
+        f"💰 {config.get_text('dcf_fmp_title')}": pages.dcf.show_dcf_analysis,
+        f"⚙️ {config.get_text('settings_title')}": pages.settings.show_settings_page,
     }
 
     selected_mode = st.sidebar.selectbox(
-        get_text("select_analysis_mode"),
+        config.get_text("select_analysis_mode"),
         list(analysis_modes.keys()),
         key="analysis_mode",
     )
 
-    st.sidebar.markdown(f"**{get_text('current_mode')}:** {selected_mode}")
+    st.sidebar.markdown(f"**{config.get_text('current_mode')}:** {selected_mode}")
     st.sidebar.markdown("---")
-    st.sidebar.markdown(f"### {get_text('about')}")
-    st.sidebar.info(get_text("about_description"))
+    st.sidebar.markdown(f"### {config.get_text('about')}")
+    st.sidebar.info(config.get_text("about_description"))
 
     # Run selected analysis
     analysis_modes[selected_mode]()
 
-    if selected_mode != get_text("settings_title"):
-        save_persistence_data()
+    if selected_mode != config.get_text("settings_title"):
+        config.save_persistence_data()
 
 
 if __name__ == "__main__":
