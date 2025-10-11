@@ -1,5 +1,12 @@
 # logic/dcf_fmp.py
-import api.fmp_api
+import sys
+from pathlib import Path
+
+# Stelle sicher, dass das Root-Verzeichnis im Python-Path ist
+root_dir = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(root_dir))
+
+from backend.api import fmp_api
 
 
 def _extract_current_dcf(payload):
@@ -64,7 +71,7 @@ def get_dcf_fmp(ticker, mos_percent=0.25):
 
     # 1. Hole DCF-Daten
     try:
-        payload = api.fmp_api.get_dcf(ticker)
+        payload = fmp_api.get_dcf(ticker)
     except Exception:
         payload = None
 
@@ -78,7 +85,7 @@ def get_dcf_fmp(ticker, mos_percent=0.25):
 
     # 3. Hole Stock-Preis über unsere neue Funktion (nur Preis, kein Timestamp)
     try:
-        price = api.fmp_api.get_current_price(ticker)
+        price = fmp_api.get_current_price(ticker)
         if price is not None:
             res["stock_price"] = price
     except Exception as e:

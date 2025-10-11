@@ -1,5 +1,12 @@
 from typing import Dict
-import api.fmp_api
+import sys
+from pathlib import Path
+
+# Stelle sicher, dass das Root-Verzeichnis im Python-Path ist
+root_dir = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(root_dir))
+
+from backend.api import fmp_api
 
 
 def calculate_mos_value_from_ticker(
@@ -21,7 +28,7 @@ def calculate_mos_value_from_ticker(
         margin_of_safety: Safety margin (e.g. 0.25 for 25%)
     """
     # Fetch EPS from financial data
-    data, _ = api.fmp_api.get_year_data_by_range(ticker, start_year=year, years=0)
+    data, _ = fmp_api.get_year_data_by_range(ticker, start_year=year, years=0)
     if not data or "EPS" not in data[0] or data[0]["EPS"] <= 0:
         print(f"No valid EPS data found for {ticker} in year {year}")
         return {
@@ -50,7 +57,7 @@ def calculate_mos_value_from_ticker(
     percentage_diff = 0
 
     try:
-        current_price = api.fmp_api.get_current_price(ticker)
+        current_price = fmp_api.get_current_price(ticker)
 
         if current_price is not None and fair_value_today > 0:
             # Calculate comparison with fair value (not MOS price)

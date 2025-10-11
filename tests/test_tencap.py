@@ -177,10 +177,10 @@ class TestTenCapResult:
             "metrics": [{"calendarYear": "2024", "weightedAverageShsOut": 200_000_000}],
         }
 
-    @patch("backend.logic.tencap.fmp_api.get_income_statement")
-    @patch("backend.logic.tencap.fmp_api.get_cashflow_statement")
-    @patch("backend.logic.tencap.fmp_api.get_key_metrics")
-    @patch("backend.logic.tencap.fmp_api.get_current_price")
+    @patch("backend.api.fmp_api.get_income_statement")
+    @patch("backend.api.fmp_api.get_cashflow_statement")
+    @patch("backend.api.fmp_api.get_key_metrics")
+    @patch("backend.api.fmp_api.get_current_price")
     def test_get_ten_cap_result_happy_path(
         self, mock_price, mock_metrics, mock_cashflow, mock_income, mock_financial_data
     ):
@@ -227,9 +227,9 @@ class TestTenCapResult:
         # Investment Recommendation sollte vorhanden sein
         assert "investment_recommendation" in result
 
-    @patch("backend.logic.tencap.fmp_api.get_income_statement")
-    @patch("backend.logic.tencap.fmp_api.get_cashflow_statement")
-    @patch("backend.logic.tencap.fmp_api.get_key_metrics")
+    @patch("backend.api.fmp_api.get_income_statement")
+    @patch("backend.api.fmp_api.get_cashflow_statement")
+    @patch("backend.api.fmp_api.get_key_metrics")
     def test_get_ten_cap_result_missing_year_returns_none(
         self, mock_metrics, mock_cashflow, mock_income, capsys
     ):
@@ -247,9 +247,9 @@ class TestTenCapResult:
         captured = capsys.readouterr()
         assert "Could not find complete data for 2024" in captured.out
 
-    @patch("backend.logic.tencap.fmp_api.get_income_statement")
-    @patch("backend.logic.tencap.fmp_api.get_cashflow_statement")
-    @patch("backend.logic.tencap.fmp_api.get_key_metrics")
+    @patch("backend.api.fmp_api.get_income_statement")
+    @patch("backend.api.fmp_api.get_cashflow_statement")
+    @patch("backend.api.fmp_api.get_key_metrics")
     def test_get_ten_cap_result_invalid_shares_returns_none(
         self, mock_metrics, mock_cashflow, mock_income, capsys
     ):
@@ -283,10 +283,10 @@ class TestTenCapResult:
         captured = capsys.readouterr()
         assert "No valid shares outstanding" in captured.out
 
-    @patch("backend.logic.tencap.fmp_api.get_income_statement")
-    @patch("backend.logic.tencap.fmp_api.get_cashflow_statement")
-    @patch("backend.logic.tencap.fmp_api.get_key_metrics")
-    @patch("backend.logic.tencap.fmp_api.get_current_price")
+    @patch("backend.api.fmp_api.get_income_statement")
+    @patch("backend.api.fmp_api.get_cashflow_statement")
+    @patch("backend.api.fmp_api.get_key_metrics")
+    @patch("backend.api.fmp_api.get_current_price")
     def test_get_ten_cap_result_price_fetch_error(
         self, mock_price, mock_metrics, mock_cashflow, mock_income, mock_financial_data
     ):

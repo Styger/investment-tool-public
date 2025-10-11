@@ -44,7 +44,9 @@ def test_run_analysis_with_stubbed_data(monkeypatch, capsys):
 
     # robust gegen Importstil patchen
     monkeypatch.setattr(
-        "api.fmp_api.get_year_data_by_range", fake_get_year_data_by_range, raising=False
+        "backend.api.fmp_api.get_year_data_by_range",
+        fake_get_year_data_by_range,
+        raising=False,
     )
     monkeypatch.setattr(
         backend.logic.cagr,

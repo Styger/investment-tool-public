@@ -17,7 +17,15 @@ Fair Value je Aktie = Equity Value / (verwässerte) Aktien.
 Optional: base_year für DCF „aus Sicht eines bestimmten Jahres".
 """
 
-import api.fmp_api as fmp
+# import api.fmp_api as fmp
+import sys
+from pathlib import Path
+
+# Stelle sicher, dass das Root-Verzeichnis im Python-Path ist
+root_dir = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(root_dir))
+
+from backend.api import fmp_api
 
 
 # ------------- Helpers -------------
@@ -87,10 +95,10 @@ def _fetch_financials_fcfe(ticker, base_year=None):
     Holt Income/Cashflow/Balance/Metrics für base_year (falls angegeben) oder das neueste Jahr.
     Liefert die Bausteine für FCFE & Bewertung. Wir verwenden primär das Cashflow-Statement.
     """
-    inc_all = fmp.get_income_statement(ticker, limit=30) or []
-    cfs_all = fmp.get_cashflow_statement(ticker, limit=30) or []
-    bal_all = fmp.get_balance_sheet(ticker, limit=30) or []
-    met_all = fmp.get_key_metrics(ticker, limit=30) or []
+    inc_all = fmp_api.get_income_statement(ticker, limit=30) or []
+    cfs_all = fmp_api.get_cashflow_statement(ticker, limit=30) or []
+    bal_all = fmp_api.get_balance_sheet(ticker, limit=30) or []
+    met_all = fmp_api.get_key_metrics(ticker, limit=30) or []
 
     if base_year is None:
         inc = _latest(inc_all)
@@ -214,7 +222,7 @@ def dcf_levered(
     investment_recommendation = None
 
     try:
-        current_price = fmp.get_current_price(ticker)
+        current_price = fmp_api.get_current_price(ticker)
 
         if current_price and fair_value_per_share:
             # Fair Value Vergleich

@@ -2,7 +2,14 @@
 import pytest
 
 # >>> Pfad anpassen, falls nötig
-import api.fmp_api
+import sys
+from pathlib import Path
+
+# Stelle sicher, dass das Root-Verzeichnis im Python-Path ist
+root_dir = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(root_dir))
+
+from backend.api import fmp_api
 
 
 class _Resp:
@@ -21,12 +28,12 @@ def test_fetch_historical_price_json_calls_requests_get(monkeypatch):
         captured["params"] = params
         return _Resp({"ok": True})
 
-    monkeypatch.setattr(api.fmp_api, "get_api_key", lambda: "APIKEY")
+    monkeypatch.setattr(fmp_api, "get_api_key", lambda: "APIKEY")
     import requests
 
     monkeypatch.setattr(requests, "get", fake_get)
 
-    out = api.fmp_api.fetch_historical_price_json("AAPL", "2024-01-02")
+    out = fmp_api.fetch_historical_price_json("AAPL", "2024-01-02")
     assert out == {"ok": True}
     assert captured["url"].endswith("/historical-price-full/AAPL")
     assert captured["params"]["from"] == "2024-01-02"
@@ -36,21 +43,21 @@ def test_fetch_historical_price_json_calls_requests_get(monkeypatch):
 
 def test_get_price_on_date_parses_close(monkeypatch, capsys):
     monkeypatch.setattr(
-        api.fmp_api,
+        fmp_api,
         "fetch_historical_price_json",
         lambda t, d: {"historical": [{"close": 42.25}]},
     )
-    price = api.fmp_api.get_price_on_date("AAPL", "2024-01-02")
+    price = fmp_api.get_price_on_date("AAPL", "2024-01-02")
     # prints are okay; we just check the value
     assert price == 42.25
 
 
 def test_get_price_on_date_no_data(monkeypatch):
-    monkeypatch.setattr(api.fmp_api, "fetch_historical_price_json", lambda t, d: None)
-    assert api.fmp_api.get_price_on_date("AAPL", "2024-01-02") is None
+    monkeypatch.setattr(fmp_api, "fetch_historical_price_json", lambda t, d: None)
+    assert fmp_api.get_price_on_date("AAPL", "2024-01-02") is None
 
-    monkeypatch.setattr(api.fmp_api, "fetch_historical_price_json", lambda t, d: {})
-    assert api.fmp_api.get_price_on_date("AAPL", "2024-01-02") is None
+    monkeypatch.setattr(fmp_api, "fetch_historical_price_json", lambda t, d: {})
+    assert fmp_api.get_price_on_date("AAPL", "2024-01-02") is None
 
 
 def test_get_valid_price_falls_back_days(monkeypatch):
@@ -64,10 +71,10 @@ def test_get_valid_price_falls_back_days(monkeypatch):
             return None
         return 100.0
 
-    monkeypatch.setattr(api.fmp_api, "get_price_on_date", fake_get_price)
+    monkeypatch.setattr(fmp_api, "get_price_on_date", fake_get_price)
 
     base = "2024-01-10"
-    price, used_date = api.fmp_api.get_valid_price("AAPL", base)
+    price, used_date = fmp_api.get_valid_price("AAPL", base)
     assert price == 100.0
     # should be base-1 day
     assert used_date == "2024-01-09"
@@ -93,11 +100,11 @@ def test_get_year_data_by_range_basic(monkeypatch):
         }
     ]
 
-    monkeypatch.setattr(api.fmp_api, "get_income_statement", lambda t, limit=20: income)
-    monkeypatch.setattr(api.fmp_api, "get_cashflow_statement", lambda t, limit=20: cash)
-    monkeypatch.setattr(api.fmp_api, "get_key_metrics", lambda t, limit=20: metrics)
+    monkeypatch.setattr(fmp_api, "get_income_statement", lambda t, limit=20: income)
+    monkeypatch.setattr(fmp_api, "get_cashflow_statement", lambda t, limit=20: cash)
+    monkeypatch.setattr(fmp_api, "get_key_metrics", lambda t, limit=20: metrics)
 
-    rows, mos = api.fmp_api.get_year_data_by_range("AAPL", start_year=year, years=0)
+    rows, mos = fmp_api.get_year_data_by_range("AAPL", start_year=year, years=0)
 
     assert isinstance(rows, list) and len(rows) == 1
     r0 = rows[0]

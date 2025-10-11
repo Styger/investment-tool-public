@@ -1,6 +1,13 @@
 import logging
 from typing import Dict, List
-import api.fmp_api
+import sys
+from pathlib import Path
+
+# Stelle sicher, dass das Root-Verzeichnis im Python-Path ist
+root_dir = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(root_dir))
+
+from backend.api import fmp_api
 
 import pandas as pd
 
@@ -150,7 +157,7 @@ def run_analysis(
         include_cashflow: Include cashflow per share in calculation
     """
     required_years = end_year - start_year
-    data, mos_input = api.fmp_api.get_year_data_by_range(
+    data, mos_input = fmp_api.get_year_data_by_range(
         ticker, start_year, years=required_years
     )
     df = pd.DataFrame(data)

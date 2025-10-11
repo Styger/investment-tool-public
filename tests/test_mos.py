@@ -22,8 +22,8 @@ class TestMOSValueCalculator:
             "current_price": 150.00,
         }
 
-    @patch("api.fmp_api.get_year_data_by_range")
-    @patch("api.fmp_api.get_current_price")
+    @patch("backend.api.fmp_api.get_year_data_by_range")
+    @patch("backend.api.fmp_api.get_current_price")
     def test_normal_calculation_success(
         self, mock_current_price, mock_year_data, sample_data
     ):
@@ -52,8 +52,8 @@ class TestMOSValueCalculator:
         assert "Margin of Safety" in result
         assert result["Margin of Safety"] == "50.0%"
 
-    @patch("api.fmp_api.get_year_data_by_range")
-    @patch("api.fmp_api.get_current_price")
+    @patch("backend.api.fmp_api.get_year_data_by_range")
+    @patch("backend.api.fmp_api.get_current_price")
     def test_no_eps_data_available(self, mock_current_price, mock_year_data):
         """Test für fehlende EPS-Daten"""
         # Arrange
@@ -72,8 +72,8 @@ class TestMOSValueCalculator:
         assert result["MOS Price"] == 0
         assert result["Price vs Fair Value"] == "N/A"
 
-    @patch("api.fmp_api.get_year_data_by_range")
-    @patch("api.fmp_api.get_current_price")
+    @patch("backend.api.fmp_api.get_year_data_by_range")
+    @patch("backend.api.fmp_api.get_current_price")
     def test_negative_eps_handling(self, mock_current_price, mock_year_data):
         """Test für negative EPS-Werte"""
         # Arrange
@@ -90,8 +90,8 @@ class TestMOSValueCalculator:
         assert result["Fair Value Today"] == 0
         assert result["MOS Price"] == 0
 
-    @patch("api.fmp_api.get_year_data_by_range")
-    @patch("api.fmp_api.get_current_price")
+    @patch("backend.api.fmp_api.get_year_data_by_range")
+    @patch("backend.api.fmp_api.get_current_price")
     def test_api_price_fetch_failure(
         self, mock_current_price, mock_year_data, sample_data
     ):
@@ -112,8 +112,8 @@ class TestMOSValueCalculator:
             result["Fair Value Today"] > 0
         )  # Andere Berechnungen sollten funktionieren
 
-    @patch("api.fmp_api.get_year_data_by_range")
-    @patch("api.fmp_api.get_current_price")
+    @patch("backend.api.fmp_api.get_year_data_by_range")
+    @patch("backend.api.fmp_api.get_current_price")
     def test_different_margin_of_safety_values(
         self, mock_current_price, mock_year_data, sample_data
     ):
@@ -143,8 +143,8 @@ class TestMOSValueCalculator:
             (0.01, False),  # Positive EPS
         ],
     )
-    @patch("api.fmp_api.get_year_data_by_range")
-    @patch("api.fmp_api.get_current_price")
+    @patch("backend.api.fmp_api.get_year_data_by_range")
+    @patch("backend.api.fmp_api.get_current_price")
     def test_eps_edge_cases(
         self, mock_current_price, mock_year_data, eps, expected_zero_values
     ):
@@ -192,8 +192,8 @@ class TestInvestmentRecommendation:
 class TestEdgeCases:
     """Tests für Grenzfälle und Randwerte"""
 
-    @patch("api.fmp_api.get_year_data_by_range")
-    @patch("api.fmp_api.get_current_price")
+    @patch("backend.api.fmp_api.get_year_data_by_range")
+    @patch("backend.api.fmp_api.get_current_price")
     def test_zero_growth_rate(self, mock_current_price, mock_year_data):
         """Test für Wachstumsrate von 0%"""
         # Arrange
@@ -209,8 +209,8 @@ class TestEdgeCases:
         assert result["EPS_10y"] == 5.0  # Bei 0% Wachstum sollte EPS_10y = EPS_now sein
         assert result["Future Value"] == 0.0  # Future PE sollte 0 sein (0 * 200)
 
-    @patch("api.fmp_api.get_year_data_by_range")
-    @patch("api.fmp_api.get_current_price")
+    @patch("backend.api.fmp_api.get_year_data_by_range")
+    @patch("backend.api.fmp_api.get_current_price")
     def test_very_high_growth_rate(self, mock_current_price, mock_year_data):
         """Test für sehr hohe Wachstumsraten"""
         # Arrange
@@ -234,8 +234,8 @@ class TestEdgeCases:
             (0.15, 4.046),  # 15% über 10 Jahre ≈ 4.046x
         ],
     )
-    @patch("api.fmp_api.get_year_data_by_range")
-    @patch("api.fmp_api.get_current_price")
+    @patch("backend.api.fmp_api.get_year_data_by_range")
+    @patch("backend.api.fmp_api.get_current_price")
     def test_growth_rate_calculations(
         self, mock_current_price, mock_year_data, growth_rate, expected_multiplier
     ):
@@ -296,8 +296,8 @@ def calculation_scenarios():
 class TestIntegration:
     """Integrationstests für komplette Workflows"""
 
-    @patch("api.fmp_api.get_year_data_by_range")
-    @patch("api.fmp_api.get_current_price")
+    @patch("backend.api.fmp_api.get_year_data_by_range")
+    @patch("backend.api.fmp_api.get_current_price")
     def test_complete_workflow_undervalued_stock(
         self, mock_current_price, mock_year_data
     ):

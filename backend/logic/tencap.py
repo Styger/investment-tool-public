@@ -1,5 +1,12 @@
-from api import fmp_api
-from typing import Optional
+from typing import List, Dict, Tuple, Optional
+import sys
+from pathlib import Path
+
+# Stelle sicher, dass das Root-Verzeichnis im Python-Path ist
+root_dir = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(root_dir))
+
+from backend.api import fmp_api
 
 # Nur für direktes Ausführen des Skripts (Fallback)
 default_language = {

@@ -119,8 +119,8 @@ class TestPBTFromTicker:
         """Fixture mit Beispiel-Aktienkurs"""
         return 175.50
 
-    @patch("api.fmp_api.get_key_metrics")
-    @patch("api.fmp_api.get_current_price")
+    @patch("backend.api.fmp_api.get_key_metrics")
+    @patch("backend.api.fmp_api.get_current_price")
     def test_calculate_pbt_from_ticker_success(
         self,
         mock_current_price,
@@ -166,7 +166,7 @@ class TestPBTFromTicker:
         assert price_info["Margin of Safety"] == "25.0%"
         assert price_info["FCF per Share"] == 5.0
 
-    @patch("api.fmp_api.get_key_metrics")
+    @patch("backend.api.fmp_api.get_key_metrics")
     def test_calculate_pbt_from_ticker_missing_year(
         self, mock_key_metrics, sample_key_metrics
     ):
@@ -185,8 +185,8 @@ class TestPBTFromTicker:
                 ticker="MISSING", year=2024, growth_estimate=0.15
             )
 
-    @patch("api.fmp_api.get_key_metrics")
-    @patch("api.fmp_api.get_current_price")
+    @patch("backend.api.fmp_api.get_key_metrics")
+    @patch("backend.api.fmp_api.get_current_price")
     def test_calculate_pbt_from_ticker_price_fetch_failure(
         self, mock_current_price, mock_key_metrics, sample_key_metrics
     ):
@@ -209,8 +209,8 @@ class TestPBTFromTicker:
         assert price_info["Price vs Fair Value"] == "N/A"
         assert price_info["Investment Recommendation"] == "No price data available"
 
-    @patch("api.fmp_api.get_key_metrics")
-    @patch("api.fmp_api.get_current_price")
+    @patch("backend.api.fmp_api.get_key_metrics")
+    @patch("backend.api.fmp_api.get_current_price")
     def test_calculate_pbt_from_ticker_without_table(
         self, mock_current_price, mock_key_metrics, sample_key_metrics
     ):
@@ -240,8 +240,8 @@ class TestPBTFromTicker:
             (0.50, "50.0%"),
         ],
     )
-    @patch("api.fmp_api.get_key_metrics")
-    @patch("api.fmp_api.get_current_price")
+    @patch("backend.api.fmp_api.get_key_metrics")
+    @patch("backend.api.fmp_api.get_current_price")
     def test_different_margin_of_safety(
         self,
         mock_current_price,
@@ -370,7 +370,7 @@ class TestEdgeCases:
             ("2023", 2023),
         ],
     )
-    @patch("api.fmp_api.get_key_metrics")
+    @patch("backend.api.fmp_api.get_key_metrics")
     def test_year_string_int_conversion(self, mock_key_metrics, year_str, year_int):
         """Test für String/Int-Konvertierung bei Jahreszahlen"""
         # Arrange
@@ -391,8 +391,8 @@ class TestEdgeCases:
 class TestIntegration:
     """Integrationstests für komplette Workflows"""
 
-    @patch("api.fmp_api.get_key_metrics")
-    @patch("api.fmp_api.get_current_price")
+    @patch("backend.api.fmp_api.get_key_metrics")
+    @patch("backend.api.fmp_api.get_current_price")
     def test_complete_workflow_undervalued_stock(
         self, mock_current_price, mock_key_metrics
     ):
@@ -423,8 +423,8 @@ class TestIntegration:
         assert price_info["Percentage Diff (Fair)"] < 0  # Negativ = unterbewertet
         assert len(table) == 17
 
-    @patch("api.fmp_api.get_key_metrics")
-    @patch("api.fmp_api.get_current_price")
+    @patch("backend.api.fmp_api.get_key_metrics")
+    @patch("backend.api.fmp_api.get_current_price")
     def test_complete_workflow_overvalued_stock(
         self, mock_current_price, mock_key_metrics
     ):
