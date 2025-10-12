@@ -261,7 +261,12 @@
     "debt_negative_income_warning": "Unternehmen ist nicht profitabel - Schulden-Verhältnis kann nicht berechnet werden",
     "debt_detailed_info": "Bewertungs-Schwellenwerte",
     "debt_threshold_explanation": "Die folgenden Schwellenwerte werden zur Bewertung der Schuldenlast verwendet:",
-    "debt_analysis_failed": "Schuldenanalyse fehlgeschlagen: {}"
+    "debt_analysis_failed": "Schuldenanalyse fehlgeschlagen: {}",
+    "multi_year_question": "Mehrere Jahre?",
+    "long_term_debt_mio": "Langfristige Schulden (Mio)",
+    "net_income_mio": "Nettogewinn (Mio)",
+    "debt_multi_year_info": "Schuldenanalyse für {} bis {} angezeigt. Verhältnis < 3.0 gilt als gesund.",
+    "debt_rating": "Bewertung"
   },
   "en": {
     "window_title": "Investment Tool",
@@ -525,7 +530,12 @@
     "debt_negative_income_warning": "Company is not profitable - Debt ratio cannot be calculated",
     "debt_detailed_info": "Rating Thresholds",
     "debt_threshold_explanation": "The following thresholds are used to evaluate the debt burden:",
-    "debt_analysis_failed": "Debt analysis failed: {}"
+    "debt_analysis_failed": "Debt analysis failed: {}",
+    "multi_year_question": "Multiple Years?",
+    "long_term_debt_mio": "Long-term Debt (Mio)",
+    "net_income_mio": "Net Income (Mio)",
+    "debt_multi_year_info": "Debt analysis from {} to {} displayed. Ratio < 3.0 is considered healthy.",
+    "debt_rating": "Rating"
 
   }
 }
