@@ -1,19 +1,13 @@
-import sys
-from pathlib import Path
-
 import streamlit as st
 from frontend.streamlit_modules.auth import simple_auth, show_logout
-from frontend.streamlit_modules.config import (
-    load_app_config,
-    get_text,
-    save_persistence_data,
-)
+from frontend.streamlit_modules.config import load_app_config, get_text
 from frontend.streamlit_modules.pages import (
     cagr,
     mos,
     pbt,
     tencap,
     dcf,
+    debt,  # NEU
     settings,
     info,
 )
@@ -48,6 +42,7 @@ def main():
         f"⏰ {get_text('pbt_title')}": pbt.show_pbt_analysis,
         f"🔟 {get_text('ten_cap_title')}": tencap.show_tencap_analysis,
         f"💰 {get_text('dcf_fmp_title')}": dcf.show_dcf_analysis,
+        f"💳 {get_text('debt_title')}": debt.show_debt_analysis,  # NEU
         f"⚙️ {get_text('settings_title')}": settings.show_settings_page,
     }
 

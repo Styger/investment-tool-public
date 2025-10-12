@@ -5,7 +5,7 @@
     "current_mode": "Aktueller Modus",
     "select_analysis_mode": "Analysemodus auswählen",
     "about": "Über",
-    "about_description": "Dieses Tool bietet verschiedene Aktienanalysemethoden einschließlich CAGR-Berechnungen, Sicherheitsmarge-Analyse, Payback-Zeit, TEN CAP-Bewertungen und DCF-Analyse.",
+    "about_description": "Dieses Tool bietet verschiedene Aktienanalysemethoden einschliesslich CAGR-Berechnungen, Sicherheitsmarge-Analyse, Payback-Zeit, TEN CAP-Bewertungen und DCF-Analyse.",
     
     "settings": "Einstellungen",
     "mode_settings": "Einstellungen",
@@ -182,7 +182,7 @@
     "usage_tab": "Nutzung",
     
     "mos_method_title": "Margin of Safety (MOS)",
-    "mos_description": "Die Margin of Safety Methode berechnet den intrinsischen Wert einer Aktie basierend auf projiziertem EPS-Wachstum über 10 Jahre mit anschließender Sicherheitsmarge.",
+    "mos_description": "Die Margin of Safety Methode berechnet den intrinsischen Wert einer Aktie basierend auf projiziertem EPS-Wachstum über 10 Jahre mit anschliessender Sicherheitsmarge.",
     "mos_how_it_works": "- Projiziert EPS-Wachstum über 10 Jahre\n- Berechnet zukünftigen Wert mit dynamischem P/E-Ratio\n- Diskontiert auf Gegenwartswert (15% Diskontrate)\n- Wendet Sicherheitsmarge an (meist 25-50%)",
     "mos_when_to_use": "- Bei Value-Investing Strategien\n- Wenn Sie konservativ investieren möchten\n- Für langfristige Investments\n- Bei unsicheren Marktphasen",
     "mos_formula_explanation": "Wobei das P/E-Ratio dynamisch aus der Wachstumsrate berechnet wird (growth_rate × 200) und eine 15% Diskontrate verwendet wird.",
@@ -203,7 +203,7 @@
     "dcf_unlevered_formula_explanation": "Umfassendste Methode: Vollständige Unternehmensanalyse unter Berücksichtigung aller Stakeholder.",
 
     "dcf_levered_method_title": "Levered DCF (FCFE) - Direkte Eigenkapitalbewertung",
-    "dcf_levered_method_description": "Free Cash Flow to Equity - bewertet Eigenkapital direkt, einschließlich Schuldeneffekte.",
+    "dcf_levered_method_description": "Free Cash Flow to Equity - bewertet Eigenkapital direkt, einschliesslich Schuldeneffekte.",
     "dcf_levered_how_it_works": "- Berechnet Free Cash Flow to Equity (FCFE)\n- FCFE = Operating Cash Flow - CapEx + Nettokreditaufnahme\n- Projiziert FCFE-Wachstum über Prognosezeitraum\n- Diskontiert mit Eigenkapitalkosten (kein WACC nötig)\n- Direkte Eigenkapitalbewertung pro Aktie",
     "dcf_levered_when_to_use": "- Direkte Eigenkapital-Investitionsentscheidungen\n- Wenn Schuldenstruktur stabil ist\n- Einfacher als Unlevered DCF\n- Fokus auf Aktionärswert\n- Alternative zum Dividendendiskontierungsmodell",
     "dcf_levered_formula_explanation": "Eigenkapital-fokussiert: Direkte Bewertung der Aktionärsansprüche mit eingebauten Schuldeneffekten.",
@@ -232,7 +232,7 @@
     "getting_started": "Erste Schritte",
     "getting_started_steps": "1. **Analyse wählen**: Beginnen Sie mit MOS für eine konservative Bewertung\n2. **Aktien-Ticker eingeben**: Verwenden Sie Standard-Ticker wie AAPL, MSFT, etc.\n3. **Parameter anpassen**: Passen Sie Wachstumsraten und Sicherheitsmargen an Ihre Strategie an\n4. **Ergebnisse interpretieren**: Grüne Werte = potentiell unterbewertet, Rote Werte = potentiell überbewertet",
     "tips_and_tricks": "Tipps & Tricks",
-    "tips_and_tricks_content": "- **Kombinieren Sie Methoden**: Verwenden Sie mehrere Analysen für ein vollständiges Bild\n- **Historische Trends**: Schauen Sie sich mehrjährige Entwicklungen an, nicht nur Momentaufnahmen\n- **Branchenvergleich**: Vergleichen Sie ähnliche Unternehmen derselben Branche\n- **Vorsicht bei Wachstumsaktien**: Junge, schnell wachsende Unternehmen sind schwerer zu bewerten\n- **Konservativ bleiben**: Lieber eine verpasste Chance als ein großer Verlust",
+    "tips_and_tricks_content": "- **Kombinieren Sie Methoden**: Verwenden Sie mehrere Analysen für ein vollständiges Bild\n- **Historische Trends**: Schauen Sie sich mehrjährige Entwicklungen an, nicht nur Momentaufnahmen\n- **Branchenvergleich**: Vergleichen Sie ähnliche Unternehmen derselben Branche\n- **Vorsicht bei Wachstumsaktien**: Junge, schnell wachsende Unternehmen sind schwerer zu bewerten\n- **Konservativ bleiben**: Lieber eine verpasste Chance als ein grosser Verlust",
  
     "suffix_tab": "Ticker",
     "suffix_guide_title": "Internationale Ticker-Suffixe",
@@ -242,7 +242,26 @@
 
     "how_it_works": "Funktionsweise",
     "when_to_use": "Wann verwenden",
-    "formula": "Formel"
+    "formula": "Formel",
+
+    "debt_title": "Schuldenanalyse",
+    "debt_description": "Analysiere die Schuldenlast eines Unternehmens durch den Vergleich von langfristigen Schulden mit dem Nettogewinn.",
+    "run_debt_analysis": "Schuldenanalyse durchführen",
+    "calculating_debt": "Berechne Schulden-Kennzahlen für {}...",
+    "debt_analysis_completed": "Schuldenanalyse für {} abgeschlossen",
+    "long_term_debt": "Langfristige Schulden",
+    "net_income": "Nettogewinn",
+    "debt_to_income_ratio": "Schulden / Gewinn Verhältnis",
+    "debt_rating_excellent": "Exzellent - Sehr geringe Schuldenlast",
+    "debt_rating_very_good": "Sehr gut - Geringe Schuldenlast",
+    "debt_rating_good": "Gut - Moderate Schuldenlast",
+    "debt_rating_acceptable": "Akzeptabel - Genau beobachten",
+    "debt_rating_risky": "Riskant - Hohe Schuldenlast",
+    "debt_info_explanation": "Ein Verhältnis unter 3.0 deutet auf eine gesunde finanzielle Position mit handhabbaren Schulden hin.",
+    "debt_negative_income_warning": "Unternehmen ist nicht profitabel - Schulden-Verhältnis kann nicht berechnet werden",
+    "debt_detailed_info": "Bewertungs-Schwellenwerte",
+    "debt_threshold_explanation": "Die folgenden Schwellenwerte werden zur Bewertung der Schuldenlast verwendet:",
+    "debt_analysis_failed": "Schuldenanalyse fehlgeschlagen: {}"
   },
   "en": {
     "window_title": "Investment Tool",
@@ -487,6 +506,26 @@
 
     "how_it_works": "How it Works",
     "when_to_use": "When to Use",
-    "formula": "Formula"
+    "formula": "Formula",
+
+    "debt_title": "Debt Analysis",
+    "debt_description": "Analyze the debt burden of a company by comparing long-term debt to net income.",
+    "run_debt_analysis": "Run Debt Analysis",
+    "calculating_debt": "Calculating debt metrics for {}...",
+    "debt_analysis_completed": "Debt analysis completed for {}",
+    "long_term_debt": "Long-term Debt",
+    "net_income": "Net Income",
+    "debt_to_income_ratio": "Debt / Income Ratio",
+    "debt_rating_excellent": "Excellent - Very low debt burden",
+    "debt_rating_very_good": "Very Good - Low debt burden",
+    "debt_rating_good": "Good - Moderate debt burden",
+    "debt_rating_acceptable": "Acceptable - Monitor closely",
+    "debt_rating_risky": "Risky - High debt burden",
+    "debt_info_explanation": "A ratio below 3.0 indicates a healthy financial position with manageable debt levels.",
+    "debt_negative_income_warning": "Company is not profitable - Debt ratio cannot be calculated",
+    "debt_detailed_info": "Rating Thresholds",
+    "debt_threshold_explanation": "The following thresholds are used to evaluate the debt burden:",
+    "debt_analysis_failed": "Debt analysis failed: {}"
+
   }
 }
