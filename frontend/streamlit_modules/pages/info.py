@@ -10,13 +10,14 @@ def show_info():
     st.markdown(get_text("info_page_intro"))
 
     # Create tabs for different analysis methods
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs(
         [
             f"🛡️ {get_text('mos_tab')}",
             f"💰 {get_text('dcf_tab')}",
             f"🔟 {get_text('tencap_tab')}",
             f"⏰ {get_text('pbt_tab')}",
             f"📈 {get_text('cagr_tab')}",
+            f"💳 {get_text('debt_tab')}",
             f"🌍 {get_text('suffix_guide_title')}",
             f"💡 {get_text('usage_tab')}",
         ]
@@ -164,6 +165,23 @@ def show_info():
         st.markdown(get_text("cagr_formula_explanation"))
 
     with tab6:
+        st.header(f"💳 {get_text('debt_method_title')}")
+        st.markdown(get_text("debt_info_description"))
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.subheader(get_text("how_it_works"))
+            st.markdown(get_text("debt_how_it_works"))
+
+        with col2:
+            st.subheader(get_text("when_to_use"))
+            st.markdown(get_text("debt_when_to_use"))
+
+        st.subheader(get_text("formula"))
+        st.latex(r"Debt\_Ratio = \frac{Long\text{-}term\_Debt}{Net\_Income}")
+        st.markdown(get_text("debt_formula_explanation"))
+
+    with tab7:
         st.header(f"🌍 {get_text('suffix_guide_title')}")
         st.markdown(get_text("suffix_guide_intro"))
 
@@ -219,7 +237,7 @@ def show_info():
         else:
             st.dataframe(df, width="stretch", hide_index=True)
 
-    with tab7:
+    with tab8:
         st.header(f"💡 {get_text('usage_guide_title')}")
         st.markdown(get_text("usage_guide_intro"))
 
