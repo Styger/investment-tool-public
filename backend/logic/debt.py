@@ -9,13 +9,16 @@ sys.path.insert(0, str(root_dir))
 from backend.api import fmp_api
 
 
-def calculate_debt_metrics_from_ticker(ticker: str, year: int) -> Dict:
+def calculate_debt_metrics_from_ticker(
+    ticker: str, year: int, use_total_debt: bool = False
+) -> Dict:
     """
     Calculates debt metrics for a company for a single year.
 
     Args:
         ticker: Stock symbol
         year: Year for analysis
+        use_total_debt: If True, use total debt; if False, use long-term debt only
 
     Returns:
         Dict with debt metrics (pure numbers, no text/ratings)
@@ -36,19 +39,26 @@ def calculate_debt_metrics_from_ticker(ticker: str, year: int) -> Dict:
 
     # Extract values
     long_term_debt = bs_data.get("longTermDebt", 0)
+    total_debt = bs_data.get("totalDebt", 0)
     net_income = is_data.get("netIncome", 0)
+
+    # Choose which debt to use for ratio calculation
+    debt_used = total_debt if use_total_debt else long_term_debt
 
     # Calculate ratio
     if net_income <= 0:
         debt_to_income_ratio = None  # Cannot calculate with negative/zero income
     else:
-        debt_to_income_ratio = long_term_debt / net_income
+        debt_to_income_ratio = debt_used / net_income
 
     # Return pure data
     result = {
         "ticker": ticker.upper(),
         "year": year,
         "long_term_debt": long_term_debt,
+        "total_debt": total_debt,
+        "debt_used": debt_used,
+        "use_total_debt": use_total_debt,
         "net_income": net_income,
         "debt_to_income_ratio": debt_to_income_ratio,
     }
@@ -58,7 +68,7 @@ def calculate_debt_metrics_from_ticker(ticker: str, year: int) -> Dict:
 
 
 def calculate_debt_metrics_multi_year(
-    ticker: str, start_year: int, end_year: int
+    ticker: str, start_year: int, end_year: int, use_total_debt: bool = False
 ) -> List[Dict]:
     """
     Calculates debt metrics for a company across multiple years.
@@ -67,6 +77,7 @@ def calculate_debt_metrics_multi_year(
         ticker: Stock symbol
         start_year: Starting year
         end_year: Ending year
+        use_total_debt: If True, use total debt; if False, use long-term debt only
 
     Returns:
         List of dicts with debt metrics for each year
@@ -89,19 +100,26 @@ def calculate_debt_metrics_multi_year(
 
         # Extract values
         long_term_debt = bs_data.get("longTermDebt", 0)
+        total_debt = bs_data.get("totalDebt", 0)
         net_income = is_data.get("netIncome", 0)
+
+        # Choose which debt to use for ratio calculation
+        debt_used = total_debt if use_total_debt else long_term_debt
 
         # Calculate ratio
         if net_income <= 0:
             debt_to_income_ratio = None
         else:
-            debt_to_income_ratio = long_term_debt / net_income
+            debt_to_income_ratio = debt_used / net_income
 
         results.append(
             {
                 "ticker": ticker.upper(),
                 "year": year,
                 "long_term_debt": long_term_debt,
+                "total_debt": total_debt,
+                "debt_used": debt_used,
+                "use_total_debt": use_total_debt,
                 "net_income": net_income,
                 "debt_to_income_ratio": debt_to_income_ratio,
             }
@@ -114,15 +132,32 @@ def calculate_debt_metrics_multi_year(
 
 
 if __name__ == "__main__":
-    # Example analysis - single year
-    print("\n=== Single Year Analysis ===")
-    result = calculate_debt_metrics_from_ticker(ticker="AAPL", year=2024)
+    # Example analysis - single year with long-term debt
+    print("\n=== Single Year Analysis - Long-term Debt ===")
+    result = calculate_debt_metrics_from_ticker(
+        ticker="AAPL", year=2024, use_total_debt=False
+    )
     print(result)
 
-    # Example analysis - multiple years
-    print("\n=== Multi Year Analysis ===")
+    # Example analysis - single year with total debt
+    print("\n=== Single Year Analysis - Total Debt ===")
+    result = calculate_debt_metrics_from_ticker(
+        ticker="AAPL", year=2024, use_total_debt=True
+    )
+    print(result)
+
+    # Example analysis - multiple years with long-term debt
+    print("\n=== Multi Year Analysis - Long-term Debt ===")
     results = calculate_debt_metrics_multi_year(
-        ticker="AAPL", start_year=2020, end_year=2024
+        ticker="AAPL", start_year=2020, end_year=2024, use_total_debt=False
+    )
+    for r in results:
+        print(r)
+
+    # Example analysis - multiple years with total debt
+    print("\n=== Multi Year Analysis - Total Debt ===")
+    results = calculate_debt_metrics_multi_year(
+        ticker="AAPL", start_year=2020, end_year=2024, use_total_debt=True
     )
     for r in results:
         print(r)

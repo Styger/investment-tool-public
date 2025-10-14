@@ -10,7 +10,7 @@ def show_debt_analysis():
 
     persist_data = st.session_state.persist.get("DEBT", {})
 
-    # First row: Ticker and Multi-year checkbox
+    # First row: Ticker, Multi-year checkbox, and Debt Type selection
     col1, col2, col3 = st.columns([2, 1, 1])
 
     with col1:
@@ -26,6 +26,16 @@ def show_debt_analysis():
             value=persist_data.get("multi_year", False),
             key="debt_multi_year",
         )
+
+    with col3:
+        debt_type = st.radio(
+            get_text("debt_type_label"),
+            options=[get_text("long_term_debt_option"), get_text("total_debt_option")],
+            index=0 if persist_data.get("debt_type", "long_term") == "long_term" else 1,
+            key="debt_type_radio",
+        )
+        # Convert display text back to boolean
+        use_total_debt = debt_type == get_text("total_debt_option")
 
     # Second row: Year selection (single or range)
     if multi_year:
@@ -68,6 +78,7 @@ def show_debt_analysis():
                             "multi_year": True,
                             "start_year": str(start_year),
                             "end_year": str(end_year),
+                            "debt_type": "total" if use_total_debt else "long_term",
                         }
                         st.session_state.persist.setdefault("DEBT", {}).update(
                             persist_data
@@ -76,7 +87,7 @@ def show_debt_analysis():
 
                         # Multi-year analysis
                         results = debt_logic.calculate_debt_metrics_multi_year(
-                            ticker, start_year, end_year
+                            ticker, start_year, end_year, use_total_debt=use_total_debt
                         )
 
                         if results:
@@ -87,7 +98,7 @@ def show_debt_analysis():
                             # Create table data
                             table_data = []
                             for result in results:
-                                long_term_debt = result.get("long_term_debt", 0)
+                                debt_used = result.get("debt_used", 0)
                                 net_income = result.get("net_income", 0)
                                 ratio = result.get("debt_to_income_ratio", None)
 
@@ -106,13 +117,18 @@ def show_debt_analysis():
                                 else:
                                     rating = "N/A"
 
+                                # Use appropriate label based on debt type
+                                debt_label = (
+                                    get_text("total_debt_mio")
+                                    if use_total_debt
+                                    else get_text("long_term_debt_mio")
+                                )
+
                                 table_data.append(
                                     {
                                         get_text("year"): result.get("year"),
-                                        get_text(
-                                            "long_term_debt_mio"
-                                        ): f"${long_term_debt / 1_000_000:,.2f}"
-                                        if long_term_debt
+                                        debt_label: f"${debt_used / 1_000_000:,.2f}"
+                                        if debt_used
                                         else "$0.00",
                                         get_text(
                                             "net_income_mio"
@@ -142,8 +158,13 @@ def show_debt_analysis():
                                 pass
 
                             # Info note
+                            debt_type_text = (
+                                get_text("total_debt_option")
+                                if use_total_debt
+                                else get_text("long_term_debt_option")
+                            )
                             st.info(
-                                f"💡 {get_text('debt_multi_year_info').format(start_year, end_year)}"
+                                f"💡 {get_text('debt_multi_year_info_with_type').format(debt_type_text, start_year, end_year)}"
                             )
 
                         else:
@@ -155,6 +176,7 @@ def show_debt_analysis():
                             "ticker": ticker,
                             "multi_year": False,
                             "year": str(year),
+                            "debt_type": "total" if use_total_debt else "long_term",
                         }
                         st.session_state.persist.setdefault("DEBT", {}).update(
                             persist_data
@@ -163,7 +185,7 @@ def show_debt_analysis():
 
                         # Single year analysis
                         result = debt_logic.calculate_debt_metrics_from_ticker(
-                            ticker, year
+                            ticker, year, use_total_debt=use_total_debt
                         )
 
                         if result:
@@ -174,15 +196,22 @@ def show_debt_analysis():
                             # Main metrics in 3 columns
                             col1, col2, col3 = st.columns(3)
 
-                            long_term_debt = result.get("long_term_debt", 0)
+                            debt_used = result.get("debt_used", 0)
                             net_income = result.get("net_income", 0)
                             ratio = result.get("debt_to_income_ratio", None)
 
+                            # Use appropriate label based on debt type
+                            debt_label = (
+                                get_text("total_debt")
+                                if use_total_debt
+                                else get_text("long_term_debt")
+                            )
+
                             with col1:
                                 st.metric(
-                                    get_text("long_term_debt"),
-                                    f"${long_term_debt / 1_000_000:,.2f}M"
-                                    if long_term_debt
+                                    debt_label,
+                                    f"${debt_used / 1_000_000:,.2f}M"
+                                    if debt_used
                                     else "$0.00M",
                                 )
 

@@ -272,7 +272,13 @@
     "long_term_debt_mio": "Langfristige Schulden (Mio)",
     "net_income_mio": "Nettogewinn (Mio)",
     "debt_multi_year_info": "Schuldenanalyse für {} bis {} angezeigt. Verhältnis < 3.0 gilt als gesund.",
-    "debt_rating": "Bewertung"
+    "debt_rating": "Bewertung",
+    "debt_type_label": "Schuldentyp:",
+    "long_term_debt_option": "Langfristige Schulden",
+    "total_debt_option": "Gesamtschulden",
+    "total_debt": "Gesamtschulden",
+    "total_debt_mio": "Gesamtschulden (Mio)",
+    "debt_multi_year_info_with_type": "{0} Analyse von {1} bis {2} angezeigt. Verhältnis < 3.0 gilt als gesund."
   },
   "en": {
     "window_title": "Investment Tool",
@@ -548,7 +554,13 @@
     "long_term_debt_mio": "Long-term Debt (Mio)",
     "net_income_mio": "Net Income (Mio)",
     "debt_multi_year_info": "Debt analysis from {} to {} displayed. Ratio < 3.0 is considered healthy.",
-    "debt_rating": "Rating"
+    "debt_rating": "Rating",
+    "debt_type_label": "Debt Type:",
+    "long_term_debt_option": "Long-term Debt",
+    "total_debt_option": "Total Debt",
+    "total_debt": "Total Debt",
+    "total_debt_mio": "Total Debt (Mio)",
+    "debt_multi_year_info_with_type": "{0} analysis from {1} to {2} displayed. Ratio < 3.0 is considered healthy."
 
   }
 }
