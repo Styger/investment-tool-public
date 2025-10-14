@@ -228,11 +228,11 @@
     
     "debt_tab": "Schulden",
     "debt_method_title": "Schuldenanalyse",
-    "debt_info_description": "Die Schuldenanalyse bewertet die finanzielle Belastung eines Unternehmens durch Verschuldung. Sie zeigt, wie viele Jahre das Unternehmen benötigen würde, um seine langfristigen Schulden aus dem Nettogewinn zu tilgen.",
-    "debt_how_it_works": "**Berechnung:**\n\n1. Hole langfristige Schulden aus der Bilanz\n2. Hole Nettogewinn aus der Gewinn- und Verlustrechnung\n3. Berechne Verhältnis: Langfristige Schulden / Nettogewinn\n4. Bewerte nach Schwellenwerten:\n   - < 1.0: Exzellent\n   - 1.0-2.0: Sehr gut\n   - 2.0-3.0: Gut\n   - 3.0-5.0: Akzeptabel\n   - \\> 5.0: Riskant\n\n**Mehrjahresanalyse:**\nVerfolge die Entwicklung der Schuldenlast über mehrere Jahre, um Trends zu erkennen.",
-    "debt_when_to_use": "**Ideal für:**\n- Risikobewertung vor Investitionen\n- Vergleich der Verschuldung zwischen Unternehmen\n- Überwachung der finanziellen Stabilität\n- Identifikation von überschuldeten Unternehmen\n\n**Nicht geeignet für:**\n- Unternehmen mit negativem Gewinn\n- Startups ohne etablierte Gewinne\n- Finanzinstitute (andere Schuldenstandards)",
-    "debt_formula_explanation": "**Interpretation:**\n\nEin Verhältnis von 3.0 bedeutet, dass das Unternehmen 3 Jahre benötigen würde, um seine langfristigen Schulden vollständig aus dem Nettogewinn zu tilgen.\n\n**Warum < 3.0 gesund ist:**\n- Unternehmen kann Schulden in überschaubarer Zeit tilgen\n- Geringes Risiko bei Gewinnrückgängen\n- Mehr Flexibilität für Investitionen\n- Niedrigere Zinsbelastung",
-
+    "debt_info_description": "Die Schuldenanalyse bewertet die finanzielle Belastung eines Unternehmens durch Verschuldung aus drei verschiedenen Perspektiven: Gewinn (buchhalterisch), EBITDA (operativ) und Cashflow (Liquidität).",
+    "debt_how_it_works": "**Drei Kennzahlen werden parallel berechnet:**\n\n**1. Schulden / Nettogewinn**\n- Buchhalterische Perspektive\n- Zeigt Jahre bis zur Tilgung aus Gewinn\n\n**2. Schulden / EBITDA**\n- Operative Perspektive (Industrie-Standard)\n- EBITDA = Operatives Ergebnis vor Zinsen, Steuern und Abschreibungen\n- Stabiler als Nettogewinn\n\n**3. Schulden / Operativer Cashflow**\n- Liquiditätsperspektive (am konservativsten)\n- Zeigt echte Zahlungsfähigkeit\n\n**Bewertung (alle Ratios):**\n- < 1.0: Exzellent\n- 1.0-2.0: Sehr gut\n- 2.0-3.0: Gut\n- 3.0-5.0: Akzeptabel\n- \\> 5.0: Riskant",
+    "debt_when_to_use": "**Ideal für:**\n- ✅ Umfassende Risikobewertung vor Investitionen\n- ✅ Vergleich der Verschuldung zwischen Unternehmen\n- ✅ Überwachung der finanziellen Stabilität\n- ✅ Identifikation von überschuldeten Unternehmen\n- ✅ Analyse der Schuldentragfähigkeit aus mehreren Blickwinkeln\n\n**Nicht geeignet für:**\n- ❌ Unternehmen mit negativem Gewinn\n- ❌ Startups ohne etablierte Gewinne\n- ❌ Finanzinstitute (andere Schuldenstandards)",
+    "debt_formula_explanation": "**Interpretation:**\n\nAlle drei Kennzahlen zeigen, wie viele Jahre das Unternehmen benötigen würde, um seine Schulden zu tilgen:\n\n- **Debt/Income**: Aus buchhalterischem Gewinn\n- **Debt/EBITDA**: Aus operativem Ergebnis (ohne Sondereffekte)\n- **Debt/Cash Flow**: Aus tatsächlichen Zahlungsströmen\n\n**Warum alle 3 wichtig sind:**\n- Nettogewinn kann durch Sonderposten verzerrt sein\n- EBITDA zeigt operative Kraft ohne Steuereffekte\n- Cash Flow zeigt echte Liquidität\n\n**Gesunde Unternehmen:** Alle 3 Ratios < 3.0",
+    
     "usage_guide_title": "Anwendungsleitfaden",
     "usage_guide_intro": "So verwenden Sie das Good Value Analyse Tool optimal:",
     "getting_started": "Erste Schritte",
@@ -278,7 +278,14 @@
     "total_debt_option": "Gesamtschulden",
     "total_debt": "Gesamtschulden",
     "total_debt_mio": "Gesamtschulden (Mio)",
-    "debt_multi_year_info_with_type": "{0} Analyse von {1} bis {2} angezeigt. Verhältnis < 3.0 gilt als gesund."
+    "debt_multi_year_info_with_type": "{0} Analyse von {1} bis {2} angezeigt. Verhältnis < 3.0 gilt als gesund.",
+    "debt_income_ratio": "Schulden / Gewinn",
+    "debt_ebitda_ratio": "Schulden / EBITDA",
+    "debt_cf_ratio": "Schulden / Op. Cashflow",
+    "ebitda": "EBITDA",
+    "operating_cash_flow": "Operativer Cashflow",
+    "debt_detailed_values": "Detaillierte Werte",
+    "debt_info_explanation_multi": "Alle drei Kennzahlen zeigen die Schuldentragfähigkeit aus verschiedenen Perspektiven: Gewinn (buchhalterisch), EBITDA (operativ), und Cashflow (liquide Mittel)."
   },
   "en": {
     "window_title": "Investment Tool",
@@ -510,10 +517,10 @@
 
     "debt_tab": "Debt",
     "debt_method_title": "Debt Analysis",
-    "debt_info_description": "Debt analysis evaluates a company's financial burden from debt. It shows how many years the company would need to pay off its long-term debt from net income.",
-    "debt_how_it_works": "**Calculation:**\n\n1. Get long-term debt from balance sheet\n2. Get net income from income statement\n3. Calculate ratio: Long-term Debt / Net Income\n4. Rate according to thresholds:\n   - < 1.0: Excellent\n   - 1.0-2.0: Very Good\n   - 2.0-3.0: Good\n   - 3.0-5.0: Acceptable\n   - \\> 5.0: Risky\n\n**Multi-Year Analysis:**\nTrack debt burden development over multiple years to identify trends.",
-    "debt_when_to_use": "**Ideal for:**\n- Risk assessment before investing\n- Comparing debt levels between companies\n- Monitoring financial stability\n- Identifying over-leveraged companies\n\n**Not suitable for:**\n- Companies with negative earnings\n- Startups without established profits\n- Financial institutions (different debt standards)",
-    "debt_formula_explanation": "**Interpretation:**\n\nA ratio of 3.0 means the company would need 3 years to fully pay off its long-term debt from net income.\n\n**Why < 3.0 is healthy:**\n- Company can repay debt in reasonable timeframe\n- Low risk during profit declines\n- More flexibility for investments\n- Lower interest burden",
+    "debt_info_description": "Debt analysis evaluates a company's financial burden from debt through three different perspectives: Income (accounting), EBITDA (operational), and Cash Flow (liquidity).",
+    "debt_how_it_works": "**Three metrics are calculated in parallel:**\n\n**1. Debt / Net Income**\n- Accounting perspective\n- Shows years to repay from profit\n\n**2. Debt / EBITDA**\n- Operational perspective (industry standard)\n- EBITDA = Earnings Before Interest, Taxes, Depreciation & Amortization\n- More stable than Net Income\n\n**3. Debt / Operating Cash Flow**\n- Liquidity perspective (most conservative)\n- Shows actual ability to pay\n\n**Rating (all ratios):**\n- < 1.0: Excellent\n- 1.0-2.0: Very Good\n- 2.0-3.0: Good\n- 3.0-5.0: Acceptable\n- \\> 5.0: Risky",
+    "debt_when_to_use": "**Ideal for:**\n- ✅ Comprehensive risk assessment before investing\n- ✅ Comparing debt levels between companies\n- ✅ Monitoring financial stability\n- ✅ Identifying over-leveraged companies\n- ✅ Analyzing debt sustainability from multiple angles\n\n**Not suitable for:**\n- ❌ Companies with negative earnings\n- ❌ Startups without established profits\n- ❌ Financial institutions (different debt standards)",
+    "debt_formula_explanation": "**Interpretation:**\n\nAll three metrics show how many years the company would need to repay its debt:\n\n- **Debt/Income**: From accounting profit\n- **Debt/EBITDA**: From operational result (without special items)\n- **Debt/Cash Flow**: From actual cash flows\n\n**Why all 3 matter:**\n- Net Income can be distorted by one-time items\n- EBITDA shows operational strength without tax effects\n- Cash Flow shows true liquidity\n\n**Healthy companies:** All 3 ratios < 3.0",
     
     "usage_guide_title": "Usage Guide",
     "usage_guide_intro": "How to use the Good Value Analysis Tool optimally:",
@@ -560,7 +567,15 @@
     "total_debt_option": "Total Debt",
     "total_debt": "Total Debt",
     "total_debt_mio": "Total Debt (Mio)",
-    "debt_multi_year_info_with_type": "{0} analysis from {1} to {2} displayed. Ratio < 3.0 is considered healthy."
+    "debt_multi_year_info_with_type": "{0} analysis from {1} to {2} displayed. Ratio < 3.0 is considered healthy.",
+    "debt_income_ratio": "Debt / Income",
+    "debt_ebitda_ratio": "Debt / EBITDA",
+    "debt_cf_ratio": "Debt / Op. Cash Flow",
+    "ebitda": "EBITDA",
+    "operating_cash_flow": "Operating Cash Flow",
+    "debt_detailed_values": "Detailed Values",
+    "debt_info_explanation_multi": "All three metrics show debt sustainability from different perspectives: Income (accounting), EBITDA (operational), and Cash Flow (liquidity)."
+
 
   }
 }

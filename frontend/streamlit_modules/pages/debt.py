@@ -3,6 +3,22 @@ from ..config import get_text, save_persistence_data
 import backend.logic.debt as debt_logic
 
 
+def _get_rating_from_ratio(ratio):
+    """Helper function to get rating text from ratio"""
+    if ratio is None:
+        return "N/A", "info"
+    if ratio < 1:
+        return get_text("debt_rating_excellent"), "success"
+    elif ratio < 2:
+        return get_text("debt_rating_very_good"), "success"
+    elif ratio < 3:
+        return get_text("debt_rating_good"), "info"
+    elif ratio < 5:
+        return get_text("debt_rating_acceptable"), "warning"
+    else:
+        return get_text("debt_rating_risky"), "error"
+
+
 def show_debt_analysis():
     """Debt Analysis Interface"""
     st.header(f"💳 {get_text('debt_title')}")
@@ -34,7 +50,6 @@ def show_debt_analysis():
             index=0 if persist_data.get("debt_type", "long_term") == "long_term" else 1,
             key="debt_type_radio",
         )
-        # Convert display text back to boolean
         use_total_debt = debt_type == get_text("total_debt_option")
 
     # Second row: Year selection (single or range)
@@ -85,39 +100,55 @@ def show_debt_analysis():
                         )
                         save_persistence_data()
 
-                        # Multi-year analysis
-                        results = debt_logic.calculate_debt_metrics_multi_year(
-                            ticker, start_year, end_year, use_total_debt=use_total_debt
+                        # Fetch results for all 3 metrics
+                        results_income = debt_logic.calculate_debt_metrics_multi_year(
+                            ticker,
+                            start_year,
+                            end_year,
+                            use_total_debt=use_total_debt,
+                            metric_type="net_income",
+                        )
+                        results_ebitda = debt_logic.calculate_debt_metrics_multi_year(
+                            ticker,
+                            start_year,
+                            end_year,
+                            use_total_debt=use_total_debt,
+                            metric_type="ebitda",
+                        )
+                        results_cf = debt_logic.calculate_debt_metrics_multi_year(
+                            ticker,
+                            start_year,
+                            end_year,
+                            use_total_debt=use_total_debt,
+                            metric_type="operating_cash_flow",
                         )
 
-                        if results:
+                        if results_income:
                             st.success(
                                 get_text("debt_analysis_completed").format(ticker)
                             )
 
-                            # Create table data
+                            # Create table data with all 3 ratios
                             table_data = []
-                            for result in results:
+                            for i, result in enumerate(results_income):
                                 debt_used = result.get("debt_used", 0)
-                                net_income = result.get("net_income", 0)
-                                ratio = result.get("debt_to_income_ratio", None)
 
-                                # Determine rating
-                                if ratio is not None and net_income > 0:
-                                    if ratio < 1:
-                                        rating = get_text("debt_rating_excellent")
-                                    elif ratio < 2:
-                                        rating = get_text("debt_rating_very_good")
-                                    elif ratio < 3:
-                                        rating = get_text("debt_rating_good")
-                                    elif ratio < 5:
-                                        rating = get_text("debt_rating_acceptable")
-                                    else:
-                                        rating = get_text("debt_rating_risky")
+                                ratio_income = result.get("debt_ratio", None)
+                                ratio_ebitda = results_ebitda[i].get("debt_ratio", None)
+                                ratio_cf = results_cf[i].get("debt_ratio", None)
+
+                                # Average rating based on all 3 ratios
+                                ratios = [
+                                    r
+                                    for r in [ratio_income, ratio_ebitda, ratio_cf]
+                                    if r is not None
+                                ]
+                                if ratios:
+                                    avg_ratio = sum(ratios) / len(ratios)
+                                    rating, _ = _get_rating_from_ratio(avg_ratio)
                                 else:
                                     rating = "N/A"
 
-                                # Use appropriate label based on debt type
                                 debt_label = (
                                     get_text("total_debt_mio")
                                     if use_total_debt
@@ -131,12 +162,17 @@ def show_debt_analysis():
                                         if debt_used
                                         else "$0.00",
                                         get_text(
-                                            "net_income_mio"
-                                        ): f"${net_income / 1_000_000:,.2f}"
-                                        if net_income
-                                        else "$0.00",
-                                        get_text("debt_to_income_ratio"): f"{ratio:.2f}"
-                                        if ratio is not None
+                                            "debt_income_ratio"
+                                        ): f"{ratio_income:.2f}"
+                                        if ratio_income is not None
+                                        else "N/A",
+                                        get_text(
+                                            "debt_ebitda_ratio"
+                                        ): f"{ratio_ebitda:.2f}"
+                                        if ratio_ebitda is not None
+                                        else "N/A",
+                                        get_text("debt_cf_ratio"): f"{ratio_cf:.2f}"
+                                        if ratio_cf is not None
                                         else "N/A",
                                         get_text("debt_rating"): rating,
                                     }
@@ -145,7 +181,7 @@ def show_debt_analysis():
                             # Display table
                             st.dataframe(table_data, use_container_width=True)
 
-                            # Get current price for comparison (using latest year)
+                            # Get current price for comparison
                             try:
                                 current_price = debt_logic.fmp_api.get_current_price(
                                     ticker
@@ -183,103 +219,130 @@ def show_debt_analysis():
                         )
                         save_persistence_data()
 
-                        # Single year analysis
-                        result = debt_logic.calculate_debt_metrics_from_ticker(
-                            ticker, year, use_total_debt=use_total_debt
+                        # Single year analysis - fetch all 3 metrics
+                        result_income = debt_logic.calculate_debt_metrics_from_ticker(
+                            ticker,
+                            year,
+                            use_total_debt=use_total_debt,
+                            metric_type="net_income",
+                        )
+                        result_ebitda = debt_logic.calculate_debt_metrics_from_ticker(
+                            ticker,
+                            year,
+                            use_total_debt=use_total_debt,
+                            metric_type="ebitda",
+                        )
+                        result_cf = debt_logic.calculate_debt_metrics_from_ticker(
+                            ticker,
+                            year,
+                            use_total_debt=use_total_debt,
+                            metric_type="operating_cash_flow",
                         )
 
-                        if result:
+                        if result_income:
                             st.success(
                                 get_text("debt_analysis_completed").format(ticker)
                             )
 
-                            # Main metrics in 3 columns
-                            col1, col2, col3 = st.columns(3)
-
-                            debt_used = result.get("debt_used", 0)
-                            net_income = result.get("net_income", 0)
-                            ratio = result.get("debt_to_income_ratio", None)
-
-                            # Use appropriate label based on debt type
+                            # Display debt amount
+                            debt_used = result_income.get("debt_used", 0)
                             debt_label = (
                                 get_text("total_debt")
                                 if use_total_debt
                                 else get_text("long_term_debt")
                             )
 
+                            st.subheader(
+                                f"{debt_label}: ${debt_used / 1_000_000:,.2f}M"
+                            )
+                            st.markdown("---")
+
+                            # All 3 ratios in columns
+                            col1, col2, col3 = st.columns(3)
+
+                            ratio_income = result_income.get("debt_ratio", None)
+                            ratio_ebitda = result_ebitda.get("debt_ratio", None)
+                            ratio_cf = result_cf.get("debt_ratio", None)
+
                             with col1:
                                 st.metric(
-                                    debt_label,
-                                    f"${debt_used / 1_000_000:,.2f}M"
-                                    if debt_used
-                                    else "$0.00M",
+                                    get_text("debt_income_ratio"),
+                                    f"{ratio_income:.2f}"
+                                    if ratio_income is not None
+                                    else "N/A",
                                 )
+                                rating, status = _get_rating_from_ratio(ratio_income)
+                                if status == "success":
+                                    st.success(f"🟢 {rating}")
+                                elif status == "info":
+                                    st.info(f"🟡 {rating}")
+                                elif status == "warning":
+                                    st.warning(f"🟡 {rating}")
+                                elif status == "error":
+                                    st.error(f"🔴 {rating}")
 
                             with col2:
                                 st.metric(
-                                    get_text("net_income"),
-                                    f"${net_income / 1_000_000:,.2f}M"
-                                    if net_income
-                                    else "$0.00M",
+                                    get_text("debt_ebitda_ratio"),
+                                    f"{ratio_ebitda:.2f}"
+                                    if ratio_ebitda is not None
+                                    else "N/A",
                                 )
+                                rating, status = _get_rating_from_ratio(ratio_ebitda)
+                                if status == "success":
+                                    st.success(f"🟢 {rating}")
+                                elif status == "info":
+                                    st.info(f"🟡 {rating}")
+                                elif status == "warning":
+                                    st.warning(f"🟡 {rating}")
+                                elif status == "error":
+                                    st.error(f"🔴 {rating}")
 
                             with col3:
-                                if ratio is not None:
-                                    st.metric(
-                                        get_text("debt_to_income_ratio"),
-                                        f"{ratio:.2f}",
-                                    )
-                                else:
-                                    st.metric(
-                                        get_text("debt_to_income_ratio"),
-                                        "N/A",
-                                    )
-
-                            # Rating section
-                            if ratio is not None and net_income > 0:
-                                st.markdown("---")
-
-                                # Determine rating
-                                if ratio < 1:
-                                    rating = get_text("debt_rating_excellent")
-                                    color = "🟢"
-                                    status = "success"
-                                elif ratio < 2:
-                                    rating = get_text("debt_rating_very_good")
-                                    color = "🟢"
-                                    status = "success"
-                                elif ratio < 3:
-                                    rating = get_text("debt_rating_good")
-                                    color = "🟡"
-                                    status = "info"
-                                elif ratio < 5:
-                                    rating = get_text("debt_rating_acceptable")
-                                    color = "🟡"
-                                    status = "warning"
-                                else:
-                                    rating = get_text("debt_rating_risky")
-                                    color = "🔴"
-                                    status = "error"
-
-                                # Display rating
-                                if status == "success":
-                                    st.success(f"{color} {rating}")
-                                elif status == "info":
-                                    st.info(f"{color} {rating}")
-                                elif status == "warning":
-                                    st.warning(f"{color} {rating}")
-                                else:
-                                    st.error(f"{color} {rating}")
-
-                                # Info box with interpretation
-                                st.info(f"💡 {get_text('debt_info_explanation')}")
-
-                            elif net_income <= 0:
-                                st.warning(
-                                    f"⚠️ {get_text('debt_negative_income_warning')}"
+                                st.metric(
+                                    get_text("debt_cf_ratio"),
+                                    f"{ratio_cf:.2f}"
+                                    if ratio_cf is not None
+                                    else "N/A",
                                 )
+                                rating, status = _get_rating_from_ratio(ratio_cf)
+                                if status == "success":
+                                    st.success(f"🟢 {rating}")
+                                elif status == "info":
+                                    st.info(f"🟡 {rating}")
+                                elif status == "warning":
+                                    st.warning(f"🟡 {rating}")
+                                elif status == "error":
+                                    st.error(f"🔴 {rating}")
 
-                            # Detailed breakdown in expander
+                            # Detailed values in expander
+                            with st.expander(f"📊 {get_text('debt_detailed_values')}"):
+                                col1, col2, col3 = st.columns(3)
+
+                                net_income = result_income.get("net_income", 0)
+                                ebitda = result_ebitda.get("ebitda", 0)
+                                op_cf = result_cf.get("operating_cash_flow", 0)
+
+                                with col1:
+                                    st.metric(
+                                        get_text("net_income"),
+                                        f"${net_income / 1_000_000:,.2f}M",
+                                    )
+                                with col2:
+                                    st.metric(
+                                        get_text("ebitda"),
+                                        f"${ebitda / 1_000_000:,.2f}M",
+                                    )
+                                with col3:
+                                    st.metric(
+                                        get_text("operating_cash_flow"),
+                                        f"${op_cf / 1_000_000:,.2f}M",
+                                    )
+
+                            # Info box with interpretation
+                            st.info(f"💡 {get_text('debt_info_explanation_multi')}")
+
+                            # Threshold explanation in expander
                             with st.expander(f"📊 {get_text('debt_detailed_info')}"):
                                 st.write(get_text("debt_threshold_explanation"))
 
