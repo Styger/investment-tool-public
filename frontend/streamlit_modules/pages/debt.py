@@ -39,7 +39,7 @@ def show_debt_analysis():
     with col2:
         multi_year = st.checkbox(
             get_text("multi_year_question"),
-            value=persist_data.get("multi_year", False),
+            value=persist_data.get("multi_year", True),
             key="debt_multi_year",
         )
 

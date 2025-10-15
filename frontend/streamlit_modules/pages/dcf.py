@@ -7,7 +7,7 @@ import backend.logic.dcf_levered as dcf_levered_logic
 
 def show_dcf_analysis():
     """Enhanced DCF Analysis Interface with three modes"""
-    st.header(f"💰 {get_text('dcf_fmp_title')}")
+    st.header(f"💸 {get_text('dcf_fmp_title')}")
     st.write("Comprehensive DCF valuation with multiple methodologies.")
 
     # DCF Mode selection
