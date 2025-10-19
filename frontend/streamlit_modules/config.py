@@ -139,3 +139,110 @@ def capture_output(func, *args, **kwargs):
         return result, output
     finally:
         sys.stdout = old_stdout
+
+
+def set_global_ticker():
+    """
+    Funktion zum Setzen des globalen Tickers.
+    Sollte in der Sidebar oder am Anfang deiner App aufgerufen werden.
+    """
+    import streamlit as st
+
+    # Initialisiere global_ticker falls nicht vorhanden
+    if "global_ticker" not in st.session_state:
+        st.session_state.global_ticker = ""
+
+    # Sidebar Widget für globalen Ticker
+    with st.sidebar:
+        st.markdown("---")
+        st.subheader("🌍 Global Settings")
+
+        new_global_ticker = st.text_input(
+            "Global Ticker",
+            value=st.session_state.global_ticker,
+            key="global_ticker_input",
+            help="This ticker will be used across all analysis modules unless 'Individual Ticker' is selected",
+        ).upper()
+
+        # Update session state wenn sich der Wert ändert
+        if new_global_ticker != st.session_state.global_ticker:
+            st.session_state.global_ticker = new_global_ticker
+
+        if st.session_state.global_ticker:
+            st.success(f"Global Ticker: **{st.session_state.global_ticker}**")
+        else:
+            st.info("No global ticker set")
+
+        st.markdown("---")
+
+
+def initialize_global_ticker():
+    """
+    Initialisiert den globalen Ticker im session_state.
+    Lädt ihn aus der Persistence oder setzt Default "MSFT".
+    Sollte einmalig am Anfang der App aufgerufen werden.
+    """
+    import streamlit as st
+
+    if "global_ticker" not in st.session_state:
+        # Lade aus Persistence oder setze Default
+        persist_data = st.session_state.get("persist", {})
+        st.session_state.global_ticker = persist_data.get("global_ticker", "MSFT")
+
+
+def initialize_global_ticker():
+    """
+    Initialisiert den globalen Ticker im session_state.
+    Lädt ihn aus der Persistence oder setzt Default "MSFT".
+    Sollte einmalig am Anfang der App aufgerufen werden.
+    """
+    import streamlit as st
+
+    if "global_ticker" not in st.session_state:
+        # Lade aus Persistence oder setze Default
+        persist_data = st.session_state.get("persist", {})
+        st.session_state.global_ticker = persist_data.get("global_ticker", "MSFT")
+
+
+def save_global_ticker():
+    """
+    Speichert den globalen Ticker in die Persistence.
+    Wird automatisch in den Modulen aufgerufen.
+    """
+    import streamlit as st
+
+    if "global_ticker" in st.session_state:
+        st.session_state.persist["global_ticker"] = st.session_state.global_ticker
+        save_persistence_data()
+
+
+def save_persistence_data():
+    """Save current persistence data benutzerspezifisch in frontend/config/user_config/"""
+    try:
+        if st.session_state.get("authenticated", False):
+            from backend.utils.user_preferences import save_user_persistence
+
+            persist_data = st.session_state.get("persist", {})
+            save_user_persistence(persist_data)
+    except Exception as e:
+        print(f"Error saving persistence: {e}")
+        pass  # Fail silently
+
+
+def get_effective_ticker(module_ticker, use_individual):
+    """
+    Hilfsfunktion um den effektiven Ticker zu bekommen.
+
+    Args:
+        module_ticker: Der im Modul eingegebene Ticker
+        use_individual: Ob individueller Ticker verwendet werden soll
+
+    Returns:
+        Der zu verwendende Ticker (entweder global oder individuell)
+    """
+    import streamlit as st
+
+    if use_individual:
+        return module_ticker
+    else:
+        return st.session_state.get("global_ticker", "")

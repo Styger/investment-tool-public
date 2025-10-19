@@ -6,9 +6,15 @@ import backend.logic.dcf_levered as dcf_levered_logic
 
 
 def show_dcf_analysis():
-    """Enhanced DCF Analysis Interface with three modes"""
+    """Enhanced DCF Analysis Interface with three modes and global ticker support"""
     st.header(f"💸 {get_text('dcf_fmp_title')}")
     st.write("Comprehensive DCF valuation with multiple methodologies.")
+
+    # Initialisiere global_ticker falls nicht vorhanden - lade aus Persistence
+    if "global_ticker" not in st.session_state:
+        st.session_state.global_ticker = st.session_state.persist.get(
+            "global_ticker", "MSFT"
+        )
 
     # DCF Mode selection
     dcf_mode = st.selectbox(
@@ -20,22 +26,46 @@ def show_dcf_analysis():
     persist_key = f"DCF_{dcf_mode.split()[0].upper()}"
     persist_data = st.session_state.persist.get(persist_key, {})
 
+    # Checkbox für individuellen Ticker
+    use_individual_ticker = st.checkbox(
+        get_text("use_individual_ticker", "Use individual ticker"),
+        value=persist_data.get("use_individual_ticker", False),
+        key=f"dcf_{dcf_mode}_use_individual",
+    )
+
     # Common ticker input
-    ticker = st.text_input(
-        get_text("ticker_symbol"),
-        value=persist_data.get("ticker", ""),
-        key="dcf_ticker",
-    ).upper()
+    if use_individual_ticker:
+        # Individueller Ticker für dieses Modul
+        ticker = st.text_input(
+            get_text("ticker_symbol"),
+            value=persist_data.get("ticker", ""),
+            key="dcf_ticker",
+        ).upper()
+    else:
+        # Globaler Ticker - editierbar und synchronisiert
+        ticker = st.text_input(
+            get_text("ticker_symbol") + " 🌍",
+            value=st.session_state.global_ticker,
+            key="dcf_ticker_global",
+            help=get_text(
+                "global_ticker_help", "This ticker will be used across all modules"
+            ),
+        ).upper()
+        # Update global ticker wenn geändert
+        if ticker != st.session_state.global_ticker:
+            st.session_state.global_ticker = ticker
 
     if dcf_mode == "fmp (FMP DCF)":
-        show_dcf_fmp_mode(ticker, persist_data, persist_key)
+        show_dcf_fmp_mode(ticker, persist_data, persist_key, use_individual_ticker)
     elif dcf_mode == "Unlevered (FCFF)":
-        show_dcf_unlevered_mode(ticker, persist_data, persist_key)
+        show_dcf_unlevered_mode(
+            ticker, persist_data, persist_key, use_individual_ticker
+        )
     elif dcf_mode == "Levered (FCFE)":
-        show_dcf_levered_mode(ticker, persist_data, persist_key)
+        show_dcf_levered_mode(ticker, persist_data, persist_key, use_individual_ticker)
 
 
-def show_dcf_fmp_mode(ticker, persist_data, persist_key):
+def show_dcf_fmp_mode(ticker, persist_data, persist_key, use_individual_ticker):
     """DCF fmp mode - uses FMP's DCF with integrated MOS"""
     st.subheader("📊 DCF fmp - FMP Valuation")
     st.write("Get current DCF valuation directly from Financial Modeling Prep.")
@@ -61,7 +91,8 @@ def show_dcf_fmp_mode(ticker, persist_data, persist_key):
                 try:
                     # Save to persistence
                     persist_data_update = {
-                        "ticker": ticker,
+                        "ticker": ticker if use_individual_ticker else "",
+                        "use_individual_ticker": use_individual_ticker,
                         "mos_percent": str(mos_percent * 100),
                     }
                     st.session_state.persist.setdefault(persist_key, {}).update(
@@ -74,7 +105,7 @@ def show_dcf_fmp_mode(ticker, persist_data, persist_key):
 
                     st.success(f"DCF analysis completed for {ticker}")
 
-                    # Main metrics in 4 clean columns like MOS
+                    # Main metrics in 4 clean columns
                     col1, col2, col3, col4 = st.columns(4)
 
                     with col1:
@@ -121,7 +152,7 @@ def show_dcf_fmp_mode(ticker, persist_data, persist_key):
                             else:
                                 st.error(f"❌ {recommendation}")
 
-                    # Info box like MOS
+                    # Info box
                     st.info(
                         f"💡 DCF Calculation: Based on FMP DCF valuation | MOS Price = Fair Value × (1 - {mos_percent * 100:.0f}%)"
                     )
@@ -134,12 +165,12 @@ def show_dcf_fmp_mode(ticker, persist_data, persist_key):
                     st.error(f"DCF analysis failed: {str(e)}")
 
 
-def show_dcf_unlevered_mode(ticker, persist_data, persist_key):
+def show_dcf_unlevered_mode(ticker, persist_data, persist_key, use_individual_ticker):
     """DCF Unlevered mode - FCFF methodology with integrated MOS"""
     st.subheader("🏭 Unlevered DCF (FCFF)")
     st.write("Free Cash Flow to Firm - values the entire company before debt.")
 
-    # Main parameters in 4 columns like MOS
+    # Main parameters in 4 columns
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
@@ -242,7 +273,8 @@ def show_dcf_unlevered_mode(ticker, persist_data, persist_key):
                 try:
                     # Save to persistence
                     persist_data_update = {
-                        "ticker": ticker,
+                        "ticker": ticker if use_individual_ticker else "",
+                        "use_individual_ticker": use_individual_ticker,
                         "forecast_years": str(forecast_years),
                         "fcff_growth": str(fcff_growth * 100),
                         "wacc": str(wacc * 100),
@@ -271,7 +303,7 @@ def show_dcf_unlevered_mode(ticker, persist_data, persist_key):
 
                     st.success(f"Unlevered DCF completed for {ticker}")
 
-                    # Main metrics in 4 clean columns like MOS
+                    # Main metrics in 4 clean columns
                     col1, col2, col3, col4 = st.columns(4)
 
                     with col1:
@@ -322,12 +354,12 @@ def show_dcf_unlevered_mode(ticker, persist_data, persist_key):
                             else:
                                 st.error(f"❌ {recommendation}")
 
-                    # Info box like MOS
+                    # Info box
                     st.info(
                         f"💡 FCFF Calculation: Based on {fcff_growth * 100:.1f}% growth rate over {forecast_years} years | WACC: {wacc * 100:.1f}% | Terminal: {perp_growth * 100:.1f}%"
                     )
 
-                    # Detailed breakdown in expandable section like MOS
+                    # Detailed breakdown in expandable section
                     with st.expander("📊 Detailed Calculations"):
                         detail_col1, detail_col2 = st.columns(2)
 
@@ -364,14 +396,14 @@ def show_dcf_unlevered_mode(ticker, persist_data, persist_key):
                     st.error(f"Unlevered DCF analysis failed: {str(e)}")
 
 
-def show_dcf_levered_mode(ticker, persist_data, persist_key):
+def show_dcf_levered_mode(ticker, persist_data, persist_key, use_individual_ticker):
     """DCF Levered mode - FCFE methodology with integrated MOS"""
     st.subheader("🏦 Levered DCF (FCFE)")
     st.write(
         "Free Cash Flow to Equity - values equity directly including debt effects."
     )
 
-    # Main parameters in 4 columns like MOS
+    # Main parameters in 4 columns
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
@@ -464,7 +496,8 @@ def show_dcf_levered_mode(ticker, persist_data, persist_key):
                 try:
                     # Save to persistence
                     persist_data_update = {
-                        "ticker": ticker,
+                        "ticker": ticker if use_individual_ticker else "",
+                        "use_individual_ticker": use_individual_ticker,
                         "forecast_years": str(forecast_years),
                         "fcfe_growth": str(fcfe_growth * 100),
                         "cost_of_equity": str(cost_of_equity * 100),
@@ -491,7 +524,7 @@ def show_dcf_levered_mode(ticker, persist_data, persist_key):
 
                     st.success(f"Levered DCF completed for {ticker}")
 
-                    # Main metrics in 4 clean columns like MOS
+                    # Main metrics in 4 clean columns
                     col1, col2, col3, col4 = st.columns(4)
 
                     with col1:
@@ -542,12 +575,12 @@ def show_dcf_levered_mode(ticker, persist_data, persist_key):
                             else:
                                 st.error(f"❌ {recommendation}")
 
-                    # Info box like MOS
+                    # Info box
                     st.info(
                         f"💡 FCFE Calculation: Based on {fcfe_growth * 100:.1f}% growth rate over {forecast_years} years | Cost of Equity: {cost_of_equity * 100:.1f}% | Terminal: {perp_growth * 100:.1f}%"
                     )
 
-                    # Detailed breakdown in expandable section like MOS
+                    # Detailed breakdown in expandable section
                     with st.expander("📊 Detailed Calculations"):
                         detail_col1, detail_col2 = st.columns(2)
 

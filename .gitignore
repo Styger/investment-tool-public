@@ -33,6 +33,7 @@ local_secrets.json
 *_preferences.json
 *_persistence.json
 *_config.json
+.config/user_config
 
 # Falls jemand die alten Pattern verwendet
 user_*.json

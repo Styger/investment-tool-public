@@ -5,21 +5,52 @@ import backend.logic.pbt as pbt_logic
 
 
 def show_pbt_analysis():
-    """Payback Time Analysis Interface"""
+    """Payback Time Analysis Interface with global ticker support"""
 
     st.header(f"⏰ {get_text('pbt_title')}")
     st.write(get_text("pbt_description"))
 
-    col1, col2, col3, col4 = st.columns(4)
-
     persist_data = st.session_state.persist.get("PBT", {})
 
+    # Initialisiere global_ticker falls nicht vorhanden - lade aus Persistence
+    if "global_ticker" not in st.session_state:
+        st.session_state.global_ticker = st.session_state.persist.get(
+            "global_ticker", "MSFT"
+        )
+
+    # Checkbox für individuellen Ticker
+    use_individual_ticker = st.checkbox(
+        get_text("use_individual_ticker", "Use individual ticker"),
+        value=persist_data.get("use_individual_ticker", False),
+        key="pbt_use_individual",
+    )
+
+    col1, col2, col3, col4 = st.columns(4)
+
     with col1:
-        ticker = st.text_input(
-            get_text("ticker_symbol"),
-            value=persist_data.get("ticker", ""),
-            key="pbt_ticker",
-        ).upper()
+        if use_individual_ticker:
+            # Individueller Ticker für dieses Modul
+            ticker = st.text_input(
+                get_text("ticker_symbol"),
+                value=persist_data.get("ticker", ""),
+                key="pbt_ticker",
+            ).upper()
+        else:
+            # Globaler Ticker - editierbar und synchronisiert
+            ticker = st.text_input(
+                get_text("ticker_symbol") + " 🌍",
+                value=st.session_state.global_ticker,
+                key="pbt_ticker_global",
+                help=get_text(
+                    "global_ticker_help", "This ticker will be used across all modules"
+                ),
+            ).upper()
+            # Update global ticker wenn geändert
+            if ticker != st.session_state.global_ticker:
+                st.session_state.global_ticker = ticker
+                # Speichere globalen Ticker in Persistence
+                st.session_state.persist["global_ticker"] = ticker
+                save_persistence_data()
 
     with col2:
         year = st.number_input(
@@ -58,7 +89,8 @@ def show_pbt_analysis():
                 try:
                     # Save to persistence
                     persist_data = {
-                        "ticker": ticker,
+                        "ticker": ticker if use_individual_ticker else "",
+                        "use_individual_ticker": use_individual_ticker,
                         "year": str(year),
                         "growth_rate": str(growth_rate),
                         "margin_of_safety": str(margin_of_safety),

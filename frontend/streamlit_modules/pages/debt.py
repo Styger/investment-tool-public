@@ -20,21 +20,49 @@ def _get_rating_from_ratio(ratio):
 
 
 def show_debt_analysis():
-    """Debt Analysis Interface"""
+    """Debt Analysis Interface with global ticker support"""
     st.header(f"💳 {get_text('debt_title')}")
     st.write(get_text("debt_description"))
 
     persist_data = st.session_state.persist.get("DEBT", {})
 
+    # Initialisiere global_ticker falls nicht vorhanden - lade aus Persistence
+    if "global_ticker" not in st.session_state:
+        st.session_state.global_ticker = st.session_state.persist.get(
+            "global_ticker", "MSFT"
+        )
+
+    # Checkbox für individuellen Ticker
+    use_individual_ticker = st.checkbox(
+        get_text("use_individual_ticker", "Use individual ticker"),
+        value=persist_data.get("use_individual_ticker", False),
+        key="debt_use_individual",
+    )
+
     # First row: Ticker, Multi-year checkbox, and Debt Type selection
     col1, col2, col3 = st.columns([2, 1, 1])
 
     with col1:
-        ticker = st.text_input(
-            get_text("ticker_symbol"),
-            value=persist_data.get("ticker", ""),
-            key="debt_ticker",
-        ).upper()
+        if use_individual_ticker:
+            # Individueller Ticker für dieses Modul
+            ticker = st.text_input(
+                get_text("ticker_symbol"),
+                value=persist_data.get("ticker", ""),
+                key="debt_ticker",
+            ).upper()
+        else:
+            # Globaler Ticker - editierbar und synchronisiert
+            ticker = st.text_input(
+                get_text("ticker_symbol") + " 🌍",
+                value=st.session_state.global_ticker,
+                key="debt_ticker_global",
+                help=get_text(
+                    "global_ticker_help", "This ticker will be used across all modules"
+                ),
+            ).upper()
+            # Update global ticker wenn geändert
+            if ticker != st.session_state.global_ticker:
+                st.session_state.global_ticker = ticker
 
     with col2:
         multi_year = st.checkbox(
@@ -89,7 +117,8 @@ def show_debt_analysis():
                     if multi_year:
                         # Save to persistence
                         persist_data = {
-                            "ticker": ticker,
+                            "ticker": ticker if use_individual_ticker else "",
+                            "use_individual_ticker": use_individual_ticker,
                             "multi_year": True,
                             "start_year": str(start_year),
                             "end_year": str(end_year),
@@ -209,7 +238,8 @@ def show_debt_analysis():
                     else:
                         # Save to persistence
                         persist_data = {
-                            "ticker": ticker,
+                            "ticker": ticker if use_individual_ticker else "",
+                            "use_individual_ticker": use_individual_ticker,
                             "multi_year": False,
                             "year": str(year),
                             "debt_type": "total" if use_total_debt else "long_term",

@@ -1,6 +1,10 @@
 import streamlit as st
 from frontend.streamlit_modules.auth import simple_auth, show_logout
-from frontend.streamlit_modules.config import load_app_config, get_text
+from frontend.streamlit_modules.config import (
+    load_app_config,
+    get_text,
+    initialize_global_ticker,
+)
 from frontend.streamlit_modules.pages import (
     cagr,
     mos,
@@ -61,6 +65,7 @@ def main():
     st.sidebar.info(get_text("about_description"))
 
     analysis_modes[selected_mode]()
+    initialize_global_ticker()
 
 
 if __name__ == "__main__":

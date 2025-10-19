@@ -5,19 +5,59 @@ import pandas as pd
 
 
 def show_cagr_analysis():
-    """CAGR Analysis Interface"""
+    """CAGR Analysis Interface with global ticker support"""
     st.header(f"📈 {get_text('cagr_title')}")
     st.write(get_text("cagr_description"))
-
-    col1, col2, col3, col4 = st.columns(4)
 
     # Load persisted values
     persist_data = st.session_state.persist.get("CAGR", {})
 
+    # Safety check: Stelle sicher, dass persist_data ein Dictionary ist
+    if not isinstance(persist_data, dict):
+        persist_data = {}
+
+    # Initialisiere global_ticker falls nicht vorhanden - lade aus Persistence
+    if "global_ticker" not in st.session_state:
+        global_ticker_value = st.session_state.persist.get("global_ticker", "MSFT")
+        # Safety check für global_ticker
+        if isinstance(global_ticker_value, str):
+            st.session_state.global_ticker = global_ticker_value
+        else:
+            st.session_state.global_ticker = "MSFT"
+
+    # Checkbox für individuellen Ticker
+    use_individual_ticker = st.checkbox(
+        get_text("use_individual_ticker", "Use individual ticker"),
+        value=persist_data.get("use_individual_ticker", False),
+        key="cagr_use_individual",
+    )
+
+    col1, col2, col3, col4 = st.columns(4)
+
     with col1:
-        ticker = st.text_input(
-            get_text("ticker"), value=persist_data.get("ticker", ""), key="cagr_ticker"
-        ).upper()
+        if use_individual_ticker:
+            # Individueller Ticker für dieses Modul
+            ticker = st.text_input(
+                get_text("ticker"),
+                value=persist_data.get("ticker", ""),
+                key="cagr_ticker",
+            ).upper()
+        else:
+            # Globaler Ticker - editierbar und synchronisiert
+            ticker = st.text_input(
+                get_text("ticker") + " 🌍",
+                value=st.session_state.global_ticker,
+                key="cagr_ticker_global",
+                help=get_text(
+                    "global_ticker_help", "This ticker will be used across all modules"
+                ),
+            ).upper()
+            # Update global ticker wenn geändert
+            if ticker != st.session_state.global_ticker:
+                st.session_state.global_ticker = ticker
+                # Speichere globalen Ticker in Persistence
+                st.session_state.persist["global_ticker"] = ticker
+                save_persistence_data()
 
     with col2:
         start_year = st.number_input(
@@ -46,8 +86,7 @@ def show_cagr_analysis():
             key="cagr_period",
         )
 
-    # Metric selection checkboxes - MOVED UP
-    # Statt st.subheader:
+    # Metric selection checkboxes
     st.markdown(f"**{get_text('select_metrics', 'Select Metrics')}**")
     col_m1, col_m2, col_m3, col_m4 = st.columns(4)
 
@@ -95,7 +134,8 @@ def show_cagr_analysis():
                 try:
                     # Save to persistence
                     persist_data = {
-                        "ticker": ticker,
+                        "ticker": ticker if use_individual_ticker else "",
+                        "use_individual_ticker": use_individual_ticker,
                         "start_year": str(start_year),
                         "end_year": str(end_year),
                         "period_years": str(period_years),

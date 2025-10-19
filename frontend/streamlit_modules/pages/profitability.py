@@ -53,21 +53,52 @@ def _get_margin_rating(margin):
 
 
 def show_profitability_analysis():
-    """Profitability Analysis Interface"""
+    """Profitability Analysis Interface with global ticker support"""
     st.header(f"💰 {get_text('profitability_title')}")
     st.write(get_text("profitability_description"))
 
     persist_data = st.session_state.persist.get("PROFITABILITY", {})
 
+    # Initialisiere global_ticker falls nicht vorhanden - lade aus Persistence
+    if "global_ticker" not in st.session_state:
+        st.session_state.global_ticker = st.session_state.persist.get(
+            "global_ticker", "MSFT"
+        )
+
+    # Checkbox für individuellen Ticker
+    use_individual_ticker = st.checkbox(
+        get_text("use_individual_ticker", "Use individual ticker"),
+        value=persist_data.get("use_individual_ticker", False),
+        key="profit_use_individual",
+    )
+
     # First row: Ticker and Multi-year checkbox
     col1, col2 = st.columns([3, 1])
 
     with col1:
-        ticker = st.text_input(
-            get_text("ticker_symbol"),
-            value=persist_data.get("ticker", ""),
-            key="profit_ticker",
-        ).upper()
+        if use_individual_ticker:
+            # Individueller Ticker für dieses Modul
+            ticker = st.text_input(
+                get_text("ticker_symbol"),
+                value=persist_data.get("ticker", ""),
+                key="profit_ticker",
+            ).upper()
+        else:
+            # Globaler Ticker - editierbar und synchronisiert
+            ticker = st.text_input(
+                get_text("ticker_symbol") + " 🌍",
+                value=st.session_state.global_ticker,
+                key="profit_ticker_global",
+                help=get_text(
+                    "global_ticker_help", "This ticker will be used across all modules"
+                ),
+            ).upper()
+            # Update global ticker wenn geändert
+            if ticker != st.session_state.global_ticker:
+                st.session_state.global_ticker = ticker
+                # Speichere globalen Ticker in Persistence
+                st.session_state.persist["global_ticker"] = ticker
+                save_persistence_data()
 
     with col2:
         multi_year = st.checkbox(
@@ -113,7 +144,8 @@ def show_profitability_analysis():
                     if multi_year:
                         # Save to persistence
                         persist_data = {
-                            "ticker": ticker,
+                            "ticker": ticker if use_individual_ticker else "",
+                            "use_individual_ticker": use_individual_ticker,
                             "multi_year": True,
                             "start_year": str(start_year),
                             "end_year": str(end_year),
@@ -218,7 +250,8 @@ def show_profitability_analysis():
                     else:
                         # Save to persistence
                         persist_data = {
-                            "ticker": ticker,
+                            "ticker": ticker if use_individual_ticker else "",
+                            "use_individual_ticker": use_individual_ticker,
                             "multi_year": False,
                             "year": str(year),
                         }

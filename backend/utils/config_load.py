@@ -3,6 +3,8 @@ import sys
 import streamlit as st
 from pathlib import Path
 
+from frontend.streamlit_modules import config
+
 
 def _resource_path(relative_path: str) -> Path:
     """Return absolute Path to an embedded resource."""
@@ -24,21 +26,12 @@ def get_language_path() -> str:
 
 
 def load_config():
-    try:
-        cfg_path = _resource_path("frontend/config/config.json")  # ✅ GEÄNDERT
-        with open(cfg_path, "r", encoding="utf-8") as f:
-            config = json.load(f)
+    config = {}
 
-        # Override API Key from Streamlit secrets if available
-        try:
-            if hasattr(st, "secrets") and "FMP_API_KEY" in st.secrets:
-                config["FMP_API_KEY"] = st.secrets["FMP_API_KEY"]
-        except:
-            pass
+    if hasattr(st, "secrets") and "FMP_API_KEY" in st.secrets:
+        config["FMP_API_KEY"] = st.secrets["FMP_API_KEY"]
 
-        return config
-    except Exception:
-        return {}
+    return config
 
 
 def _save_config(new_config):

@@ -322,7 +322,9 @@
     "profit_threshold_explanation": "Die folgenden Schwellenwerte werden zur Bewertung der Profitabilität verwendet:",
     "revenue": "Umsatz",
     "total_assets": "Gesamtvermögen",
-    "shareholders_equity": "Eigenkapital"
+    "shareholders_equity": "Eigenkapital",
+
+    "use_individual_ticker": "Individueller Ticker"
   },
   "en": {
     "window_title": "Investment Tool",
@@ -648,6 +650,8 @@
     "profit_threshold_explanation": "The following thresholds are used to evaluate profitability:",
     "revenue": "Revenue",
     "total_assets": "Total Assets",
-    "shareholders_equity": "Shareholders' Equity"
+    "shareholders_equity": "Shareholders' Equity",
+
+    "use_individual_ticker": "Individual Ticker"
   }
 }
