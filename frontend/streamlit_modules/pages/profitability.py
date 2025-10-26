@@ -34,6 +34,19 @@ def _get_return_rating(ratio, metric_type):
         else:
             return get_text("profit_rating_poor"), "error"
 
+    elif metric_type == "roic":
+        # ROIC thresholds
+        if ratio >= 0.15:  # >= 15%
+            return get_text("profit_rating_excellent"), "success"
+        elif ratio >= 0.12:  # >= 12%
+            return get_text("profit_rating_very_good"), "success"
+        elif ratio >= 0.08:  # >= 8%
+            return get_text("profit_rating_good"), "info"
+        elif ratio >= 0.05:  # >= 5%
+            return get_text("profit_rating_acceptable"), "warning"
+        else:
+            return get_text("profit_rating_poor"), "error"
+
 
 def _get_margin_rating(margin):
     """Helper function to get rating for profit margins"""
@@ -172,6 +185,7 @@ def show_profitability_analysis():
                             for result in results:
                                 roe = result.get("roe", None)
                                 roa = result.get("roa", None)
+                                roic = result.get("roic", None)
                                 gross_margin = result.get("gross_margin", None)
                                 operating_margin = result.get("operating_margin", None)
                                 net_margin = result.get("net_margin", None)
@@ -211,6 +225,9 @@ def show_profitability_analysis():
                                         else "N/A",
                                         get_text("roa_label"): f"{roa * 100:.1f}%"
                                         if roa is not None
+                                        else "N/A",
+                                        "ROIC": f"{roic * 100:.1f}%"
+                                        if roic is not None
                                         else "N/A",
                                         get_text(
                                             "gross_margin_label"
@@ -274,10 +291,11 @@ def show_profitability_analysis():
 
                             # Section 1: Return Ratios
                             st.subheader(f"📊 {get_text('return_ratios_section')}")
-                            col1, col2 = st.columns(2)
+                            col1, col2, col3 = st.columns(3)
 
                             roe = result.get("roe", None)
                             roa = result.get("roa", None)
+                            roic = result.get("roic", None)
 
                             with col1:
                                 st.metric(
@@ -300,6 +318,21 @@ def show_profitability_analysis():
                                     f"{roa * 100:.2f}%" if roa is not None else "N/A",
                                 )
                                 rating, status = _get_return_rating(roa, "roa")
+                                if status == "success":
+                                    st.success(f"🟢 {rating}")
+                                elif status == "info":
+                                    st.info(f"🟡 {rating}")
+                                elif status == "warning":
+                                    st.warning(f"🟡 {rating}")
+                                elif status == "error":
+                                    st.error(f"🔴 {rating}")
+
+                            with col3:
+                                st.metric(
+                                    "ROIC",
+                                    f"{roic * 100:.2f}%" if roic is not None else "N/A",
+                                )
+                                rating, status = _get_return_rating(roic, "roic")
                                 if status == "success":
                                     st.success(f"🟢 {rating}")
                                 elif status == "info":
@@ -450,6 +483,19 @@ def show_profitability_analysis():
                                     f"- 3-5%: {get_text('profit_rating_acceptable')}"
                                 )
                                 st.write(f"- < 3%: {get_text('profit_rating_poor')}")
+
+                                st.write(f"\n**ROIC:**")
+                                st.write(
+                                    f"- ≥ 15%: {get_text('profit_rating_excellent')}"
+                                )
+                                st.write(
+                                    f"- 12-15%: {get_text('profit_rating_very_good')}"
+                                )
+                                st.write(f"- 8-12%: {get_text('profit_rating_good')}")
+                                st.write(
+                                    f"- 5-8%: {get_text('profit_rating_acceptable')}"
+                                )
+                                st.write(f"- < 5%: {get_text('profit_rating_poor')}")
 
                         else:
                             st.warning(get_text("no_valid_data"))
