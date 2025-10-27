@@ -240,6 +240,15 @@
     "profitability_when_to_use": "**Ideal für:**\n- ✅ Identifikation hochprofitabler Unternehmen\n- ✅ Vergleich der Profitabilität zwischen Unternehmen\n- ✅ Bewertung der operativen Effizienz\n- ✅ Analyse von Premium-Geschäftsmodellen\n- ✅ Trendanalyse über mehrere Jahre\n\n**Besonders wichtig für:**\n- Value Investing (hohe ROE = Qualität)\n- Dividend Investing (hohe Margen = nachhaltig)\n- Growth Investing (steigende Margen = Skalierung)\n\n**Branchenabhängig:**\n- Tech: Hohe Margen (>30%) normal\n- Retail: Niedrigere Margen (10-15%) normal\n- Finanzsektor: ROE wichtiger als Margen",
     "profitability_formula_explanation": "**Interpretation der Kennzahlen:**\n\n**ROE (Return on Equity):**\n- Misst Rendite auf Eigenkapital\n- Hohe Werte (>20%) zeigen exzellente Kapitaleffizienz\n- Kann durch Aktienrückkäufe steigen\n- Achtung: Sehr hohe Werte (>50%) können auf hohe Verschuldung hindeuten\n\n**ROA (Return on Assets):**\n- Misst Rendite auf Gesamtvermögen\n- Zeigt wie effizient Assets genutzt werden\n- Unabhängiger von Kapitalstruktur als ROE\n- Gut für Branchenvergleiche\n\n**Margen:**\n- Höhere Margen = Bessere Preissetzungsmacht\n- Steigende Margen = Skalierung/Effizienzgewinne\n- Konstant hohe Margen = Wettbewerbsvorteil (Moat)\n- Bruttomarge zeigt Rohertragskraft\n- Operative Marge zeigt Kostenkontrolle\n- Nettomarge zeigt finales Ergebnis\n\n**Vermögensumschlag:**\n- Zeigt wie viel Umsatz pro Euro Vermögen\n- Retail: Oft hoch (>2x)\n- Kapitalintensive Branchen: Niedrig (<1x)\n- Zusammen mit Margen wichtig für ROA",
 
+    "capital_allocation_tab": "Kapitalverwendung",
+    "capital_allocation_method_title": "Kapitalverwendung Analyse",
+    "capital_allocation_info_description": "Die Kapitalverwendung-Analyse zeigt wie ein Unternehmen seinen Free Cash Flow (FCF) verwendet. Dies gibt Einblick in die Prioritäten des Managements und die Kapitaleffizienz.",
+    "capital_allocation_how_it_works": "**Wie es funktioniert:**\n\nDie Analyse untersucht die Verwendung des Free Cash Flow:\n\n**Kategorien:**\n- **Dividenden**: Auszahlungen an Aktionäre\n- **Aktienrückkäufe**: Rückkauf eigener Aktien\n- **Schuldenabbau**: Tilgung von Verbindlichkeiten\n- **Capex**: Investitionen in Anlagen und Wachstum\n- **M&A**: Übernahmen und Fusionen\n- **Cash-Aufbau**: Erhöhung der Liquidität\n- **Andere**: Sonstige Verwendungen\n\n**Zusätzliche Kennzahlen:**\n- Dividende und Buybacks pro Aktie\n- Schuldenabbau als % der Gesamtverschuldung",
+    "capital_allocation_when_to_use": "**Wann nutzen:**\n- ✅ Beurteilung der Managementqualität\n- ✅ Vergleich der Kapitalverwendung zwischen Unternehmen\n- ✅ Bewertung der Aktionärsfreundlichkeit\n- ✅ Analyse der Wachstumsinvestitionen vs. Shareholder Returns\n- ✅ Tracking von Trends über mehrere Jahre\n\n**Besonders wichtig für:**\n- Dividendeninvestoren\n- Value Investoren\n- Langfristige Investoren\n- Buy-and-Hold Strategien",
+    "capital_allocation_formula_explanation": "**Interpretation der Kennzahlen:**\n\nDer Free Cash Flow wird auf verschiedene Kategorien aufgeteilt. Die Prozentsätze zeigen den Anteil am FCF. Pro-Aktie Kennzahlen ermöglichen den Vergleich zwischen Unternehmen unterschiedlicher Größe.\n\n**Was bedeuten die Werte:**\n- Hohe Dividenden/Buybacks = Aktionärsorientiert\n- Hoher Capex = Wachstumsfokus\n- Hoher Schuldenabbau = Konservativ/Deleveraging\n- Hoher Cash-Aufbau = Defensive Strategie",
+    "capital_allocation_categories": "Kategorien im Detail",
+    "capital_allocation_categories_explanation": "**💵 Dividenden**: Regelmäßige Ausschüttungen an Aktionäre. Zeigt Commitment zur Aktionärsvergütung.\n\n**🔄 Aktienrückkäufe**: Reduziert Aktienanzahl, erhöht EPS. Oft steuerlich günstiger als Dividenden.\n\n**💳 Schuldenabbau**: Reduziert finanzielles Risiko und Zinsaufwand. Wichtig in unsicheren Zeiten.\n\n**🏗️ Capex**: Investitionen in Anlagen, Technologie und Wachstum. Notwendig für langfristigen Erfolg.\n\n**🤝 M&A**: Übernahmen zur Expansion. Kann Wert schaffen oder zerstören, je nach Preis und Integration.\n\n**💰 Cash-Aufbau**: Erhöht finanzielle Flexibilität. Kann auf kommende Opportunitäten oder Unsicherheit hinweisen.",
+
     "usage_guide_title": "Anwendungsleitfaden",
     "usage_guide_intro": "So verwenden Sie das Good Value Analyse Tool optimal:",
     "getting_started": "Erste Schritte",
@@ -324,7 +333,38 @@
     "total_assets": "Gesamtvermögen",
     "shareholders_equity": "Eigenkapital",
 
-    "use_individual_ticker": "Individueller Ticker"
+    "use_individual_ticker": "Individueller Ticker",
+
+    "capital_allocation_title": "Kapitalverwendung",
+    "capital_allocation_description": "Analysiere wie das Unternehmen seinen Free Cash Flow verwendet",
+    "run_capital_allocation_analysis": "Kapitalverwendung analysieren",
+    "calculating_capital_allocation": "Berechne Kapitalverwendung für {0}...",
+    "capital_allocation_completed": "Kapitalverwendung-Analyse für {0} abgeschlossen",
+    "capital_allocation_failed": "Kapitalverwendung-Analyse fehlgeschlagen: {0}",
+    "capital_allocation_over_time": "Kapitalverwendung über Zeit",
+    "capital_allocation_breakdown": "Kapitalverwendung Übersicht",
+    "cap_alloc_info": "Die Prozentsätze zeigen wie der Free Cash Flow allokiert wurde. Die Summe kann über 100% liegen wenn aus anderen Quellen (z.B. FCF vom Vorjahr, Schuldenaufnahme) finanziert wird.",
+    "cap_alloc_single_info": "Zeigt wie das Unternehmen seinen Free Cash Flow allokiert hat. Prozentsätze können über 100% liegen wenn aus anderen Quellen finanziert wird.",
+    "cap_alloc_explanation": "Was bedeuten diese Kategorien?",
+    
+    "free_cash_flow": "Free Cash Flow",
+    "shares_outstanding": "Ausstehende Aktien",
+    "total_debt": "Gesamtverschuldung",
+    
+    "dividends": "Dividenden",
+    "buybacks": "Aktienrückkäufe",
+    "debt_repayment": "Schuldenabbau",
+    "cash_increase": "Cash-Aufbau",
+    "other": "Andere",
+    
+    "dividends_explanation": "An Aktionäre ausgezahlte Dividenden",
+    "buybacks_explanation": "Geld für Rückkauf eigener Aktien ausgegeben",
+    "debt_explanation": "Rückzahlung von Schulden",
+    "capex_explanation": "Kapitalausgaben für Erhalt und Wachstum des Geschäfts",
+    "ma_explanation": "Ausgaben für Fusionen und Übernahmen",
+    "cash_increase_explanation": "Erhöhung der liquiden Mittel in der Bilanz",
+    "other_explanation": "Andere Cash-Verwendungen die oben nicht kategorisiert sind"
+
   },
   "en": {
     "window_title": "Investment Tool",
@@ -568,6 +608,15 @@
     "profitability_when_to_use": "**Ideal for:**\n- ✅ Identifying highly profitable companies\n- ✅ Comparing profitability between companies\n- ✅ Evaluating operational efficiency\n- ✅ Analyzing premium business models\n- ✅ Trend analysis over multiple years\n\n**Especially important for:**\n- Value Investing (high ROE = quality)\n- Dividend Investing (high margins = sustainable)\n- Growth Investing (rising margins = scaling)\n\n**Industry-dependent:**\n- Tech: High margins (>30%) normal\n- Retail: Lower margins (10-15%) normal\n- Financial sector: ROE more important than margins",
     "profitability_formula_explanation": "**Interpretation of Metrics:**\n\n**ROE (Return on Equity):**\n- Measures return on equity capital\n- High values (>20%) show excellent capital efficiency\n- Can increase through share buybacks\n- Caution: Very high values (>50%) may indicate high leverage\n\n**ROA (Return on Assets):**\n- Measures return on total assets\n- Shows how efficiently assets are used\n- More independent from capital structure than ROE\n- Good for industry comparisons\n\n**Margins:**\n- Higher margins = Better pricing power\n- Rising margins = Scaling/efficiency gains\n- Consistently high margins = Competitive advantage (Moat)\n- Gross margin shows raw profit power\n- Operating margin shows cost control\n- Net margin shows final result\n\n**Asset Turnover:**\n- Shows revenue per dollar of assets\n- Retail: Often high (>2x)\n- Capital-intensive industries: Low (<1x)\n- Important together with margins for ROA",
     
+    "capital_allocation_tab": "Capital Allocation",
+    "capital_allocation_method_title": "Capital Allocation Analysis",
+    "capital_allocation_info_description": "Capital Allocation Analysis shows how a company uses its Free Cash Flow (FCF). This provides insight into management priorities and capital efficiency.",
+    "capital_allocation_how_it_works": "**How it works:**\n\nThe analysis examines the use of Free Cash Flow:\n\n**Categories:**\n- **Dividends**: Distributions to shareholders\n- **Buybacks**: Share repurchases\n- **Debt Repayment**: Paying down liabilities\n- **Capex**: Investments in assets and growth\n- **M&A**: Mergers and acquisitions\n- **Cash Increase**: Building cash reserves\n- **Other**: Miscellaneous uses\n\n**Additional Metrics:**\n- Dividends and buybacks per share\n- Debt repayment as % of total debt",
+    "capital_allocation_when_to_use": "**When to use:**\n- ✅ Evaluating management quality\n- ✅ Comparing capital allocation between companies\n- ✅ Assessing shareholder friendliness\n- ✅ Analyzing growth investments vs. shareholder returns\n- ✅ Tracking trends over multiple years\n\n**Especially important for:**\n- Dividend investors\n- Value investors\n- Long-term investors\n- Buy-and-hold strategies",
+    "capital_allocation_formula_explanation": "**Interpretation of metrics:**\n\nFree Cash Flow is distributed across different categories. Percentages show the proportion of FCF. Per-share metrics enable comparison between companies of different sizes.\n\n**What the values mean:**\n- High dividends/buybacks = Shareholder-oriented\n- High capex = Growth focus\n- High debt repayment = Conservative/Deleveraging\n- High cash buildup = Defensive strategy",
+    "capital_allocation_categories": "Categories in Detail",
+    "capital_allocation_categories_explanation": "**💵 Dividends**: Regular distributions to shareholders. Shows commitment to shareholder returns.\n\n**🔄 Buybacks**: Reduces share count, increases EPS. Often more tax-efficient than dividends.\n\n**💳 Debt Repayment**: Reduces financial risk and interest expense. Important in uncertain times.\n\n**🏗️ Capex**: Investments in assets, technology and growth. Necessary for long-term success.\n\n**🤝 M&A**: Acquisitions for expansion. Can create or destroy value depending on price and integration.\n\n**💰 Cash Increase**: Enhances financial flexibility. May indicate upcoming opportunities or uncertainty.",
+
     "usage_guide_title": "Usage Guide",
     "usage_guide_intro": "How to use the Good Value Analysis Tool optimally:",
     "getting_started": "Getting Started",
@@ -652,6 +701,37 @@
     "total_assets": "Total Assets",
     "shareholders_equity": "Shareholders' Equity",
 
-    "use_individual_ticker": "Individual Ticker"
+    "use_individual_ticker": "Individual Ticker",
+
+
+    "capital_allocation_title": "Capital Allocation",
+    "capital_allocation_description": "Analyze how the company uses its Free Cash Flow",
+    "run_capital_allocation_analysis": "Run Capital Allocation Analysis",
+    "calculating_capital_allocation": "Calculating capital allocation for {0}...",
+    "capital_allocation_completed": "Capital allocation analysis completed for {0}",
+    "capital_allocation_failed": "Capital allocation analysis failed: {0}",
+    "capital_allocation_over_time": "Capital Allocation Over Time",
+    "capital_allocation_breakdown": "Capital Allocation Breakdown",
+    "cap_alloc_info": "The percentages show how the Free Cash Flow was allocated. Total can exceed 100% if financed from other sources (e.g. prior year FCF, debt issuance).",
+    "cap_alloc_single_info": "Shows how the company allocated its Free Cash Flow. Percentages may exceed 100% if financed from other sources.",
+    "cap_alloc_explanation": "What do these categories mean?",
+    
+    "free_cash_flow": "Free Cash Flow",
+    "shares_outstanding": "Shares Outstanding",
+    "total_debt": "Total Debt",
+    
+    "dividends": "Dividends",
+    "buybacks": "Buybacks",
+    "debt_repayment": "Debt Repayment",
+    "cash_increase": "Cash Increase",
+    "other": "Other",
+    
+    "dividends_explanation": "Cash paid to shareholders as dividends",
+    "buybacks_explanation": "Money spent on repurchasing own shares",
+    "debt_explanation": "Repayment of debt obligations",
+    "capex_explanation": "Capital expenditure for maintaining and growing the business",
+    "ma_explanation": "Mergers and acquisitions spending",
+    "cash_increase_explanation": "Increase in cash and cash equivalents on the balance sheet",
+    "other_explanation": "Other uses of cash not categorized above"
   }
 }

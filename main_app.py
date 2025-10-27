@@ -12,7 +12,8 @@ from frontend.streamlit_modules.pages import (
     tencap,
     dcf,
     debt,
-    profitability,  # NEU
+    profitability,
+    capital_allocation,  # NEU
     settings,
     info,
 )
@@ -48,7 +49,8 @@ def main():
         f"🔟 {get_text('ten_cap_title')}": tencap.show_tencap_analysis,
         f"💸 {get_text('dcf_fmp_title')}": dcf.show_dcf_analysis,
         f"💳 {get_text('debt_title')}": debt.show_debt_analysis,
-        f"💰 {get_text('profitability_title')}": profitability.show_profitability_analysis,  # Money = Profit
+        f"💰 {get_text('profitability_title')}": profitability.show_profitability_analysis,
+        f"💵 {get_text('capital_allocation_title')}": capital_allocation.show_capital_allocation_analysis,  # NEU
         # f"💎 {get_text('quality_title')}": quality.show_quality_analysis,  # SPÄTER!
         f"⚙️ {get_text('settings_title')}": settings.show_settings_page,
     }

@@ -10,7 +10,7 @@ def show_info():
     st.markdown(get_text("info_page_intro"))
 
     # Create tabs for different analysis methods
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs(
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10 = st.tabs(
         [
             f"🛡️ {get_text('mos_tab')}",
             f"💸 {get_text('dcf_tab')}",
@@ -19,6 +19,7 @@ def show_info():
             f"📈 {get_text('cagr_tab')}",
             f"💳 {get_text('debt_tab')}",
             f"💰 {get_text('profitability_tab')}",
+            f"💵 {get_text('capital_allocation_tab')}",
             f"🌍 {get_text('suffix_guide_title')}",
             f"💡 {get_text('usage_tab')}",
         ]
@@ -207,6 +208,31 @@ def show_info():
         st.markdown(get_text("profitability_formula_explanation"))
 
     with tab8:
+        st.header(f"💵 {get_text('capital_allocation_method_title')}")
+        st.markdown(get_text("capital_allocation_info_description"))
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.subheader(get_text("how_it_works"))
+            st.markdown(get_text("capital_allocation_how_it_works"))
+
+        with col2:
+            st.subheader(get_text("when_to_use"))
+            st.markdown(get_text("capital_allocation_when_to_use"))
+
+        st.subheader(get_text("formula"))
+        st.latex(r"FCF = Operating\_Cash\_Flow - Capital\_Expenditure")
+        st.latex(r"Dividends\_per\_Share = \frac{Dividends\_Paid}{Shares\_Outstanding}")
+        st.latex(r"Buybacks\_per\_Share = \frac{Stock\_Buybacks}{Shares\_Outstanding}")
+        st.latex(
+            r"Debt\_Repayment\_\% = \frac{Debt\_Repayment}{Total\_Debt} \times 100"
+        )
+        st.markdown(get_text("capital_allocation_formula_explanation"))
+
+        st.subheader(get_text("capital_allocation_categories"))
+        st.markdown(get_text("capital_allocation_categories_explanation"))
+
+    with tab9:
         st.header(f"🌍 {get_text('suffix_guide_title')}")
         st.markdown(get_text("suffix_guide_intro"))
 
@@ -262,7 +288,7 @@ def show_info():
         else:
             st.dataframe(df, width="stretch", hide_index=True)
 
-    with tab9:
+    with tab10:
         st.header(f"💡 {get_text('usage_guide_title')}")
         st.markdown(get_text("usage_guide_intro"))
 
