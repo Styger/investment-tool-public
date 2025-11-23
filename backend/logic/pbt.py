@@ -1,6 +1,13 @@
 # import api.fmp_api
 from typing import List, Dict, Tuple, Optional
-from .. import api
+import sys
+from pathlib import Path
+
+# Stelle sicher, dass das Root-Verzeichnis im Python-Path ist
+root_dir = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(root_dir))
+
+from backend.api import fmp_api
 
 
 def _calculate_pbt_price(
@@ -59,7 +66,7 @@ def calculate_pbt_from_ticker(
     """
     try:
         # FCF pro Aktie holen
-        key_metrics = api.fmp_api.get_key_metrics(ticker, limit=20)
+        key_metrics = fmp_api.get_key_metrics(ticker, limit=20)
         fcf = None
 
         for entry in key_metrics:
@@ -85,7 +92,7 @@ def calculate_pbt_from_ticker(
         percentage_diff_buy = 0
 
         try:
-            current_price = api.fmp_api.get_current_price(ticker)
+            current_price = fmp_api.get_current_price(ticker)
 
             if current_price is not None and fair_value > 0:
                 # Vergleich mit fairem Wert (ohne MOS)
