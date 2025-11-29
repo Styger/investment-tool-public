@@ -1,6 +1,6 @@
 import chromadb
 from chromadb.config import Settings
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from voyageai import Client as VoyageClient
@@ -53,21 +53,29 @@ class VectorStore:
             persist_directory=self.config.CHROMA_PERSIST_DIR,
         )
 
-    def add_documents(self, documents: List[Dict[str, Any]]) -> int:
+    def add_documents(self, documents: List[Any]) -> int:
         """
         Add documents to vector store
 
         Args:
-            documents: List of dicts with 'text' and 'metadata' keys
+            documents: List of LangChain Documents OR dicts with 'text' and 'metadata' keys
 
         Returns:
             Number of chunks added
         """
-        # Convert to LangChain Document format
-        docs = [
-            Document(page_content=doc["text"], metadata=doc.get("metadata", {}))
-            for doc in documents
-        ]
+        # Convert to LangChain Document format if needed
+        docs = []
+        for doc in documents:
+            if isinstance(doc, Document):
+                # Already a Document, use as-is
+                docs.append(doc)
+            elif isinstance(doc, dict):
+                # Dict format, convert to Document
+                docs.append(
+                    Document(page_content=doc["text"], metadata=doc.get("metadata", {}))
+                )
+            else:
+                raise TypeError(f"Expected Document or dict, got {type(doc)}")
 
         # Split documents into chunks
         chunks = self.text_splitter.split_documents(docs)
