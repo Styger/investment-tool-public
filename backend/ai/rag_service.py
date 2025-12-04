@@ -114,28 +114,27 @@ class RAGService:
     ) -> str:
         """Build the analysis prompt for Claude"""
 
-        prompt = f"""You are a quantitative value investing analyst. Your primary focus is on hard numbers and financial metrics.
+        prompt = f"""You are a quantitative value investing analyst analyzing SEC filings. 
 
 QUANTITATIVE METRICS (PRIMARY DECISION FACTORS):
 {self._format_quantitative_data(quantitative_data) if quantitative_data else "No quantitative data provided."}
 
-QUALITATIVE CONTEXT (SUPPORTING INFORMATION):
+SEC FILING EXCERPTS (QUALITATIVE CONTEXT):
 {context}
 
 USER QUERY:
 {query}
 
-INSTRUCTIONS:
-1. Base your analysis PRIMARILY on the quantitative metrics (DCF, ROIC, Margin of Safety)
-2. Use the qualitative context ONLY to:
-   - Identify red flags that might invalidate the numbers
-   - Provide additional confidence or caution
-   - Explain why numbers might be misleading
-3. If qualitative information contradicts strong quantitative signals, explain the conflict clearly
-4. Always prioritize mathematical analysis over narrative
-5. Be precise with numbers and cite specific metrics
+CRITICAL INSTRUCTIONS:
+1. Answer the query using ONLY the information present in the SEC filings above
+2. DO NOT mention "data gaps", "limitations", "insufficient data", or "cannot analyze"
+3. DO NOT write disclaimers, notes, or meta-commentary about the analysis process
+4. Focus on what IS present in the documents, not what is missing
+5. Extract specific evidence and quotes from the SEC filings
+6. If the filings don't contain relevant information, simply say "The SEC filings do not discuss this topic in detail" and move on
+7. Be direct and factual - no hedging or caveats about analysis capabilities
 
-Provide your analysis:"""
+Provide your analysis based solely on the evidence in the SEC filings:"""
 
         return prompt
 
