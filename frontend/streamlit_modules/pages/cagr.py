@@ -86,9 +86,9 @@ def show_cagr_analysis():
             key="cagr_period",
         )
 
-    # Metric selection checkboxes
+    # Metric selection checkboxes - JETZT 5 SPALTEN
     st.markdown(f"**{get_text('select_metrics', 'Select Metrics')}**")
-    col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+    col_m1, col_m2, col_m3, col_m4, col_m5 = st.columns(5)
 
     with col_m1:
         include_book = st.checkbox(
@@ -118,12 +118,21 @@ def show_cagr_analysis():
             key="cagr_cashflow",
         )
 
+    with col_m5:  # NEU: FCF Checkbox
+        include_fcf = st.checkbox(
+            get_text("checkbox_fcf", "FCF per Share"),
+            value=persist_data.get("include_fcf", True),
+            key="cagr_fcf",
+        )
+
     if st.button(get_text("run_cagr_analysis"), key="cagr_run"):
         if not ticker:
             st.error(get_text("please_enter_ticker"))
         elif start_year >= end_year:
             st.error(get_text("start_year_before_end"))
-        elif not any([include_book, include_eps, include_revenue, include_cashflow]):
+        elif not any(
+            [include_book, include_eps, include_revenue, include_cashflow, include_fcf]
+        ):  # FCF hinzugefügt
             st.error(
                 get_text(
                     "select_at_least_one_metric", "Please select at least one metric"
@@ -143,6 +152,7 @@ def show_cagr_analysis():
                         "include_eps": include_eps,
                         "include_revenue": include_revenue,
                         "include_cashflow": include_cashflow,
+                        "include_fcf": include_fcf,  # NEU: FCF speichern
                     }
                     st.session_state.persist.setdefault("CAGR", {}).update(persist_data)
                     save_persistence_data()
@@ -157,6 +167,7 @@ def show_cagr_analysis():
                         include_eps,
                         include_revenue,
                         include_cashflow,
+                        include_fcf,  # NEU: FCF Parameter übergeben
                     )
 
                     if output.strip():
@@ -197,6 +208,9 @@ def show_cagr_analysis():
                                             row["Cashflow"] = (
                                                 f"{float(parts[col_idx]):.2f}%"
                                             )
+                                            col_idx += 1
+                                        if include_fcf:  # NEU: FCF Spalte hinzufügen
+                                            row["FCF"] = f"{float(parts[col_idx]):.2f}%"
                                             col_idx += 1
 
                                         # Average is always last

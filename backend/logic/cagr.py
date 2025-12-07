@@ -61,6 +61,7 @@ def _mos_growth_estimate_auto(
     include_eps: bool = True,
     include_revenue: bool = True,
     include_cashflow: bool = True,
+    include_fcf: bool = True,
 ) -> Dict[str, float]:
     """
     Calculates CAGR metrics from start_year to end_year, inferring the base year from data or using known_start_year.
@@ -75,6 +76,7 @@ def _mos_growth_estimate_auto(
         include_eps: Whether to include EPS in calculation
         include_revenue: Whether to include revenue in calculation
         include_cashflow: Whether to include cashflow in calculation
+        include_fcf: Whether to include free cash flow per share in calculation
     """
     metrics = [v for v in data_dict.values() if isinstance(v, list)]
     if not metrics:
@@ -101,6 +103,7 @@ def _mos_growth_estimate_auto(
         "eps": include_eps,
         "revenue": include_revenue,
         "cashflow": include_cashflow,
+        "fcf": include_fcf,  # NEU: FCF pro Aktie
     }
 
     details = {}
@@ -141,6 +144,7 @@ def run_analysis(
     include_eps: bool = True,
     include_revenue: bool = True,
     include_cashflow: bool = True,
+    include_fcf: bool = True,  # NEU: FCF Parameter
 ):
     """
     Führt die CAGR-Analyse für einen gegebenen Ticker durch.
@@ -155,6 +159,7 @@ def run_analysis(
         include_eps: Include EPS in calculation
         include_revenue: Include revenue per share in calculation
         include_cashflow: Include cashflow per share in calculation
+        include_fcf: Include free cash flow per share in calculation
     """
     required_years = end_year - start_year
     data, mos_input = fmp_api.get_year_data_by_range(
@@ -177,6 +182,8 @@ def run_analysis(
         active_metrics.append("revenue")
     if include_cashflow:
         active_metrics.append("cashflow")
+    if include_fcf:  # NEU
+        active_metrics.append("fcf")
 
     print(f"\n==== {ticker.upper()} Yearly CAGR ({period_years}y periods) ====")
     print(f"Active metrics: {', '.join(active_metrics)}\n")
@@ -196,6 +203,7 @@ def run_analysis(
                 include_eps=include_eps,
                 include_revenue=include_revenue,
                 include_cashflow=include_cashflow,
+                include_fcf=include_fcf,  # NEU
             )
             result["from"] = start
             result["to"] = end
@@ -216,6 +224,8 @@ def run_analysis(
             cols.append("revenue")
         if include_cashflow:
             cols.append("cashflow")
+        if include_fcf:  # NEU
+            cols.append("fcf")
         cols.append("avg")
 
         result_df = result_df[cols]
@@ -232,7 +242,7 @@ def _main():
     period_years = 5
 
     print("\n" + "=" * 60)
-    print("all metrics (default)")
+    print("all metrics (default - including FCF)")
     print("=" * 60)
     run_analysis(
         ticker=ticker,
@@ -243,6 +253,7 @@ def _main():
         include_eps=True,
         include_revenue=True,
         include_cashflow=True,
+        include_fcf=True,  # NEU
     )
 
 

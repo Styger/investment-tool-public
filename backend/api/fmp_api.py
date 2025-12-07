@@ -77,7 +77,13 @@ def get_year_data_by_range(ticker, start_year, years=4):
         return {}
 
     results = []
-    book_list, eps_list, revenue_list, cashflow_list = [], [], [], []
+    book_list, eps_list, revenue_list, cashflow_list, fcf_list = (
+        [],
+        [],
+        [],
+        [],
+        [],
+    )  # NEU: fcf_list hinzugefügt
 
     for year in range(start_year, start_year + years + 1):
         i = get_by_year(income, year)
@@ -103,12 +109,16 @@ def get_year_data_by_range(ticker, start_year, years=4):
         eps_list.append(i.get("eps", 0))
         revenue_list.append(m.get("revenuePerShare", 0))
         cashflow_list.append(m.get("operatingCashFlowPerShare", 0))
+        fcf_list.append(
+            m.get("freeCashFlowPerShare", 0)
+        )  # NEU: FCF per Share hinzufügen
 
     mos_metrics = {
         "book": book_list,
         "eps": eps_list,
         "revenue": revenue_list,
         "cashflow": cashflow_list,
+        "fcf": fcf_list,  # NEU: FCF zum Dictionary hinzufügen
     }
 
     return results, mos_metrics

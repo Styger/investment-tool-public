@@ -4,8 +4,8 @@ Run complete investment analysis: Quantitative + Qualitative + AI Moat
 
 Usage:
     python run.py AAPL
-    python run.py AAPL --load-sec  # Force reload SEC data
-    python run.py AAPL --no-growth-estimate  # Manual growth rate
+    python run.py AAPL --preset quant-only
+    python run.py AAPL --no-brand --no-scale
 """
 
 import sys
@@ -17,52 +17,76 @@ root_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(root_dir))
 
 from valuekit_integration import ValueKitAnalyzer
+from analysis_config import (
+    AnalysisConfig,
+    quick_config,
+    quantitative_only,
+    qualitative_only,
+)
 
 
 def run_analysis(
     ticker: str,
-    load_sec_data: bool = False,
-    auto_estimate_growth: bool = True,
+    config: AnalysisConfig = None,
     growth_rate: float = None,
-    margin_of_safety: float = 0.50,
-    discount_rate: float = 0.15,
     year: int = 2024,
 ):
     """
-    Run complete ValueKit AI analysis
+    Run complete ValueKit AI analysis with config
 
     Args:
         ticker: Stock ticker symbol
-        load_sec_data: Force reload SEC 10-K data
-        auto_estimate_growth: Auto-estimate growth from CAGR
-        growth_rate: Manual growth rate (overrides auto-estimate)
-        margin_of_safety: Safety margin (default 50%)
-        discount_rate: Discount rate (default 15%)
+        config: AnalysisConfig object with feature flags
+        growth_rate: Manual growth rate (overrides config)
         year: Base year for calculations
     """
+
+    if config is None:
+        config = quick_config()
 
     print("\n" + "=" * 80)
     print("🚀 VALUEKIT AI INVESTMENT ANALYSIS")
     print("=" * 80)
     print(f"\nTicker: {ticker.upper()}")
     print(
-        f"Mode: {'Auto-estimate growth' if auto_estimate_growth else 'Manual growth'}"
+        f"Mode: {'Auto-estimate growth' if config.auto_estimate_growth else 'Manual growth'}"
     )
-    print(f"SEC Data: {'Reloading...' if load_sec_data else 'Using cache'}")
+    print(f"SEC Data: {'Reloading...' if config.load_sec_data else 'Using cache'}")
+
+    # Show config
+    print(f"\n📋 Analysis Components:")
+    if config.run_mos or config.run_cagr:
+        quant = []
+        if config.run_mos:
+            quant.append("MOS")
+        if config.run_cagr:
+            quant.append("CAGR")
+        if config.run_roic:
+            quant.append("ROIC")
+        print(f"  Quantitative: {', '.join(quant)}")
+
+    if config.run_moat_analysis:
+        moats = [m.replace("_", " ").title() for m in config.get_enabled_moats()]
+        print(f"  Moats: {', '.join(moats) if moats else 'None'}")
+
+    if config.run_red_flags:
+        flags = [f.replace("_", " ").title() for f in config.get_enabled_red_flags()]
+        print(f"  Red Flags: {', '.join(flags) if flags else 'None'}")
 
     try:
         # Initialize analyzer
         analyzer = ValueKitAnalyzer()
 
-        # Run complete analysis
+        # Run complete analysis with config
         result = analyzer.analyze_stock_complete(
             ticker=ticker,
             year=year,
             growth_rate=growth_rate,
-            discount_rate=discount_rate,
-            margin_of_safety=margin_of_safety,
-            auto_estimate_growth=auto_estimate_growth,
-            load_sec_data=load_sec_data,
+            discount_rate=config.discount_rate,
+            margin_of_safety=config.margin_of_safety,
+            auto_estimate_growth=config.auto_estimate_growth,
+            load_sec_data=config.load_sec_data,
+            config=config,  # Pass config!
         )
 
         # Print detailed results
@@ -102,58 +126,67 @@ def _print_results(result: dict):
         print(f"  Average:       {growth['avg_growth_rate'] * 100:>6.2f}%")
 
     # Intrinsic Value
-    mos = result["intrinsic_value"]
-    print(f"\n💰 INTRINSIC VALUE (MARGIN OF SAFETY)")
-    print(f"{'─' * 80}")
-    print(f"Current Stock Price:  ${mos['Current Stock Price']:>10.2f}")
-    print(f"Fair Value Today:     ${mos['Fair Value Today']:>10.2f}")
-    print(f"MOS Price (50%):      ${mos['MOS Price']:>10.2f}")
-    print(f"\nValuation: {mos['Price vs Fair Value']}")
-    print(f"MOS Recommendation: {mos['Investment Recommendation']}")
+    if result.get("intrinsic_value"):
+        mos = result["intrinsic_value"]
+        print(f"\n💰 INTRINSIC VALUE (MARGIN OF SAFETY)")
+        print(f"{'─' * 80}")
+        print(f"Current Stock Price:  ${mos['Current Stock Price']:>10.2f}")
+        print(f"Fair Value Today:     ${mos['Fair Value Today']:>10.2f}")
+        print(f"MOS Price (50%):      ${mos['MOS Price']:>10.2f}")
+        print(f"\nValuation: {mos['Price vs Fair Value']}")
+        print(f"MOS Recommendation: {mos['Investment Recommendation']}")
 
     # AI Moat Analysis
-    ai = result["ai_analysis"]
-    moat = ai.moat_analysis
+    if result.get("ai_analysis"):
+        ai = result["ai_analysis"]
+        moat = ai.moat_analysis
 
-    print(f"\n🏰 AI MOAT ANALYSIS")
-    print(f"{'─' * 80}")
-    print(f"Overall Moat Score:   {moat.overall_score}/50")
-    print(f"Moat Strength:        {moat.moat_strength}")
-    print(f"Competitive Position: {moat.competitive_position}")
+        # Calculate display values
+        num_moats = len(moat.moats)
+        max_possible = num_moats * 10
 
-    print(f"\nIndividual Moat Scores:")
-    sorted_moats = sorted(moat.moats.items(), key=lambda x: x[1].score, reverse=True)
-    for i, (key, m) in enumerate(sorted_moats, 1):
-        emoji = "🟢" if m.score >= 7 else ("🟡" if m.score >= 4 else "🔴")
+        print(f"\n🏰 AI MOAT ANALYSIS")
+        print(f"{'─' * 80}")
         print(
-            f"  {i}. {emoji} {m.name:30s} {m.score:>2}/10 ({m.confidence} confidence)"
+            f"Overall Moat Score:   {moat.overall_score}/{max_possible} ({num_moats} moats analyzed)"
         )
+        print(f"Moat Strength:        {moat.moat_strength}")
+        print(f"Competitive Position: {moat.competitive_position}")
 
-    if moat.red_flags:
-        print(f"\n🚩 RED FLAGS ({len(moat.red_flags)}):")
-        for i, flag in enumerate(moat.red_flags, 1):
-            print(f"  {i}. {flag[:100]}...")
-    else:
-        print(f"\n✅ No significant red flags detected")
+        print(f"\nIndividual Moat Scores:")
+        sorted_moats = sorted(
+            moat.moats.items(), key=lambda x: x[1].score, reverse=True
+        )
+        for i, (key, m) in enumerate(sorted_moats, 1):
+            emoji = "🟢" if m.score >= 7 else ("🟡" if m.score >= 4 else "🔴")
+            print(
+                f"  {i}. {emoji} {m.name:30s} {m.score:>2}/10 ({m.confidence} confidence)"
+            )
 
-    # AI Decision
-    print(f"\n🤖 AI INVESTMENT DECISION")
-    print(f"{'─' * 80}")
-    print(f"Decision:       {ai.decision}")
-    print(f"Confidence:     {ai.confidence}")
-    print(f"Overall Score:  {ai.overall_score}/100")
-    print(f"\nScore Breakdown:")
-    print(f"  Quantitative:  {ai.quantitative_score}/100 (60% weight)")
-    print(f"  Qualitative:   {ai.qualitative_score}/100 (40% weight)")
-    print(
-        f"  Red Flag Penalty: -{ai.overall_score - int((ai.quantitative_score * 0.6 + ai.qualitative_score * 0.4))}"
-    )
+        if moat.red_flags:
+            print(f"\n🚩 RED FLAGS ({len(moat.red_flags)}):")
+            for i, flag in enumerate(moat.red_flags, 1):
+                print(f"  {i}. {flag[:100]}...")
+        else:
+            print(f"\n✅ No significant red flags detected")
+
+        # AI Decision
+        print(f"\n🤖 AI INVESTMENT DECISION")
+        print(f"{'─' * 80}")
+        print(f"Decision:       {ai.decision}")
+        print(f"Confidence:     {ai.confidence}")
+        print(f"Overall Score:  {ai.overall_score}/100")
+        print(f"\nScore Breakdown:")
+        print(f"  Quantitative:  {ai.quantitative_score}/100 (60% weight)")
+        print(f"  Qualitative:   {ai.qualitative_score}/100 (40% weight)")
+        print(
+            f"  Red Flag Penalty: -{ai.overall_score - int((ai.quantitative_score * 0.6 + ai.qualitative_score * 0.4))}"
+        )
 
     # Final Recommendation
     print(f"\n🎯 FINAL RECOMMENDATION")
     print(f"{'─' * 80}")
     print(f"\n  {result['final_recommendation']}")
-
     print(f"\n{'=' * 80}\n")
 
 
@@ -165,52 +198,61 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python run.py AAPL                    # Quick analysis
-  python run.py AAPL --load-sec         # Force reload SEC data
-  python run.py MSFT --growth 0.12      # Manual growth rate (12%)
-  python run.py GOOGL --mos 0.30        # 30% margin of safety
+  python run.py AAPL                    # Quick analysis (default)
+  python run.py AAPL --preset quant-only  # Only quantitative
+  python run.py AAPL --no-brand --no-scale  # Skip certain moats
+  python run.py AAPL --no-red-flags     # Skip red flag detection
         """,
     )
 
+    parser.add_argument("ticker", type=str, help="Stock ticker symbol")
+
+    # Preset configs
     parser.add_argument(
-        "ticker", type=str, help="Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)"
+        "--preset",
+        type=str,
+        choices=["quick", "quant-only", "qual-only"],
+        help="Analysis preset (quick=all, quant-only=numbers, qual-only=moats)",
     )
 
+    # Toggle components
+    parser.add_argument("--no-mos", action="store_true", help="Disable MOS calculation")
     parser.add_argument(
-        "--load-sec",
-        action="store_true",
-        help="Force reload SEC 10-K data (default: use cache)",
+        "--no-cagr", action="store_true", help="Disable CAGR calculation"
+    )
+    parser.add_argument(
+        "--no-moats", action="store_true", help="Disable all moat analysis"
+    )
+    parser.add_argument(
+        "--no-red-flags", action="store_true", help="Disable red flag detection"
     )
 
+    # Individual moats
+    parser.add_argument("--no-brand", action="store_true", help="Skip brand power moat")
     parser.add_argument(
-        "--no-growth-estimate",
-        action="store_true",
-        help="Disable auto growth rate estimation",
+        "--no-switching", action="store_true", help="Skip switching costs moat"
+    )
+    parser.add_argument(
+        "--no-network", action="store_true", help="Skip network effects moat"
+    )
+    parser.add_argument(
+        "--no-cost", action="store_true", help="Skip cost advantages moat"
+    )
+    parser.add_argument(
+        "--no-scale", action="store_true", help="Skip efficient scale moat"
     )
 
+    # Options
+    parser.add_argument("--load-sec", action="store_true", help="Force reload SEC data")
+    parser.add_argument("--growth", type=float, help="Manual growth rate")
     parser.add_argument(
-        "--growth", type=float, help="Manual growth rate (e.g., 0.12 for 12%%)"
+        "--mos", type=float, default=0.50, help="Margin of safety (default: 0.50)"
     )
-
     parser.add_argument(
-        "--mos",
-        type=float,
-        default=0.50,
-        help="Margin of safety (default: 0.50 = 50%%)",
+        "--discount", type=float, default=0.15, help="Discount rate (default: 0.15)"
     )
-
     parser.add_argument(
-        "--discount",
-        type=float,
-        default=0.15,
-        help="Discount rate (default: 0.15 = 15%%)",
-    )
-
-    parser.add_argument(
-        "--year",
-        type=int,
-        default=2024,
-        help="Base year for calculations (default: 2024)",
+        "--year", type=int, default=2024, help="Base year (default: 2024)"
     )
 
     args = parser.parse_args()
@@ -221,14 +263,46 @@ Examples:
         print(f"❌ Invalid ticker: {ticker}")
         sys.exit(1)
 
+    # Build config
+    if args.preset == "quant-only":
+        config = quantitative_only()
+    elif args.preset == "qual-only":
+        config = qualitative_only()
+    else:
+        config = quick_config()
+
+    # Apply toggles
+    if args.no_mos:
+        config.run_mos = False
+    if args.no_cagr:
+        config.run_cagr = False
+    if args.no_moats:
+        config.run_moat_analysis = False
+    if args.no_red_flags:
+        config.run_red_flags = False
+
+    # Individual moat toggles
+    if args.no_brand:
+        config.run_brand_power = False
+    if args.no_switching:
+        config.run_switching_costs = False
+    if args.no_network:
+        config.run_network_effects = False
+    if args.no_cost:
+        config.run_cost_advantages = False
+    if args.no_scale:
+        config.run_efficient_scale = False
+
+    # Other options
+    config.load_sec_data = args.load_sec
+    config.margin_of_safety = args.mos
+    config.discount_rate = args.discount
+
     # Run analysis
     result = run_analysis(
         ticker=ticker,
-        load_sec_data=args.load_sec,
-        auto_estimate_growth=not args.no_growth_estimate,
+        config=config,
         growth_rate=args.growth,
-        margin_of_safety=args.mos,
-        discount_rate=args.discount,
         year=args.year,
     )
 

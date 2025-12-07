@@ -61,6 +61,7 @@
     "checkbox_eps": "Gewinn pro Aktie",
     "checkbox_book": "Buchwert pro Aktie",
     "checkbox_cashflow": "Cashflow pro Aktie",
+    "checkbox_fcf": "FCF pro Aktie",
     "select_metrics": "Metriken auswählen:",
 
     "mos_title": "MOS-Berechnung",
@@ -113,7 +114,7 @@
     "calculating_pbt": "Berechne PBT für {}...",
     "pbt_analysis_completed": "PBT-Analyse für {} abgeschlossen",
     "pbt_price": "PBT-Kaufpreis",
-    "pbt_buy_price": "PBT-Kaufpreis",
+    "pbt_buy_price": "PBT-Kaufpreis (8Y Payback):",
     "based_on_8_year_payback": "Basierend auf 8-jähriger Amortisationszeit",
     "revenue": "Umsatz",
     "income": "Einkommen",
@@ -134,6 +135,13 @@
     "based_on_8_year_payback_info": "Basierend auf 8-jähriger PBT-Rückzahlung",
     "with_safety_margin": "Mit {}% Sicherheitsmarge",
     "pbt_calculation_info": "PBT-Berechnung: Basierend auf 8-jähriger Rückzahlung | PBT-Kaufpreis = Fairer Wert × (1 - {:.0f}% Sicherheitsmarge)",
+    "pbt_calc_title": "PBT Analyse für",
+    "pbt_year": "Jahr",
+    "pbt_income": "Einnahme",
+    "pbt_cumulative": "Kumuliert",
+    "pbt_fcf_per_share": "FCF pro Aktie:",
+    "pbt_growth_rate": "Wachstumsrate:",
+    "pbt_fair_value": "Fair Value (2x):",
 
     "ten_cap_calc_title": "TEN CAP Analyse für",
     "ten_cap_profit_before_tax": "Gewinn vor Steuern:",
@@ -219,6 +227,7 @@
     "pbt_how_it_works": "- Verwendet Free Cash Flow pro Aktie\n- Berechnet Wachstum über mehrere Jahre\n- Summiert Cashflows bis zur Amortisation\n- Wendet Sicherheitsmarge an",
     "pbt_when_to_use": "- Bei cashflow-starken Unternehmen\n- Für langfristige Investitionen\n- Wenn Sie konservativ bewerten möchten\n- Bei etablierten, profitablen Firmen",
     "pbt_formula_explanation": "Fair Value basiert auf kumulierten FCF über 8 Jahre. Buy Price = Fair Value × (1 - MOS%). Standard MOS ist 25%.",
+
 
     "cagr_method_title": "Durchschnittliche jährliche Wachstumsrate (CAGR)",
     "cagr_description": "CAGR misst die durchschnittliche jährliche Wachstumsrate verschiedener Kennzahlen pro Aktie über einen bestimmten Zeitraum (Buchwert, EPS, Umsatz, Cashflow).",
@@ -428,6 +437,7 @@
     "checkbox_eps": "Earnings per Share",
     "checkbox_book": "Book Value per Share",
     "checkbox_cashflow": "Cash Flow per Share",
+    "checkbox_fcf": "FCF per Share",
     "select_metrics": "Select Metrics:",
 
     "mos_title": "MOS Calculation",
@@ -491,6 +501,13 @@
     "based_on_8_year_payback_info": "Based on 8-year PBT payback",
     "with_safety_margin": "With {}% safety margin",
     "pbt_calculation_info": "PBT Calculation: Based on 8-year payback | PBT Buy Price = Fair Value × (1 - {:.0f}% Safety Margin)",
+    "pbt_calc_title": "PBT Analyse for",
+    "pbt_year": "Year",
+    "pbt_income": "Income",
+    "pbt_cumulative": "Cumulative",
+    "pbt_fcf_per_share": "FCF per Share:",
+    "pbt_growth_rate": "Growth Rate:",
+    "pbt_fair_value": "Fair Value (2x):",
     
     "ten_cap_calc_title": "TEN CAP Analysis for",
     "ten_cap_profit_before_tax": "Profit Before Tax:",

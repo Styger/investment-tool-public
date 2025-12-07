@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
-from ..config import get_text, save_persistence_data
+from ..config import get_text, save_persistence_data, capture_output
 import backend.logic.pbt as pbt_logic
 
 
 def show_pbt_analysis():
-    """Payback Time Analysis Interface with global ticker support"""
+    """Payback Time Analysis Interface with global ticker support and multi-year"""
 
     st.header(f"⏰ {get_text('pbt_title')}")
     st.write(get_text("pbt_description"))
@@ -25,7 +25,7 @@ def show_pbt_analysis():
         key="pbt_use_individual",
     )
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3 = st.columns(3)
 
     with col1:
         if use_individual_ticker:
@@ -53,15 +53,53 @@ def show_pbt_analysis():
                 save_persistence_data()
 
     with col2:
-        year = st.number_input(
-            get_text("base_year"),
-            min_value=1990,
-            max_value=2030,
-            value=int(persist_data.get("year", 2024)),
-            key="pbt_year",
+        multi_year = st.checkbox(
+            get_text("multi_year_checkbox"),
+            value=persist_data.get("multi_year", False),
+            key="pbt_multi",
         )
 
     with col3:
+        show_details = st.checkbox(
+            get_text("details_checkbox"),
+            value=persist_data.get("show_details", False),
+            key="pbt_details",
+        )
+
+    # Year und Growth Rate inputs
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if multi_year:
+            subcol1, subcol2 = st.columns(2)
+            with subcol1:
+                start_year = st.number_input(
+                    get_text("from_year"),
+                    min_value=1990,
+                    max_value=2030,
+                    value=int(persist_data.get("start_year", 2020)),
+                    key="pbt_start",
+                )
+            with subcol2:
+                end_year = st.number_input(
+                    get_text("to_year"),
+                    min_value=1990,
+                    max_value=2030,
+                    value=int(persist_data.get("end_year", 2024)),
+                    key="pbt_end",
+                )
+            years = list(range(start_year, end_year + 1))
+        else:
+            single_year = st.number_input(
+                get_text("year"),
+                min_value=1990,
+                max_value=2030,
+                value=int(persist_data.get("single_year", 2024)),
+                key="pbt_single",
+            )
+            years = [single_year]
+
+    with col2:
         growth_rate = st.number_input(
             get_text("growth_rate"),
             min_value=0.0,
@@ -71,118 +109,235 @@ def show_pbt_analysis():
             key="pbt_growth",
         )
 
-    with col4:
-        margin_of_safety = st.number_input(
-            get_text("margin_of_safety"),
-            min_value=0.0,
-            max_value=100.0,
-            value=float(persist_data.get("margin_of_safety", 50.0)),
-            step=1.0,
-            key="pbt_mos",
-        )
-
     if st.button(get_text("run_pbt_analysis"), key="pbt_run_button"):
         if not ticker:
             st.error(get_text("please_enter_ticker"))
+        elif multi_year and start_year >= end_year:
+            st.error(get_text("start_year_before_end"))
         else:
             with st.spinner(get_text("calculating_pbt").format(ticker)):
                 try:
                     # Save to persistence
-                    persist_data = {
+                    persist_update = {
                         "ticker": ticker if use_individual_ticker else "",
                         "use_individual_ticker": use_individual_ticker,
-                        "year": str(year),
+                        "multi_year": multi_year,
+                        "show_details": show_details,
                         "growth_rate": str(growth_rate),
-                        "margin_of_safety": str(margin_of_safety),
                     }
-                    st.session_state.persist.setdefault("PBT", {}).update(persist_data)
+                    if multi_year:
+                        persist_update.update(
+                            {"start_year": str(start_year), "end_year": str(end_year)}
+                        )
+                    else:
+                        persist_update["single_year"] = str(single_year)
+
+                    st.session_state.persist.setdefault("PBT", {}).update(
+                        persist_update
+                    )
                     save_persistence_data()
 
-                    # Neue Funktion gibt 4 Werte zurück: fair_value, buy_price, table, price_info
-                    fair_value, buy_price, table, price_info = (
-                        pbt_logic.calculate_pbt_from_ticker(
-                            ticker,
-                            year,
-                            growth_rate / 100,
-                            margin_of_safety / 100,
-                            return_full_table=True,
-                        )
-                    )
+                    if show_details:
+                        # Details anzeigen - formatierte Reports mit Cashflow-Tabelle
+                        current_language_data = st.session_state.get("language", {})
 
-                    st.success(get_text("pbt_analysis_completed").format(ticker))
+                        for year in years:
+                            try:
+                                _, output = capture_output(
+                                    pbt_logic.print_pbt_analysis,
+                                    ticker,
+                                    year,
+                                    growth_rate / 100,
+                                    current_language_data,
+                                )
+                                if output.strip():
+                                    st.code(output, language=None)
+                                else:
+                                    st.warning(
+                                        get_text("no_details_available").format(year)
+                                    )
+                            except Exception as e:
+                                st.error(
+                                    get_text("error_for_year").format(year, str(e))
+                                )
+                    else:
+                        # Tabellen-Ansicht
+                        results = []
+                        latest_year = max(years)
+                        current_price_data = None
 
-                    # Erweiterte Metriken mit Preisvergleich
-                    col1, col2, col3, col4 = st.columns(4)
+                        # Hole Current Price vom neuesten Jahr
+                        try:
+                            latest_result = pbt_logic.calculate_pbt_with_comparison(
+                                ticker, latest_year, growth_rate / 100
+                            )
+                            if (
+                                latest_result
+                                and latest_result.get("current_stock_price") is not None
+                            ):
+                                current_price_data = {
+                                    "price": latest_result["current_stock_price"],
+                                    "buy_price": latest_result.get("buy_price"),
+                                    "fair_value": latest_result.get("fair_value"),
+                                    "comparison": latest_result.get(
+                                        "price_comparison", "N/A"
+                                    ),
+                                    "recommendation": latest_result.get(
+                                        "investment_recommendation", "N/A"
+                                    ),
+                                }
+                        except Exception as e:
+                            st.warning(
+                                get_text("could_not_fetch_current_price").format(str(e))
+                            )
 
-                    with col1:
-                        st.metric(
-                            get_text("fair_value_8y_payback"), f"${fair_value:,.2f}"
-                        )
-
-                    with col2:
-                        st.metric(get_text("buy_price_with_mos"), f"${buy_price:,.2f}")
-
-                    with col3:
-                        st.metric(
-                            get_text("current_stock_price"),
-                            f"${price_info['Current Stock Price']:,.2f}",
-                        )
-                        st.metric(
-                            get_text("fcf_per_share"),
-                            f"${price_info['FCF per Share']:,.2f}",
-                        )
-
-                    with col4:
-                        # Bewertung anzeigen (basiert jetzt auf Fair Value)
-                        valuation = price_info["Price vs Fair Value"]
-                        if "Undervalued" in valuation:
-                            st.success(f"📈 {valuation}")
-                        elif "Overvalued" in valuation:
-                            st.warning(f"📉 {valuation}")
-                        else:
-                            st.info(f"⚖️ {valuation}")
-
-                        # Investment Recommendation anzeigen
-                        recommendation = price_info["Investment Recommendation"]
-                        if "Strong Buy" in recommendation:
-                            st.success(f"🚀 {recommendation}")
-                        elif "Buy" in recommendation:
-                            st.success(f"✅ {recommendation}")
-                        elif "Hold" in recommendation:
-                            st.warning(f"⚖️ {recommendation}")
-                        else:
-                            st.error(f"❌ {recommendation}")
-
-                    # Zentrale Info-Box mit wichtigen Erklärungen
-                    st.info(get_text("pbt_calculation_info").format(margin_of_safety))
-
-                    # Tabelle anzeigen
-                    if table:
-                        st.subheader(get_text("payback_time_calculation"))
-                        df = pd.DataFrame(table)
-                        df["Jahr"] = df["Jahr"].astype(int)
-                        df = df.rename(
-                            columns={
-                                "Jahr": get_text("year"),
-                                "Einnahme": get_text("income"),
-                                "Summe_Cashflows": get_text("cumulative"),
-                                "Fair_Value": get_text("fair_value_8y"),
-                            }
-                        )
-
-                        # Formatierung der Geldbeträge
-                        for col in [get_text("income"), get_text("cumulative")]:
-                            if col in df.columns:
-                                df[col] = df[col].apply(
-                                    lambda x: f"${x:,.2f}" if pd.notna(x) else ""
+                        # Sammle alle Ergebnisse
+                        for year in years:
+                            try:
+                                result_data = pbt_logic.calculate_pbt_with_comparison(
+                                    ticker, year, growth_rate / 100
                                 )
 
-                        if get_text("fair_value_8y") in df.columns:
-                            df[get_text("fair_value_8y")] = df[
-                                get_text("fair_value_8y")
-                            ].apply(lambda x: f"${x:,.2f}" if pd.notna(x) else "")
+                                if result_data:
+                                    buy_price = result_data.get("buy_price")
+                                    fair_value = result_data.get("fair_value")
+                                    fcf = result_data.get("fcf_per_share")
 
-                        st.dataframe(df, width="stretch")
+                                    row = {
+                                        get_text("year"): year,
+                                        get_text(
+                                            "fcf_per_share", "FCF per Share"
+                                        ): f"${fcf:,.2f}" if fcf else "N/A",
+                                        get_text(
+                                            "buy_price_8y_payback", "Buy Price (8Y)"
+                                        ): f"${buy_price:,.2f}" if buy_price else "N/A",
+                                        get_text(
+                                            "fair_value_2x", "Fair Value (2x)"
+                                        ): f"${fair_value:,.2f}"
+                                        if fair_value
+                                        else "N/A",
+                                    }
+
+                                    # Current Price nur beim neuesten Jahr hinzufügen
+                                    if year == latest_year and current_price_data:
+                                        row[get_text("current_stock_price")] = (
+                                            f"${current_price_data['price']:,.2f}"
+                                        )
+                                        row[get_text("price_comparison")] = (
+                                            current_price_data["comparison"]
+                                        )
+
+                                    results.append(row)
+                                else:
+                                    results.append(
+                                        {
+                                            get_text("year"): year,
+                                            get_text(
+                                                "fcf_per_share", "FCF per Share"
+                                            ): "N/A",
+                                            get_text(
+                                                "buy_price_8y_payback", "Buy Price (8Y)"
+                                            ): "N/A",
+                                            get_text(
+                                                "fair_value_2x", "Fair Value (2x)"
+                                            ): "N/A",
+                                        }
+                                    )
+
+                            except Exception as e:
+                                results.append(
+                                    {
+                                        get_text("year"): year,
+                                        get_text(
+                                            "fcf_per_share", "FCF per Share"
+                                        ): f"{get_text('error')}: {str(e)}",
+                                        get_text(
+                                            "buy_price_8y_payback", "Buy Price (8Y)"
+                                        ): f"{get_text('error')}: {str(e)}",
+                                        get_text(
+                                            "fair_value_2x", "Fair Value (2x)"
+                                        ): f"{get_text('error')}: {str(e)}",
+                                    }
+                                )
+
+                        if results:
+                            # Spezielle Anzeige für Single Year
+                            if len(years) == 1 and current_price_data:
+                                st.subheader(
+                                    get_text(
+                                        "pbt_analysis_for", "PBT Analysis for"
+                                    ).format(ticker)
+                                )
+
+                                # Metriken in 4 Spalten anzeigen
+                                col1, col2, col3, col4 = st.columns(4)
+
+                                with col1:
+                                    st.metric(
+                                        get_text(
+                                            "buy_price_8y_payback", "Buy Price (8Y)"
+                                        ),
+                                        f"${current_price_data['buy_price']:,.2f}",
+                                    )
+
+                                with col2:
+                                    st.metric(
+                                        get_text("fair_value_2x", "Fair Value (2x)"),
+                                        f"${current_price_data['fair_value']:,.2f}",
+                                    )
+
+                                with col3:
+                                    st.metric(
+                                        get_text("current_stock_price"),
+                                        f"${current_price_data['price']:,.2f}",
+                                    )
+
+                                with col4:
+                                    # Bewertung
+                                    valuation = current_price_data["comparison"]
+                                    if "Below buy price" in valuation:
+                                        st.success(f"📈 {valuation}")
+                                    elif "Below fair value" in valuation:
+                                        st.info(f"✅ {valuation}")
+                                    elif "Overvalued" in valuation:
+                                        st.warning(f"📉 {valuation}")
+                                    else:
+                                        st.info(f"⚖️ {valuation}")
+
+                                    # Investment Recommendation
+                                    recommendation = current_price_data[
+                                        "recommendation"
+                                    ]
+                                    if "Strong Buy" in recommendation:
+                                        st.success(f"🚀 {recommendation}")
+                                    elif "Buy" in recommendation:
+                                        st.success(f"✅ {recommendation}")
+                                    elif "Hold" in recommendation:
+                                        st.warning(f"⚖️ {recommendation}")
+                                    else:
+                                        st.error(f"❌ {recommendation}")
+
+                                # Zentrale Info-Box
+                                st.info(
+                                    get_text(
+                                        "pbt_calculation_info_simple",
+                                        "💡 **Payback Time Method:** Buy Price = 8-year cumulative FCF | Fair Value = 2× Buy Price",
+                                    )
+                                )
+
+                            # Tabelle für alle Fälle anzeigen
+                            df = pd.DataFrame(results)
+                            st.dataframe(df, width="stretch")
+
+                            # Zusätzliche Info bei Multi-Year
+                            if multi_year and current_price_data:
+                                st.info(
+                                    get_text("current_price_comparison_info").format(
+                                        latest_year
+                                    )
+                                )
+
+                    st.success(get_text("pbt_analysis_completed").format(ticker))
 
                 except Exception as e:
                     st.error(get_text("pbt_analysis_failed").format(str(e)))

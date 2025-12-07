@@ -11,6 +11,7 @@ from typing import Dict, Optional
 root_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(root_dir))
 
+from backend.ai.analysis_config import AnalysisConfig
 from backend.logic.mos import calculate_mos_value_from_ticker
 from backend.logic.cagr import _mos_growth_estimate_auto
 from backend.api import fmp_api
@@ -114,7 +115,7 @@ class ValueKitAnalyzer:
         # Auto-estimate growth rate if not provided
         if growth_rate is None and auto_estimate_growth:
             print(f"📊 Auto-estimating growth rate for {ticker}...")
-            growth_data = self.estimate_growth_rate(ticker)
+            growth_data = self.estimate_growth_rate(ticker, end_year=year)
             growth_rate = growth_data["avg_growth_rate"]
             print(
                 f"   Estimated growth rate: {growth_rate * 100:.2f}% (based on {growth_data['period_years']}y CAGR)"
@@ -135,6 +136,8 @@ class ValueKitAnalyzer:
 
         return mos_result
 
+    # In valuekit_integration.py
+
     def analyze_stock_complete(
         self,
         ticker: str,
@@ -144,98 +147,119 @@ class ValueKitAnalyzer:
         margin_of_safety: float = 0.50,
         auto_estimate_growth: bool = True,
         load_sec_data: bool = False,
+        config: Optional["AnalysisConfig"] = None,
     ) -> Dict:
-        """
-        Complete stock analysis: Quantitative (MOS, CAGR) + Qualitative (Moat)
+        """Complete stock analysis with config support"""
 
-        Args:
-            ticker: Stock ticker
-            year: Base year
-            growth_rate: Manual growth rate (None for auto-estimate)
-            discount_rate: Discount rate
-            margin_of_safety: Safety margin
-            auto_estimate_growth: Auto-estimate growth from CAGR
-            load_sec_data: Whether to reload SEC data (False if already cached)
+        # Use config if provided
+        if config:
+            discount_rate = config.discount_rate
+            margin_of_safety = config.margin_of_safety
+            auto_estimate_growth = config.auto_estimate_growth
+            load_sec_data = config.load_sec_data
 
-        Returns:
-            Complete analysis with investment decision
-        """
         print(f"\n{'=' * 70}")
         print(f"🎯 VALUEKIT COMPLETE ANALYSIS: {ticker.upper()}")
         print(f"{'=' * 70}\n")
 
-        # Step 1: Calculate Growth Rate (CAGR)
-        if growth_rate is None and auto_estimate_growth:
-            growth_data = self.estimate_growth_rate(ticker)
-            growth_rate = growth_data["avg_growth_rate"]
+        # Step 1: Growth Rate (if enabled)
+        growth_data = None
+        if config is None or config.run_cagr:
+            if auto_estimate_growth and growth_rate is None:
+                growth_data = self.estimate_growth_rate(ticker, end_year=year)
+                growth_rate = growth_data["avg_growth_rate"]
 
-            print(f"📈 Growth Rate Analysis (CAGR):")
-            print(f"   Period: {growth_data['start_year']}-{growth_data['end_year']}")
-            print(f"   Book Value CAGR: {growth_data['book_cagr']:.2f}%")
-            print(f"   EPS CAGR: {growth_data['eps_cagr']:.2f}%")
-            print(f"   Revenue CAGR: {growth_data['revenue_cagr']:.2f}%")
-            print(f"   Cashflow CAGR: {growth_data['cashflow_cagr']:.2f}%")
-            print(f"   → Average Growth: {growth_rate * 100:.2f}%\n")
-
-        # Step 2: Calculate Intrinsic Value (MOS)
-        print(f"💰 Intrinsic Value Calculation (MOS):")
-        mos_result = self.calculate_intrinsic_value(
-            ticker=ticker,
-            year=year,
-            growth_rate=growth_rate,
-            discount_rate=discount_rate,
-            margin_of_safety=margin_of_safety,
-            auto_estimate_growth=False,  # Already calculated above
-        )
-
-        print(f"   Current Price: ${mos_result['Current Stock Price']:.2f}")
-        print(f"   Fair Value: ${mos_result['Fair Value Today']:.2f}")
-        print(f"   MOS Price: ${mos_result['MOS Price']:.2f}")
-        print(f"   {mos_result['Price vs Fair Value']}")
-        print(f"   → {mos_result['Investment Recommendation']}\n")
-
-        # Calculate margin of safety percentage
-        fair_value = mos_result["Fair Value Today"]
-        current_price = mos_result["Current Stock Price"]
-
-        if fair_value > 0 and current_price > 0:
-            actual_mos = ((fair_value - current_price) / fair_value) * 100
+                print(f"📈 Growth Rate Analysis (CAGR):")
+                print(
+                    f"   Period: {growth_data['start_year']}-{growth_data['end_year']}"
+                )
+                print(f"   Book Value CAGR: {growth_data['book_cagr']:.2f}%")
+                print(f"   EPS CAGR: {growth_data['eps_cagr']:.2f}%")
+                print(f"   Revenue CAGR: {growth_data['revenue_cagr']:.2f}%")
+                print(f"   Cashflow CAGR: {growth_data['cashflow_cagr']:.2f}%")
+                print(f"   → Average Growth: {growth_rate * 100:.2f}%\n")
         else:
-            actual_mos = 0
+            print(f"📈 Growth Rate Analysis (CAGR): SKIPPED\n")
 
-        # Step 3: Prepare metrics for AI Analysis
-        # Note: We don't have ROIC calculated yet - would need separate module
-        # For now, use growth rate as proxy for quality
-        quantitative_metrics = {
-            "margin_of_safety": f"{actual_mos:.2f}%",
-            "growth_rate": f"{growth_rate * 100:.2f}%",
-            "current_price": current_price,
-            "fair_value": fair_value,
-            "mos_price": mos_result["MOS Price"],
-            "discount_rate": f"{discount_rate * 100:.0f}%",
-            # TODO: Add ROIC when profitability.py is integrated
-        }
+        # Step 2: Intrinsic Value (if enabled)
+        mos_result = None
+        if config is None or config.run_mos:
+            print(f"💰 Intrinsic Value Calculation (MOS):")
+            mos_result = self.calculate_intrinsic_value(
+                ticker=ticker,
+                year=year,
+                growth_rate=growth_rate,
+                discount_rate=discount_rate,
+                margin_of_safety=margin_of_safety,
+                auto_estimate_growth=False,
+            )
 
-        # Step 4: AI Moat Analysis
-        print(f"🏰 AI Moat Analysis:")
-        ai_decision = self.ai_analyzer.analyze(
-            ticker=ticker,
-            quantitative_metrics=quantitative_metrics,
-            load_sec_data=load_sec_data,
-        )
+            print(f"   Current Price: ${mos_result['Current Stock Price']:.2f}")
+            print(f"   Fair Value: ${mos_result['Fair Value Today']:.2f}")
+            print(f"   MOS Price: ${mos_result['MOS Price']:.2f}")
+            print(f"   {mos_result['Price vs Fair Value']}")
+            print(f"   → {mos_result['Investment Recommendation']}\n")
+        else:
+            print(f"💰 Intrinsic Value Calculation (MOS): SKIPPED\n")
 
-        # Step 5: Combine Results
-        final_rec = self._reconcile_recommendations(
-            mos_result["Investment Recommendation"],
-            ai_decision.decision,
-            ai_decision.moat_analysis.moat_strength,
-        )
+        # Step 3: Prepare metrics for AI (if needed)
+        ai_decision = None
+        if config is None or config.run_moat_analysis:
+            # Calculate metrics
+            if mos_result:
+                fair_value = mos_result["Fair Value Today"]
+                current_price = mos_result["Current Stock Price"]
+                if fair_value > 0 and current_price > 0:
+                    actual_mos = ((fair_value - current_price) / fair_value) * 100
+                else:
+                    actual_mos = 0
+            else:
+                actual_mos = 0
+
+            quantitative_metrics = {
+                "margin_of_safety": f"{actual_mos:.2f}%",
+                "growth_rate": f"{growth_rate * 100:.2f}%" if growth_rate else "0%",
+                "current_price": mos_result["Current Stock Price"] if mos_result else 0,
+                "fair_value": mos_result["Fair Value Today"] if mos_result else 0,
+                "mos_price": mos_result["MOS Price"] if mos_result else 0,
+                "discount_rate": f"{discount_rate * 100:.0f}%",
+                "roic": "None",  # TODO: Add when profitability.py integrated
+            }
+
+            # Step 4: AI Moat Analysis
+            print(f"🏰 AI Moat Analysis:")
+            ai_decision = self.ai_analyzer.analyze(
+                ticker=ticker,
+                quantitative_metrics=quantitative_metrics,
+                load_sec_data=load_sec_data,
+                config=config,
+            )
+        else:
+            print(f"🏰 AI Moat Analysis: SKIPPED\n")
+
+        # Step 5: Final Recommendation
+        if mos_result and ai_decision:
+            # Both analyses available
+            final_rec = self._reconcile_recommendations(
+                mos_result["Investment Recommendation"],
+                ai_decision.decision,
+                ai_decision.moat_analysis.moat_strength,
+            )
+        elif mos_result:
+            # Only MOS available
+            final_rec = mos_result["Investment Recommendation"]
+        elif ai_decision:
+            # Only AI available
+            final_rec = ai_decision.decision
+        else:
+            # Nothing analyzed
+            final_rec = "No analysis performed (all components disabled)"
 
         return {
             "ticker": ticker.upper(),
-            "growth_analysis": growth_data if auto_estimate_growth else None,
+            "growth_analysis": growth_data,
             "intrinsic_value": mos_result,
-            "ai_analysis": ai_decision,
+            "ai_analysis": ai_decision,  # Can be None!
             "final_recommendation": final_rec,
         }
 

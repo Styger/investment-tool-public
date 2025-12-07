@@ -3,9 +3,10 @@ Moat Analysis System - Warren Buffett's 5 Economic Moats
 Analyzes competitive advantages from SEC 10-K filings using RAG
 """
 
-from typing import Dict, List, Any
+from typing import Dict, List, Optional
 from rag_service import get_rag_service
 from dataclasses import dataclass
+from analysis_config import AnalysisConfig
 
 
 @dataclass
@@ -193,21 +194,16 @@ class MoatAnalyzer:
 
     def __init__(self):
         self.rag = get_rag_service()
+        self.moat_types = self.MOAT_TYPES
 
     def analyze_single_moat(
         self, ticker: str, moat_key: str, moat_config: Dict
     ) -> MoatScore:
-        """
-        Analyze a single moat type
+        """Analyze a single moat type - Returns MoatScore with 0-10 rating"""
 
-        Returns:
-            MoatScore with 0-10 rating
-        """
-        # Create explicit prompt to avoid meta-commentary
         base_query = moat_config["query_template"].format(ticker=ticker)
         full_query = f"{base_query} Provide specific evidence from the SEC filings only. Do not mention data gaps, limitations, or inability to analyze. Focus only on what IS present in the documents."
 
-        # Get RAG analysis
         result = self.rag.analyze_with_rag(
             query=full_query, quantitative_data={"ticker": ticker}
         )
@@ -221,59 +217,53 @@ class MoatAnalyzer:
             )
 
         analysis_text = result["analysis"].lower()
-
-        # Count indicator mentions
         indicator_count = sum(
             1
             for indicator in moat_config["indicators"]
             if indicator.lower() in analysis_text
         )
 
-        # Extract evidence (first 3 relevant sentences)
         evidence = self._extract_evidence(result["analysis"], moat_config["indicators"])
 
-        # Calculate score (0-10)
-        # Based on: indicator frequency, evidence strength, source count
+        # Calculate score
         base_score = min(10, (indicator_count / len(moat_config["indicators"])) * 20)
         source_bonus = min(2, len(result.get("sources", [])) / 3)
         evidence_bonus = min(2, len(evidence))
-
         score = int(min(10, base_score + source_bonus + evidence_bonus))
 
-        # Determine confidence and apply ceiling
+        # Confidence ceiling
         if len(result.get("sources", [])) >= 3 and indicator_count >= 3:
-            confidence = "High"
-            confidence_ceiling = 10  # Can score up to 10
+            confidence, confidence_ceiling = "High", 10
         elif len(result.get("sources", [])) >= 2 and indicator_count >= 2:
-            confidence = "Medium"
-            confidence_ceiling = 8  # Can score up to 8
+            confidence, confidence_ceiling = "Medium", 8
         else:
-            confidence = "Low"
-            confidence_ceiling = 5  # Can score up to 5 max
+            confidence, confidence_ceiling = "Low", 5
 
-        # Apply confidence ceiling - cap the score
         final_score = min(score, confidence_ceiling)
 
         return MoatScore(
             name=moat_config["name"],
-            score=final_score,  # Now confidence-capped!
-            evidence=evidence[:3],  # Top 3 pieces of evidence
+            score=final_score,
+            evidence=evidence[:3],
             confidence=confidence,
         )
 
-    def detect_red_flags(self, ticker: str) -> List[str]:
-        """
-        Detect red flags from SEC filings
+    def detect_red_flags(
+        self, ticker: str, enabled_categories: List[str] = None
+    ) -> List[str]:
+        """Detect red flags - only checks enabled categories"""
 
-        Returns:
-            List of red flag descriptions
-        """
+        if enabled_categories is None:
+            enabled_categories = list(self.RED_FLAG_CATEGORIES.keys())
+
         red_flags = []
 
-        for category, config in self.RED_FLAG_CATEGORIES.items():
-            query = config["query"].format(ticker=ticker)
+        for category in enabled_categories:
+            if category not in self.RED_FLAG_CATEGORIES:
+                continue
 
-            # Add explicit instruction to only report SERIOUS red flags
+            config = self.RED_FLAG_CATEGORIES[category]
+            query = config["query"].format(ticker=ticker)
             full_query = f"{query} Only report SERIOUS concerns that would materially impact investment decisions. Do not report normal business risks or competitive dynamics that all companies face. Be specific about material risks only."
 
             result = self.rag.analyze_with_rag(
@@ -283,8 +273,7 @@ class MoatAnalyzer:
             if result["status"] == "success":
                 analysis_text = result["analysis"].lower()
 
-                # First check: Does the analysis actually report concerns?
-                # If it says "no issues" or "cannot identify", skip
+                # Check for "no issues" patterns
                 no_issue_patterns = [
                     "no specific",
                     "cannot identify",
@@ -305,12 +294,10 @@ class MoatAnalyzer:
                     "no issues",
                 ]
 
-                # Check if the response is actually saying "no problems found"
                 has_negative_finding = any(
                     pattern in analysis_text for pattern in no_issue_patterns
                 )
 
-                # Additional check: look for affirmative problem statements
                 problem_statements = [
                     "faces",
                     "experiencing",
@@ -328,18 +315,13 @@ class MoatAnalyzer:
                     stmt in analysis_text for stmt in problem_statements
                 )
 
-                # Only proceed if we have actual problems, not just keyword matches
                 if has_negative_finding and not has_positive_finding:
-                    continue  # Skip this category - analysis says "no issues found"
+                    continue
 
-                # More stringent keyword matching - need multiple indicators
                 found_keywords = [
                     kw for kw in config["keywords"] if kw.lower() in analysis_text
                 ]
 
-                # Only flag if:
-                # 1. Multiple keywords found (not just one)
-                # 2. Contains severity indicators
                 severity_indicators = [
                     "significant",
                     "material",
@@ -355,11 +337,9 @@ class MoatAnalyzer:
 
                 has_severity = any(ind in analysis_text for ind in severity_indicators)
 
-                # Require at least 2 keywords OR 1 keyword + severity indicator
                 if (len(found_keywords) >= 2) or (
                     len(found_keywords) >= 1 and has_severity
                 ):
-                    # Extract the concerning part
                     flag_description = self._extract_red_flag(
                         result["analysis"], category, found_keywords
                     )
@@ -368,50 +348,80 @@ class MoatAnalyzer:
 
         return red_flags
 
-    def analyze_company_moat(self, ticker: str) -> MoatAnalysis:
+    def analyze_moats(
+        self, ticker: str, config: Optional["AnalysisConfig"] = None
+    ) -> MoatAnalysis:
         """
-        Complete moat analysis for a company
+        Complete moat analysis with config support
+
+        Args:
+            ticker: Stock ticker
+            config: AnalysisConfig with enabled/disabled features
 
         Returns:
-            MoatAnalysis with scores, red flags, and recommendation
+            MoatAnalysis result
         """
-        print(f"\n🏰 Analyzing Economic Moats for {ticker}...")
-        print("=" * 70)
+        print(f"\n🏰 Analyzing Economic Moats for {ticker.upper()}...")
+        print("=" * 70 + "\n")
 
-        # Analyze each moat
+        # Get enabled moats and flags from config
+        if config:
+            enabled_moats = config.get_enabled_moats()
+            enabled_flags = (
+                config.get_enabled_red_flags() if config.run_red_flags else []
+            )
+        else:
+            # All enabled by default
+            enabled_moats = list(self.MOAT_TYPES.keys())
+            enabled_flags = list(self.RED_FLAG_CATEGORIES.keys())
+
         moat_scores = {}
-        for moat_key, moat_config in self.MOAT_TYPES.items():
-            print(f"\n📊 Analyzing: {moat_config['name']}...")
-            score = self.analyze_single_moat(ticker, moat_key, moat_config)
-            moat_scores[moat_key] = score
-            print(f"   Score: {score.score}/10 (Confidence: {score.confidence})")
-            if score.evidence:
-                print(f"   Evidence: {score.evidence[0][:100]}...")
 
-        # Calculate overall score
+        # Analyze only enabled moats
+        for moat_type, moat_config in self.MOAT_TYPES.items():
+            if moat_type in enabled_moats:
+                print(f"📊 Analyzing: {moat_config['name']}...")
+                score = self.analyze_single_moat(ticker, moat_type, moat_config)
+                moat_scores[moat_type] = score
+                print(f"   Score: {score.score}/10 (Confidence: {score.confidence})")
+            else:
+                print(f"⏭️  Skipping: {moat_config['name']}")
+
+        # Calculate overall score (only from analyzed moats)
         overall_score = sum(s.score for s in moat_scores.values())
 
-        # Determine moat strength (adjusted thresholds for confidence weighting)
-        # Wide: 33+ (was 35+, adjusted for low confidence penalties)
-        # Narrow: 18+ (was 20+)
-        if overall_score >= 33:
-            moat_strength = "Wide"
-        elif overall_score >= 18:
-            moat_strength = "Narrow"
+        # Determine moat strength DYNAMICALLY based on enabled moats
+        num_enabled_moats = len(moat_scores)
+        max_possible_score = num_enabled_moats * 10
+
+        if max_possible_score > 0:
+            # Calculate as percentage of max possible
+            score_percentage = overall_score / max_possible_score
+
+            if score_percentage >= 0.66:  # 66%+ → Wide
+                moat_strength = "Wide"
+            elif score_percentage >= 0.36:  # 36%+ → Narrow
+                moat_strength = "Narrow"
+            else:
+                moat_strength = "None"
         else:
+            # No moats analyzed
             moat_strength = "None"
 
-        # Detect red flags
-        print(f"\n🚩 Detecting Red Flags...")
-        red_flags = self.detect_red_flags(ticker)
-        print(f"   Found {len(red_flags)} red flags")
+        # Red flags (if enabled)
+        red_flags = []
+        if config is None or config.run_red_flags:
+            print(f"\n🚩 Detecting Red Flags...")
+            red_flags = self.detect_red_flags(ticker, enabled_flags)
+            print(f"   Found {len(red_flags)} red flags")
+        else:
+            print(f"\n🚩 Red Flag Detection: SKIPPED")
 
-        # Determine competitive position
+        # Assess position
         competitive_position = self._assess_competitive_position(
             overall_score, moat_scores, red_flags
         )
 
-        # Generate recommendation
         recommendation = self._generate_recommendation(
             overall_score, moat_strength, red_flags
         )
@@ -428,14 +438,11 @@ class MoatAnalyzer:
 
     def _extract_evidence(self, text: str, indicators: List[str]) -> List[str]:
         """Extract sentences containing moat indicators"""
-        # Split by periods and newlines
         sentences = []
         for line in text.split("\n"):
             sentences.extend(line.split("."))
 
         evidence = []
-
-        # Very aggressive filter for meta-commentary
         skip_patterns = [
             "quantitative",
             "qualitative",
@@ -467,23 +474,14 @@ class MoatAnalyzer:
 
         for sentence in sentences:
             sentence_lower = sentence.lower().strip()
-
-            # Skip very short sentences
             if len(sentence_lower) < 30:
                 continue
-
-            # Skip if contains meta-commentary
             if any(pattern in sentence_lower for pattern in skip_patterns):
                 continue
-
-            # Skip if starts with markdown headers or asterisks
             if sentence.strip().startswith("#") or sentence.strip().startswith("**"):
                 continue
-
-            # Check for moat indicators
             if any(ind.lower() in sentence_lower for ind in indicators):
                 clean = sentence.strip()
-                # Final check: must contain actual content words
                 content_words = [
                     "company",
                     "product",
@@ -495,13 +493,11 @@ class MoatAnalyzer:
                 if any(word in clean.lower() for word in content_words):
                     evidence.append(clean)
 
-        return evidence[:5]  # Return top 5
+        return evidence[:5]
 
     def _extract_red_flag(self, text: str, category: str, keywords: List[str]) -> str:
         """Extract red flag description from analysis"""
         sentences = text.split(".")
-
-        # Exclude patterns that indicate NO red flag found
         exclude_patterns = [
             "cannot identify",
             "do not discuss",
@@ -516,17 +512,12 @@ class MoatAnalyzer:
 
         for sentence in sentences:
             sentence_lower = sentence.lower().strip()
-
-            # Skip if it's actually saying "no red flag found"
             if any(pattern in sentence_lower for pattern in exclude_patterns):
                 continue
-
-            # Check if contains red flag keywords
             if any(kw.lower() in sentence_lower for kw in keywords):
                 clean = sentence.strip()
                 if len(clean) > 30:
                     return f"{category.replace('_', ' ').title()}: {clean}"
-
         return None
 
     def _assess_competitive_position(
@@ -537,15 +528,24 @@ class MoatAnalyzer:
     ) -> str:
         """Assess overall competitive position"""
 
-        # Adjusted thresholds to account for confidence weighting
-        if overall_score >= 33 and len(red_flags) == 0:
+        # Calculate as percentage of max possible
+        num_moats = len(moat_scores)
+        max_possible = num_moats * 10
+
+        if max_possible == 0:
+            return "Not analyzed"
+
+        score_percentage = overall_score / max_possible
+
+        # Use percentage-based thresholds
+        if score_percentage >= 0.66 and len(red_flags) == 0:
             return "Dominant market position with multiple sustainable competitive advantages"
-        elif overall_score >= 33:
+        elif score_percentage >= 0.66:
             return "Strong competitive position but facing some challenges"
-        elif overall_score >= 23 and len(red_flags) <= 1:
+        elif score_percentage >= 0.50 and len(red_flags) <= 1:
             return "Solid competitive position with moderate advantages"
-        elif overall_score >= 13:
-            return "Competitive but without strong moats"
+        elif score_percentage >= 0.36:
+            return "Competitive but with limited moats"  # Changed!
         else:
             return "Weak competitive position - commodity-like business"
 
@@ -553,7 +553,6 @@ class MoatAnalyzer:
         self, overall_score: int, moat_strength: str, red_flags: List[str]
     ) -> str:
         """Generate moat-based investment recommendation"""
-
         if moat_strength == "Wide" and len(red_flags) == 0:
             return "STRONG BUY - Wide moat, no significant red flags"
         elif moat_strength == "Wide" and len(red_flags) <= 1:
@@ -567,60 +566,13 @@ class MoatAnalyzer:
         else:
             return "PASS - No sustainable competitive advantage"
 
-    def print_analysis(self, analysis: MoatAnalysis):
-        """Pretty print moat analysis"""
-
-        print("\n" + "=" * 70)
-        print(f"🏰 MOAT ANALYSIS: {analysis.ticker}")
-        print("=" * 70)
-
-        print(f"\n📊 Overall Moat Score: {analysis.overall_score}/50")
-        print(f"💪 Moat Strength: {analysis.moat_strength}")
-        print(f"🎯 Competitive Position: {analysis.competitive_position}")
-
-        print(f"\n{'─' * 70}")
-        print("INDIVIDUAL MOAT SCORES")
-        print(f"{'─' * 70}")
-
-        for moat_key, score in analysis.moats.items():
-            print(f"\n{score.name}:")
-            print(f"  Score: {score.score}/10 ({score.confidence} confidence)")
-            if score.evidence:
-                print(f"  Evidence:")
-                for ev in score.evidence[:2]:
-                    print(f"    • {ev[:150]}...")
-
-        if analysis.red_flags:
-            print(f"\n{'─' * 70}")
-            print(f"🚩 RED FLAGS ({len(analysis.red_flags)})")
-            print(f"{'─' * 70}")
-            for i, flag in enumerate(analysis.red_flags, 1):
-                print(f"{i}. {flag}")
-        else:
-            print(f"\n✅ No significant red flags detected")
-
-        print(f"\n{'─' * 70}")
-        print(f"💡 RECOMMENDATION: {analysis.recommendation}")
-        print(f"{'─' * 70}\n")
+    # Keep backward compatibility
+    def analyze_company_moat(self, ticker: str) -> MoatAnalysis:
+        """Backward compatible - analyze all moats"""
+        return self.analyze_moats(ticker, config=None)
 
 
 def analyze_moat(ticker: str) -> MoatAnalysis:
-    """
-    Convenience function to analyze moat
-
-    Usage:
-        from moat_analyzer import analyze_moat
-        analysis = analyze_moat("AAPL")
-        print(analysis.overall_score)
-    """
+    """Convenience function"""
     analyzer = MoatAnalyzer()
-    return analyzer.analyze_company_moat(ticker)
-
-
-if __name__ == "__main__":
-    # Example usage
-    ticker = "AAPL"
-
-    analyzer = MoatAnalyzer()
-    analysis = analyzer.analyze_company_moat(ticker)
-    analyzer.print_analysis(analysis)
+    return analyzer.analyze_moats(ticker)
