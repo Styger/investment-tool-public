@@ -6,16 +6,16 @@ from frontend.streamlit_modules.config import (
     initialize_global_ticker,
 )
 from frontend.streamlit_modules.pages import (
-    cagr,
-    mos,
-    pbt,
-    tencap,
-    dcf,
-    debt,
-    profitability,
-    capital_allocation,  # NEU
-    settings,
-    info,
+    cagr_ui,
+    capital_allocation_ui,
+    dcf_ui,
+    debt_ui,
+    info_ui,
+    mos_ui,
+    pbt_ui,
+    profitability_ui,
+    settings_ui,
+    tencap_ui,
 )
 
 # Page configuration
@@ -42,17 +42,17 @@ def main():
     st.sidebar.title(f"📈 {get_text('window_title')}")
 
     analysis_modes = {
-        f"💡 {get_text('info_help_title')}": info.show_info,
-        f"📈 {get_text('cagr_title')}": cagr.show_cagr_analysis,
-        f"🛡️ {get_text('mos_title')}": mos.show_mos_analysis,
-        f"⏰ {get_text('pbt_title')}": pbt.show_pbt_analysis,
-        f"🔟 {get_text('ten_cap_title')}": tencap.show_tencap_analysis,
-        f"💸 {get_text('dcf_fmp_title')}": dcf.show_dcf_analysis,
-        f"💳 {get_text('debt_title')}": debt.show_debt_analysis,
-        f"💰 {get_text('profitability_title')}": profitability.show_profitability_analysis,
-        f"💵 {get_text('capital_allocation_title')}": capital_allocation.show_capital_allocation_analysis,  # NEU
+        f"💡 {get_text('info_help_title')}": info_ui.show_info,
+        f"📈 {get_text('cagr_title')}": cagr_ui.show_cagr_analysis,
+        f"🛡️ {get_text('mos_title')}": mos_ui.show_mos_analysis,
+        f"⏰ {get_text('pbt_title')}": pbt_ui.show_pbt_analysis,
+        f"🔟 {get_text('ten_cap_title')}": tencap_ui.show_tencap_analysis,
+        f"💸 {get_text('dcf_fmp_title')}": dcf_ui.show_dcf_analysis,
+        f"💳 {get_text('debt_title')}": debt_ui.show_debt_analysis,
+        f"💰 {get_text('profitability_title')}": profitability_ui.show_profitability_analysis,
+        f"💵 {get_text('capital_allocation_title')}": capital_allocation_ui.show_capital_allocation_analysis,  # NEU
         # f"💎 {get_text('quality_title')}": quality.show_quality_analysis,  # SPÄTER!
-        f"⚙️ {get_text('settings_title')}": settings.show_settings_page,
+        f"⚙️ {get_text('settings_title')}": settings_ui.show_settings_page,
     }
 
     selected_mode = st.sidebar.selectbox(
