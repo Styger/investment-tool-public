@@ -7,10 +7,10 @@ import backend.logic.dcf_levered as dcf_levered_logic
 
 def show_dcf_analysis():
     """Enhanced DCF Analysis Interface with three modes and global ticker support"""
-    st.header(f"💸 {get_text('dcf_fmp_title')}")
-    st.write("Comprehensive DCF valuation with multiple methodologies.")
+    st.header(f"💸 {get_text('dcf.title')}")
+    st.write(get_text("dcf.description"))
 
-    # Initialisiere global_ticker falls nicht vorhanden - lade aus Persistence
+    # Initialize global_ticker if not present - load from persistence
     if "global_ticker" not in st.session_state:
         st.session_state.global_ticker = st.session_state.persist.get(
             "global_ticker", "MSFT"
@@ -18,7 +18,7 @@ def show_dcf_analysis():
 
     # DCF Mode selection
     dcf_mode = st.selectbox(
-        "DCF Method",
+        get_text("dcf.method_label"),
         ["fmp (FMP DCF)", "Unlevered (FCFF)", "Levered (FCFE)"],
         key="dcf_mode",
     )
@@ -26,32 +26,30 @@ def show_dcf_analysis():
     persist_key = f"DCF_{dcf_mode.split()[0].upper()}"
     persist_data = st.session_state.persist.get(persist_key, {})
 
-    # Checkbox für individuellen Ticker
+    # Checkbox for individual ticker
     use_individual_ticker = st.checkbox(
-        get_text("use_individual_ticker", "Use individual ticker"),
+        get_text("common.use_individual_ticker"),
         value=persist_data.get("use_individual_ticker", False),
         key=f"dcf_{dcf_mode}_use_individual",
     )
 
     # Common ticker input
     if use_individual_ticker:
-        # Individueller Ticker für dieses Modul
+        # Individual ticker for this module
         ticker = st.text_input(
-            get_text("ticker_symbol"),
+            get_text("common.ticker_symbol"),
             value=persist_data.get("ticker", ""),
             key="dcf_ticker",
         ).upper()
     else:
-        # Globaler Ticker - editierbar und synchronisiert
+        # Global ticker - editable and synchronized
         ticker = st.text_input(
-            get_text("ticker_symbol") + " 🌍",
+            get_text("common.ticker_symbol") + " 🌍",
             value=st.session_state.global_ticker,
             key="dcf_ticker_global",
-            help=get_text(
-                "global_ticker_help", "This ticker will be used across all modules"
-            ),
+            help=get_text("common.global_ticker_help"),
         ).upper()
-        # Update global ticker wenn geändert
+        # Update global ticker when changed
         if ticker != st.session_state.global_ticker:
             st.session_state.global_ticker = ticker
 
@@ -67,13 +65,13 @@ def show_dcf_analysis():
 
 def show_dcf_fmp_mode(ticker, persist_data, persist_key, use_individual_ticker):
     """DCF fmp mode - uses FMP's DCF with integrated MOS"""
-    st.subheader("📊 DCF fmp - FMP Valuation")
-    st.write("Get current DCF valuation directly from Financial Modeling Prep.")
+    st.subheader(f"📊 {get_text('dcf.fmp_subtitle')}")
+    st.write(get_text("dcf.fmp_description"))
 
     # Parameter input in single row
     mos_percent = (
         st.number_input(
-            "Margin of Safety (%)",
+            get_text("dcf.margin_of_safety"),
             min_value=0.0,
             max_value=75.0,
             value=float(persist_data.get("mos_percent", 25.0)),
@@ -83,11 +81,11 @@ def show_dcf_fmp_mode(ticker, persist_data, persist_key, use_individual_ticker):
         / 100
     )
 
-    if st.button("Get DCF Analysis", key="dcf_fmp_run"):
+    if st.button(get_text("dcf.get_analysis"), key="dcf_fmp_run"):
         if not ticker:
-            st.error(get_text("please_enter_ticker"))
+            st.error(get_text("common.please_enter_ticker"))
         else:
-            with st.spinner(f"Fetching DCF data for {ticker}..."):
+            with st.spinner(get_text("dcf.fetching_data").format(ticker)):
                 try:
                     # Save to persistence
                     persist_data_update = {
@@ -103,7 +101,7 @@ def show_dcf_fmp_mode(ticker, persist_data, persist_key, use_individual_ticker):
                     # Use the enhanced backend function
                     data = dcf_fmp_logic.get_dcf_fmp(ticker, mos_percent)
 
-                    st.success(f"DCF analysis completed for {ticker}")
+                    st.success(get_text("dcf.analysis_completed").format(ticker))
 
                     # Main metrics in 4 clean columns
                     col1, col2, col3, col4 = st.columns(4)
@@ -111,21 +109,23 @@ def show_dcf_fmp_mode(ticker, persist_data, persist_key, use_individual_ticker):
                     with col1:
                         if data.get("dcf"):
                             st.metric(
-                                "Fair Value",
+                                get_text("dcf.fair_value"),
                                 f"${data['dcf']:,.2f}",
                             )
 
                     with col2:
                         if data.get("buy_price"):
                             st.metric(
-                                f"Buy Price ({mos_percent * 100:.0f}% MOS)",
+                                get_text("dcf.buy_price_mos").format(
+                                    int(mos_percent * 100)
+                                ),
                                 f"${data['buy_price']:,.2f}",
                             )
 
                     with col3:
                         if data.get("stock_price"):
                             st.metric(
-                                "Current Stock Price",
+                                get_text("common.current_stock_price"),
                                 f"${data['stock_price']:,.2f}",
                             )
 
@@ -154,28 +154,30 @@ def show_dcf_fmp_mode(ticker, persist_data, persist_key, use_individual_ticker):
 
                     # Info box
                     st.info(
-                        f"💡 DCF Calculation: Based on FMP DCF valuation | MOS Price = Fair Value × (1 - {mos_percent * 100:.0f}%)"
+                        get_text("dcf.fmp_calculation_info").format(
+                            int(mos_percent * 100)
+                        )
                     )
 
                     # Data source info
                     if data.get("as_of"):
-                        st.caption(f"📅 Data as of: {data['as_of']}")
+                        st.caption(get_text("dcf.data_as_of").format(data["as_of"]))
 
                 except Exception as e:
-                    st.error(f"DCF analysis failed: {str(e)}")
+                    st.error(get_text("dcf.analysis_failed").format(str(e)))
 
 
 def show_dcf_unlevered_mode(ticker, persist_data, persist_key, use_individual_ticker):
     """DCF Unlevered mode - FCFF methodology with integrated MOS"""
-    st.subheader("🏭 Unlevered DCF (FCFF)")
-    st.write("Free Cash Flow to Firm - values the entire company before debt.")
+    st.subheader(f"🏭 {get_text('dcf.unlevered_subtitle')}")
+    st.write(get_text("dcf.unlevered_description"))
 
     # Main parameters in 4 columns
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
         forecast_years = st.number_input(
-            "Forecast Years",
+            get_text("dcf.forecast_years"),
             min_value=3,
             max_value=15,
             value=int(persist_data.get("forecast_years", 5)),
@@ -185,7 +187,7 @@ def show_dcf_unlevered_mode(ticker, persist_data, persist_key, use_individual_ti
     with col2:
         fcff_growth = (
             st.number_input(
-                "FCFF Growth (%)",
+                get_text("dcf.fcff_growth"),
                 min_value=0.0,
                 max_value=50.0,
                 value=float(persist_data.get("fcff_growth", 8.0)),
@@ -198,7 +200,7 @@ def show_dcf_unlevered_mode(ticker, persist_data, persist_key, use_individual_ti
     with col3:
         wacc = (
             st.number_input(
-                "WACC (%)",
+                get_text("dcf.wacc"),
                 min_value=1.0,
                 max_value=25.0,
                 value=float(persist_data.get("wacc", 10.0)),
@@ -211,7 +213,7 @@ def show_dcf_unlevered_mode(ticker, persist_data, persist_key, use_individual_ti
     with col4:
         mos_percent = (
             st.number_input(
-                "Margin of Safety (%)",
+                get_text("dcf.margin_of_safety"),
                 min_value=0.0,
                 max_value=75.0,
                 value=float(persist_data.get("mos_percent", 25.0)),
@@ -222,13 +224,13 @@ def show_dcf_unlevered_mode(ticker, persist_data, persist_key, use_individual_ti
         )
 
     # Advanced parameters in expander
-    with st.expander("Advanced Parameters"):
+    with st.expander(get_text("dcf.advanced_parameters")):
         col1, col2, col3, col4 = st.columns(4)
 
         with col1:
             perp_growth = (
                 st.number_input(
-                    "Terminal Growth (%)",
+                    get_text("dcf.terminal_growth"),
                     min_value=0.0,
                     max_value=10.0,
                     value=float(persist_data.get("perp_growth", 3.0)),
@@ -241,7 +243,7 @@ def show_dcf_unlevered_mode(ticker, persist_data, persist_key, use_individual_ti
         with col2:
             tax_rate = (
                 st.number_input(
-                    "Tax Rate (%) - 0 for auto",
+                    get_text("dcf.tax_rate_auto"),
                     min_value=0.0,
                     max_value=50.0,
                     value=float(persist_data.get("tax_rate", 0.0)),
@@ -253,7 +255,7 @@ def show_dcf_unlevered_mode(ticker, persist_data, persist_key, use_individual_ti
 
         with col3:
             base_year = st.number_input(
-                "Base Year (optional)",
+                get_text("dcf.base_year_optional"),
                 min_value=2010,
                 max_value=2030,
                 value=int(persist_data.get("base_year", 2024)),
@@ -262,14 +264,14 @@ def show_dcf_unlevered_mode(ticker, persist_data, persist_key, use_individual_ti
 
         with col4:
             use_base_year = st.checkbox(
-                "Use specific base year", key="unlevered_use_base"
+                get_text("dcf.use_specific_base_year"), key="unlevered_use_base"
             )
 
-    if st.button("Run Unlevered DCF", key="dcf_unlevered_run"):
+    if st.button(get_text("dcf.run_unlevered"), key="dcf_unlevered_run"):
         if not ticker:
-            st.error(get_text("please_enter_ticker"))
+            st.error(get_text("common.please_enter_ticker"))
         else:
-            with st.spinner(f"Calculating Unlevered DCF for {ticker}..."):
+            with st.spinner(get_text("dcf.calculating_unlevered").format(ticker)):
                 try:
                     # Save to persistence
                     persist_data_update = {
@@ -301,7 +303,7 @@ def show_dcf_unlevered_mode(ticker, persist_data, persist_key, use_individual_ti
                         mos_percent=mos_percent,
                     )
 
-                    st.success(f"Unlevered DCF completed for {ticker}")
+                    st.success(get_text("dcf.unlevered_completed").format(ticker))
 
                     # Main metrics in 4 clean columns
                     col1, col2, col3, col4 = st.columns(4)
@@ -309,25 +311,27 @@ def show_dcf_unlevered_mode(ticker, persist_data, persist_key, use_individual_ti
                     with col1:
                         if result.get("fair_value_per_share"):
                             st.metric(
-                                "Fair Value per Share",
+                                get_text("dcf.fair_value_per_share"),
                                 f"${result['fair_value_per_share']:,.2f}",
                             )
 
                     with col2:
                         if result.get("buy_price_per_share"):
                             st.metric(
-                                f"Buy Price ({mos_percent * 100:.0f}% MOS)",
+                                get_text("dcf.buy_price_mos").format(
+                                    int(mos_percent * 100)
+                                ),
                                 f"${result['buy_price_per_share']:,.2f}",
                             )
 
                     with col3:
                         if result.get("current_stock_price"):
                             st.metric(
-                                "Current Stock Price",
+                                get_text("common.current_stock_price"),
                                 f"${result['current_stock_price']:,.2f}",
                             )
                         st.metric(
-                            "Enterprise Value",
+                            get_text("dcf.enterprise_value"),
                             f"${result.get('enterprise_value', 0):,.0f}",
                         )
 
@@ -356,59 +360,62 @@ def show_dcf_unlevered_mode(ticker, persist_data, persist_key, use_individual_ti
 
                     # Info box
                     st.info(
-                        f"💡 FCFF Calculation: Based on {fcff_growth * 100:.1f}% growth rate over {forecast_years} years | WACC: {wacc * 100:.1f}% | Terminal: {perp_growth * 100:.1f}%"
+                        get_text("dcf.fcff_calculation_info").format(
+                            fcff_growth * 100,
+                            forecast_years,
+                            wacc * 100,
+                            perp_growth * 100,
+                        )
                     )
 
                     # Detailed breakdown in expandable section
-                    with st.expander("📊 Detailed Calculations"):
+                    with st.expander(f"📊 {get_text('dcf.detailed_calculations')}"):
                         detail_col1, detail_col2 = st.columns(2)
 
                         with detail_col1:
                             st.metric(
-                                "Base FCFF",
+                                get_text("dcf.base_fcff"),
                                 f"${result.get('fcff0', 0):,.0f}",
                             )
                             st.metric(
-                                "PV Explicit FCFF",
+                                get_text("dcf.pv_explicit_fcff"),
                                 f"${result.get('pv_explicit', 0):,.0f}",
                             )
                             st.metric(
-                                "WACC Used",
+                                get_text("dcf.wacc_used"),
                                 f"{result.get('wacc', 0) * 100:.1f}%",
                             )
 
                         with detail_col2:
                             if result.get("pv_terminal"):
                                 st.metric(
-                                    "PV Terminal Value",
+                                    get_text("dcf.pv_terminal_value"),
                                     f"${result['pv_terminal']:,.0f}",
                                 )
                             st.metric(
-                                "Net Debt",
+                                get_text("dcf.net_debt"),
                                 f"${result.get('net_debt', 0):,.0f}",
                             )
                             st.metric(
-                                "Tax Rate Used",
+                                get_text("dcf.tax_rate_used"),
                                 f"{result.get('tax_rate_used', 0) * 100:.1f}%",
                             )
 
                 except Exception as e:
-                    st.error(f"Unlevered DCF analysis failed: {str(e)}")
+                    st.error(get_text("dcf.unlevered_failed").format(str(e)))
 
 
 def show_dcf_levered_mode(ticker, persist_data, persist_key, use_individual_ticker):
     """DCF Levered mode - FCFE methodology with integrated MOS"""
-    st.subheader("🏦 Levered DCF (FCFE)")
-    st.write(
-        "Free Cash Flow to Equity - values equity directly including debt effects."
-    )
+    st.subheader(f"🏦 {get_text('dcf.levered_subtitle')}")
+    st.write(get_text("dcf.levered_description"))
 
     # Main parameters in 4 columns
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
         forecast_years = st.number_input(
-            "Forecast Years",
+            get_text("dcf.forecast_years"),
             min_value=3,
             max_value=15,
             value=int(persist_data.get("forecast_years", 5)),
@@ -418,7 +425,7 @@ def show_dcf_levered_mode(ticker, persist_data, persist_key, use_individual_tick
     with col2:
         fcfe_growth = (
             st.number_input(
-                "FCFE Growth (%)",
+                get_text("dcf.fcfe_growth"),
                 min_value=0.0,
                 max_value=50.0,
                 value=float(persist_data.get("fcfe_growth", 8.0)),
@@ -431,7 +438,7 @@ def show_dcf_levered_mode(ticker, persist_data, persist_key, use_individual_tick
     with col3:
         cost_of_equity = (
             st.number_input(
-                "Cost of Equity (%)",
+                get_text("dcf.cost_of_equity"),
                 min_value=1.0,
                 max_value=25.0,
                 value=float(persist_data.get("cost_of_equity", 11.0)),
@@ -444,7 +451,7 @@ def show_dcf_levered_mode(ticker, persist_data, persist_key, use_individual_tick
     with col4:
         mos_percent = (
             st.number_input(
-                "Margin of Safety (%)",
+                get_text("dcf.margin_of_safety"),
                 min_value=0.0,
                 max_value=75.0,
                 value=float(persist_data.get("mos_percent", 25.0)),
@@ -455,13 +462,13 @@ def show_dcf_levered_mode(ticker, persist_data, persist_key, use_individual_tick
         )
 
     # Advanced parameters in expander
-    with st.expander("Advanced Parameters"):
+    with st.expander(get_text("dcf.advanced_parameters")):
         col1, col2, col3, col4 = st.columns(4)
 
         with col1:
             perp_growth = (
                 st.number_input(
-                    "Terminal Growth (%)",
+                    get_text("dcf.terminal_growth"),
                     min_value=0.0,
                     max_value=10.0,
                     value=float(persist_data.get("perp_growth", 3.0)),
@@ -473,7 +480,7 @@ def show_dcf_levered_mode(ticker, persist_data, persist_key, use_individual_tick
 
         with col2:
             base_year = st.number_input(
-                "Base Year (optional)",
+                get_text("dcf.base_year_optional"),
                 min_value=2010,
                 max_value=2030,
                 value=int(persist_data.get("base_year", 2024)),
@@ -482,17 +489,17 @@ def show_dcf_levered_mode(ticker, persist_data, persist_key, use_individual_tick
 
         with col3:
             use_base_year = st.checkbox(
-                "Use specific base year", key="levered_use_base"
+                get_text("dcf.use_specific_base_year"), key="levered_use_base"
             )
 
         with col4:
             pass  # Empty column for alignment
 
-    if st.button("Run Levered DCF", key="dcf_levered_run"):
+    if st.button(get_text("dcf.run_levered"), key="dcf_levered_run"):
         if not ticker:
-            st.error(get_text("please_enter_ticker"))
+            st.error(get_text("common.please_enter_ticker"))
         else:
-            with st.spinner(f"Calculating Levered DCF for {ticker}..."):
+            with st.spinner(get_text("dcf.calculating_levered").format(ticker)):
                 try:
                     # Save to persistence
                     persist_data_update = {
@@ -522,7 +529,7 @@ def show_dcf_levered_mode(ticker, persist_data, persist_key, use_individual_tick
                         mos_percent=mos_percent,
                     )
 
-                    st.success(f"Levered DCF completed for {ticker}")
+                    st.success(get_text("dcf.levered_completed").format(ticker))
 
                     # Main metrics in 4 clean columns
                     col1, col2, col3, col4 = st.columns(4)
@@ -530,25 +537,27 @@ def show_dcf_levered_mode(ticker, persist_data, persist_key, use_individual_tick
                     with col1:
                         if result.get("fair_value_per_share"):
                             st.metric(
-                                "Fair Value per Share",
+                                get_text("dcf.fair_value_per_share"),
                                 f"${result['fair_value_per_share']:,.2f}",
                             )
 
                     with col2:
                         if result.get("buy_price_per_share"):
                             st.metric(
-                                f"Buy Price ({mos_percent * 100:.0f}% MOS)",
+                                get_text("dcf.buy_price_mos").format(
+                                    int(mos_percent * 100)
+                                ),
                                 f"${result['buy_price_per_share']:,.2f}",
                             )
 
                     with col3:
                         if result.get("current_stock_price"):
                             st.metric(
-                                "Current Stock Price",
+                                get_text("common.current_stock_price"),
                                 f"${result['current_stock_price']:,.2f}",
                             )
                         st.metric(
-                            "Equity Value",
+                            get_text("dcf.equity_value"),
                             f"${result.get('equity_value', 0):,.0f}",
                         )
 
@@ -577,41 +586,46 @@ def show_dcf_levered_mode(ticker, persist_data, persist_key, use_individual_tick
 
                     # Info box
                     st.info(
-                        f"💡 FCFE Calculation: Based on {fcfe_growth * 100:.1f}% growth rate over {forecast_years} years | Cost of Equity: {cost_of_equity * 100:.1f}% | Terminal: {perp_growth * 100:.1f}%"
+                        get_text("dcf.fcfe_calculation_info").format(
+                            fcfe_growth * 100,
+                            forecast_years,
+                            cost_of_equity * 100,
+                            perp_growth * 100,
+                        )
                     )
 
                     # Detailed breakdown in expandable section
-                    with st.expander("📊 Detailed Calculations"):
+                    with st.expander(f"📊 {get_text('dcf.detailed_calculations')}"):
                         detail_col1, detail_col2 = st.columns(2)
 
                         with detail_col1:
                             st.metric(
-                                "Base FCFE",
+                                get_text("dcf.base_fcfe"),
                                 f"${result.get('fcfe0', 0):,.0f}",
                             )
                             st.metric(
-                                "Operating Cash Flow",
+                                get_text("dcf.operating_cash_flow"),
                                 f"${result.get('cfo', 0):,.0f}",
                             )
                             st.metric(
-                                "CapEx",
+                                get_text("dcf.capex"),
                                 f"${result.get('capex', 0):,.0f}",
                             )
 
                         with detail_col2:
                             st.metric(
-                                "PV Explicit FCFE",
+                                get_text("dcf.pv_explicit_fcfe"),
                                 f"${result.get('pv_explicit', 0):,.0f}",
                             )
                             if result.get("pv_terminal"):
                                 st.metric(
-                                    "PV Terminal Value",
+                                    get_text("dcf.pv_terminal_value"),
                                     f"${result['pv_terminal']:,.0f}",
                                 )
                             st.metric(
-                                "Net Borrowing",
+                                get_text("dcf.net_borrowing"),
                                 f"${result.get('net_borrowing', 0):,.0f}",
                             )
 
                 except Exception as e:
-                    st.error(f"Levered DCF analysis failed: {str(e)}")
+                    st.error(get_text("dcf.levered_failed").format(str(e)))

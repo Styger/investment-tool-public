@@ -8,84 +8,78 @@ def _get_rating_from_ratio(ratio):
     if ratio is None:
         return "N/A", "info"
     if ratio < 1:
-        return get_text("debt_rating_excellent"), "success"
+        return get_text("debt.rating_excellent"), "success"
     elif ratio < 2:
-        return get_text("debt_rating_very_good"), "success"
+        return get_text("debt.rating_very_good"), "success"
     elif ratio < 3:
-        return get_text("debt_rating_good"), "info"
+        return get_text("debt.rating_good"), "info"
     elif ratio < 5:
-        return get_text("debt_rating_acceptable"), "warning"
+        return get_text("debt.rating_acceptable"), "warning"
     else:
-        return get_text("debt_rating_risky"), "error"
+        return get_text("debt.rating_risky"), "error"
 
 
 def show_debt_analysis():
     """Debt Analysis Interface with global ticker support"""
-    st.header(f"💳 {get_text('debt_title')}")
-    st.write(get_text("debt_description"))
+    st.header(f"💳 {get_text('debt.title')}")
+    st.write(get_text("debt.description"))
 
     persist_data = st.session_state.persist.get("DEBT", {})
 
-    # Initialisiere global_ticker falls nicht vorhanden - lade aus Persistence
     if "global_ticker" not in st.session_state:
         st.session_state.global_ticker = st.session_state.persist.get(
             "global_ticker", "MSFT"
         )
 
-    # Checkbox für individuellen Ticker
     use_individual_ticker = st.checkbox(
-        get_text("use_individual_ticker", "Use individual ticker"),
+        get_text("common.use_individual_ticker"),
         value=persist_data.get("use_individual_ticker", False),
         key="debt_use_individual",
     )
 
-    # First row: Ticker, Multi-year checkbox, and Debt Type selection
     col1, col2, col3 = st.columns([2, 1, 1])
 
     with col1:
         if use_individual_ticker:
-            # Individueller Ticker für dieses Modul
             ticker = st.text_input(
-                get_text("ticker_symbol"),
+                get_text("common.ticker_symbol"),
                 value=persist_data.get("ticker", ""),
                 key="debt_ticker",
             ).upper()
         else:
-            # Globaler Ticker - editierbar und synchronisiert
             ticker = st.text_input(
-                get_text("ticker_symbol") + " 🌍",
+                get_text("common.ticker_symbol") + " 🌍",
                 value=st.session_state.global_ticker,
                 key="debt_ticker_global",
-                help=get_text(
-                    "global_ticker_help", "This ticker will be used across all modules"
-                ),
+                help=get_text("common.global_ticker_help"),
             ).upper()
-            # Update global ticker wenn geändert
             if ticker != st.session_state.global_ticker:
                 st.session_state.global_ticker = ticker
 
     with col2:
         multi_year = st.checkbox(
-            get_text("multi_year_question"),
+            get_text("common.multi_year_checkbox"),
             value=persist_data.get("multi_year", True),
             key="debt_multi_year",
         )
 
     with col3:
         debt_type = st.radio(
-            get_text("debt_type_label"),
-            options=[get_text("long_term_debt_option"), get_text("total_debt_option")],
+            get_text("debt.debt_type_label"),
+            options=[
+                get_text("debt.long_term_debt_option"),
+                get_text("debt.total_debt_option"),
+            ],
             index=0 if persist_data.get("debt_type", "long_term") == "long_term" else 1,
             key="debt_type_radio",
         )
-        use_total_debt = debt_type == get_text("total_debt_option")
+        use_total_debt = debt_type == get_text("debt.total_debt_option")
 
-    # Second row: Year selection (single or range)
     if multi_year:
         col1, col2 = st.columns(2)
         with col1:
             start_year = st.number_input(
-                get_text("from_year"),
+                get_text("common.start_year"),
                 min_value=1990,
                 max_value=2030,
                 value=int(persist_data.get("start_year", 2020)),
@@ -93,7 +87,7 @@ def show_debt_analysis():
             )
         with col2:
             end_year = st.number_input(
-                get_text("to_year"),
+                get_text("common.end_year"),
                 min_value=1990,
                 max_value=2030,
                 value=int(persist_data.get("end_year", 2024)),
@@ -101,21 +95,20 @@ def show_debt_analysis():
             )
     else:
         year = st.number_input(
-            get_text("base_year"),
+            get_text("common.year"),
             min_value=1990,
             max_value=2030,
             value=int(persist_data.get("year", 2024)),
             key="debt_year",
         )
 
-    if st.button(get_text("run_debt_analysis"), key="debt_run"):
+    if st.button(get_text("debt.run_analysis"), key="debt_run"):
         if not ticker:
-            st.error(get_text("please_enter_ticker"))
+            st.error(get_text("common.please_enter_ticker"))
         else:
-            with st.spinner(get_text("calculating_debt").format(ticker)):
+            with st.spinner(get_text("debt.calculating").format(ticker)):
                 try:
                     if multi_year:
-                        # Save to persistence
                         persist_data = {
                             "ticker": ticker if use_individual_ticker else "",
                             "use_individual_ticker": use_individual_ticker,
@@ -129,7 +122,6 @@ def show_debt_analysis():
                         )
                         save_persistence_data()
 
-                        # Fetch results for all 3 metrics
                         results_income = debt_logic.calculate_debt_metrics_multi_year(
                             ticker,
                             start_year,
@@ -154,10 +146,9 @@ def show_debt_analysis():
 
                         if results_income:
                             st.success(
-                                get_text("debt_analysis_completed").format(ticker)
+                                get_text("debt.analysis_completed").format(ticker)
                             )
 
-                            # Create table data with all 3 ratios
                             table_data = []
                             for i, result in enumerate(results_income):
                                 debt_used = result.get("debt_used", 0)
@@ -166,7 +157,6 @@ def show_debt_analysis():
                                 ratio_ebitda = results_ebitda[i].get("debt_ratio", None)
                                 ratio_cf = results_cf[i].get("debt_ratio", None)
 
-                                # Average rating based on all 3 ratios
                                 ratios = [
                                     r
                                     for r in [ratio_income, ratio_ebitda, ratio_cf]
@@ -179,64 +169,62 @@ def show_debt_analysis():
                                     rating = "N/A"
 
                                 debt_label = (
-                                    get_text("total_debt_mio")
+                                    get_text("debt.total_debt_mio")
                                     if use_total_debt
-                                    else get_text("long_term_debt_mio")
+                                    else get_text("debt.long_term_debt_mio")
                                 )
 
                                 table_data.append(
                                     {
-                                        get_text("year"): result.get("year"),
+                                        get_text("common.year"): result.get("year"),
                                         debt_label: f"${debt_used / 1_000_000:,.2f}"
                                         if debt_used
                                         else "$0.00",
                                         get_text(
-                                            "debt_income_ratio"
+                                            "debt.income_ratio"
                                         ): f"{ratio_income:.2f}"
                                         if ratio_income is not None
                                         else "N/A",
                                         get_text(
-                                            "debt_ebitda_ratio"
+                                            "debt.ebitda_ratio"
                                         ): f"{ratio_ebitda:.2f}"
                                         if ratio_ebitda is not None
                                         else "N/A",
-                                        get_text("debt_cf_ratio"): f"{ratio_cf:.2f}"
+                                        get_text("debt.cf_ratio"): f"{ratio_cf:.2f}"
                                         if ratio_cf is not None
                                         else "N/A",
-                                        get_text("debt_rating"): rating,
+                                        get_text("debt.rating"): rating,
                                     }
                                 )
 
-                            # Display table
-                            st.dataframe(table_data, use_container_width=True)
+                            st.dataframe(
+                                table_data, use_container_width=True, hide_index=True
+                            )
 
-                            # Get current price for comparison
                             try:
                                 current_price = debt_logic.fmp_api.get_current_price(
                                     ticker
                                 )
                                 if current_price:
                                     st.info(
-                                        f"📊 {get_text('current_stock_price')}: ${current_price:,.2f}"
+                                        f"📊 {get_text('common.current_stock_price')}: ${current_price:,.2f}"
                                     )
                             except Exception:
                                 pass
 
-                            # Info note
                             debt_type_text = (
-                                get_text("total_debt_option")
+                                get_text("debt.total_debt_option")
                                 if use_total_debt
-                                else get_text("long_term_debt_option")
+                                else get_text("debt.long_term_debt_option")
                             )
                             st.info(
-                                f"💡 {get_text('debt_multi_year_info_with_type').format(debt_type_text, start_year, end_year)}"
+                                f"💡 {get_text('debt.multi_year_info_with_type').format(debt_type_text, start_year, end_year)}"
                             )
 
                         else:
-                            st.warning(get_text("no_valid_data"))
+                            st.warning(get_text("common.no_valid_data"))
 
                     else:
-                        # Save to persistence
                         persist_data = {
                             "ticker": ticker if use_individual_ticker else "",
                             "use_individual_ticker": use_individual_ticker,
@@ -249,7 +237,6 @@ def show_debt_analysis():
                         )
                         save_persistence_data()
 
-                        # Single year analysis - fetch all 3 metrics
                         result_income = debt_logic.calculate_debt_metrics_from_ticker(
                             ticker,
                             year,
@@ -271,15 +258,14 @@ def show_debt_analysis():
 
                         if result_income:
                             st.success(
-                                get_text("debt_analysis_completed").format(ticker)
+                                get_text("debt.analysis_completed").format(ticker)
                             )
 
-                            # Display debt amount
                             debt_used = result_income.get("debt_used", 0)
                             debt_label = (
-                                get_text("total_debt")
+                                get_text("debt.total_debt")
                                 if use_total_debt
-                                else get_text("long_term_debt")
+                                else get_text("debt.long_term_debt")
                             )
 
                             st.subheader(
@@ -287,7 +273,6 @@ def show_debt_analysis():
                             )
                             st.markdown("---")
 
-                            # All 3 ratios in columns
                             col1, col2, col3 = st.columns(3)
 
                             ratio_income = result_income.get("debt_ratio", None)
@@ -296,7 +281,7 @@ def show_debt_analysis():
 
                             with col1:
                                 st.metric(
-                                    get_text("debt_income_ratio"),
+                                    get_text("debt.income_ratio"),
                                     f"{ratio_income:.2f}"
                                     if ratio_income is not None
                                     else "N/A",
@@ -313,7 +298,7 @@ def show_debt_analysis():
 
                             with col2:
                                 st.metric(
-                                    get_text("debt_ebitda_ratio"),
+                                    get_text("debt.ebitda_ratio"),
                                     f"{ratio_ebitda:.2f}"
                                     if ratio_ebitda is not None
                                     else "N/A",
@@ -330,7 +315,7 @@ def show_debt_analysis():
 
                             with col3:
                                 st.metric(
-                                    get_text("debt_cf_ratio"),
+                                    get_text("debt.cf_ratio"),
                                     f"{ratio_cf:.2f}"
                                     if ratio_cf is not None
                                     else "N/A",
@@ -345,8 +330,7 @@ def show_debt_analysis():
                                 elif status == "error":
                                     st.error(f"🔴 {rating}")
 
-                            # Detailed values in expander
-                            with st.expander(f"📊 {get_text('debt_detailed_values')}"):
+                            with st.expander(f"📊 {get_text('debt.detailed_values')}"):
                                 col1, col2, col3 = st.columns(3)
 
                                 net_income = result_income.get("net_income", 0)
@@ -355,40 +339,38 @@ def show_debt_analysis():
 
                                 with col1:
                                     st.metric(
-                                        get_text("net_income"),
+                                        get_text("debt.net_income"),
                                         f"${net_income / 1_000_000:,.2f}M",
                                     )
                                 with col2:
                                     st.metric(
-                                        get_text("ebitda"),
+                                        get_text("debt.ebitda"),
                                         f"${ebitda / 1_000_000:,.2f}M",
                                     )
                                 with col3:
                                     st.metric(
-                                        get_text("operating_cash_flow"),
+                                        get_text("debt.operating_cash_flow"),
                                         f"${op_cf / 1_000_000:,.2f}M",
                                     )
 
-                            # Info box with interpretation
-                            st.info(f"💡 {get_text('debt_info_explanation_multi')}")
+                            st.info(f"💡 {get_text('debt.info_explanation_multi')}")
 
-                            # Threshold explanation in expander
-                            with st.expander(f"📊 {get_text('debt_detailed_info')}"):
-                                st.write(get_text("debt_threshold_explanation"))
+                            with st.expander(f"📊 {get_text('debt.detailed_info')}"):
+                                st.write(get_text("debt.threshold_explanation"))
 
                                 thresholds = [
-                                    ("< 1.0", get_text("debt_rating_excellent")),
-                                    ("1.0 - 2.0", get_text("debt_rating_very_good")),
-                                    ("2.0 - 3.0", get_text("debt_rating_good")),
-                                    ("3.0 - 5.0", get_text("debt_rating_acceptable")),
-                                    ("> 5.0", get_text("debt_rating_risky")),
+                                    ("< 1.0", get_text("debt.rating_excellent")),
+                                    ("1.0 - 2.0", get_text("debt.rating_very_good")),
+                                    ("2.0 - 3.0", get_text("debt.rating_good")),
+                                    ("3.0 - 5.0", get_text("debt.rating_acceptable")),
+                                    ("> 5.0", get_text("debt.rating_risky")),
                                 ]
 
                                 for threshold, description in thresholds:
                                     st.write(f"**{threshold}**: {description}")
 
                         else:
-                            st.warning(get_text("no_valid_data"))
+                            st.warning(get_text("common.no_valid_data"))
 
                 except Exception as e:
-                    st.error(get_text("debt_analysis_failed").format(str(e)))
+                    st.error(get_text("debt.analysis_failed").format(str(e)))

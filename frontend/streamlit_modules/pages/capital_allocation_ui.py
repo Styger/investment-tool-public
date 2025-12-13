@@ -5,72 +5,55 @@ import backend.logic.capital_allocation as capital_allocation_logic
 
 def show_capital_allocation_analysis():
     """Capital Allocation Analysis Interface with global ticker support"""
-    st.header(
-        f"💵 {get_text('capital_allocation_title', 'Capital Allocation Analysis')}"
-    )
-    st.write(
-        get_text(
-            "capital_allocation_description",
-            "Analyze how the company uses its Free Cash Flow",
-        )
-    )
+    st.header(f"💵 {get_text('capital_allocation.title')}")
+    st.write(get_text("capital_allocation.description"))
 
     persist_data = st.session_state.persist.get("CAPITAL_ALLOCATION", {})
 
-    # Initialisiere global_ticker falls nicht vorhanden - lade aus Persistence
     if "global_ticker" not in st.session_state:
         st.session_state.global_ticker = st.session_state.persist.get(
             "global_ticker", "MSFT"
         )
 
-    # Checkbox für individuellen Ticker
     use_individual_ticker = st.checkbox(
-        get_text("use_individual_ticker", "Use individual ticker"),
+        get_text("common.use_individual_ticker"),
         value=persist_data.get("use_individual_ticker", False),
         key="cap_alloc_use_individual",
     )
 
-    # First row: Ticker and Multi-year checkbox
     col1, col2 = st.columns([3, 1])
 
     with col1:
         if use_individual_ticker:
-            # Individueller Ticker für dieses Modul
             ticker = st.text_input(
-                get_text("ticker_symbol"),
+                get_text("common.ticker_symbol"),
                 value=persist_data.get("ticker", ""),
                 key="cap_alloc_ticker",
             ).upper()
         else:
-            # Globaler Ticker - editierbar und synchronisiert
             ticker = st.text_input(
-                get_text("ticker_symbol") + " 🌍",
+                get_text("common.ticker_symbol") + " 🌍",
                 value=st.session_state.global_ticker,
                 key="cap_alloc_ticker_global",
-                help=get_text(
-                    "global_ticker_help", "This ticker will be used across all modules"
-                ),
+                help=get_text("common.global_ticker_help"),
             ).upper()
-            # Update global ticker wenn geändert
             if ticker != st.session_state.global_ticker:
                 st.session_state.global_ticker = ticker
-                # Speichere globalen Ticker in Persistence
                 st.session_state.persist["global_ticker"] = ticker
                 save_persistence_data()
 
     with col2:
         multi_year = st.checkbox(
-            get_text("multi_year_question"),
+            get_text("common.multi_year_checkbox"),
             value=persist_data.get("multi_year", True),
             key="cap_alloc_multi_year",
         )
 
-    # Second row: Year selection (single or range)
     if multi_year:
         col1, col2 = st.columns(2)
         with col1:
             start_year = st.number_input(
-                get_text("from_year"),
+                get_text("common.from_year"),
                 min_value=1990,
                 max_value=2030,
                 value=int(persist_data.get("start_year", 2020)),
@@ -78,7 +61,7 @@ def show_capital_allocation_analysis():
             )
         with col2:
             end_year = st.number_input(
-                get_text("to_year"),
+                get_text("common.to_year"),
                 min_value=1990,
                 max_value=2030,
                 value=int(persist_data.get("end_year", 2024)),
@@ -86,29 +69,20 @@ def show_capital_allocation_analysis():
             )
     else:
         year = st.number_input(
-            get_text("base_year"),
+            get_text("common.year"),
             min_value=1990,
             max_value=2030,
             value=int(persist_data.get("year", 2024)),
             key="cap_alloc_year",
         )
 
-    if st.button(
-        get_text("run_capital_allocation_analysis", "Run Capital Allocation Analysis"),
-        key="cap_alloc_run",
-    ):
+    if st.button(get_text("capital_allocation.run_analysis"), key="cap_alloc_run"):
         if not ticker:
-            st.error(get_text("please_enter_ticker"))
+            st.error(get_text("common.please_enter_ticker"))
         else:
-            with st.spinner(
-                get_text(
-                    "calculating_capital_allocation",
-                    "Calculating capital allocation for {0}...",
-                ).format(ticker)
-            ):
+            with st.spinner(get_text("capital_allocation.calculating").format(ticker)):
                 try:
                     if multi_year:
-                        # Save to persistence
                         persist_data = {
                             "ticker": ticker if use_individual_ticker else "",
                             "use_individual_ticker": use_individual_ticker,
@@ -121,25 +95,19 @@ def show_capital_allocation_analysis():
                         ).update(persist_data)
                         save_persistence_data()
 
-                        # Multi-year analysis
                         results = capital_allocation_logic.calculate_capital_allocation_multi_year(
                             ticker, start_year, end_year
                         )
 
                         if results:
                             st.success(
-                                get_text(
-                                    "capital_allocation_completed",
-                                    "Capital allocation analysis completed for {0}",
-                                ).format(ticker)
+                                get_text("capital_allocation.completed").format(ticker)
                             )
 
-                            # Create table data
                             table_data = []
                             for result in results:
                                 fcf = result.get("fcf", 0)
 
-                                # Get values
                                 dividends_paid = result.get("dividends_paid", 0)
                                 dividends_pct = result.get("dividends_pct", None)
                                 dividends_per_share = result.get(
@@ -171,7 +139,6 @@ def show_capital_allocation_analysis():
                                     "cash_increase_pct", None
                                 )
 
-                                # Format combined strings
                                 div_str = (
                                     f"${dividends_paid / 1_000_000:,.0f}M ({dividends_pct:.1f}%)"
                                     if dividends_pct is not None
@@ -218,22 +185,27 @@ def show_capital_allocation_analysis():
 
                                 table_data.append(
                                     {
-                                        get_text("year"): result.get("year"),
+                                        get_text("common.year"): result.get("year"),
                                         "FCF": f"${fcf / 1_000_000:,.0f}M",
-                                        get_text("dividends", "Dividends"): div_str,
-                                        get_text("buybacks", "Buybacks"): buy_str,
                                         get_text(
-                                            "debt_repayment", "Debt Repay"
+                                            "capital_allocation.dividends"
+                                        ): div_str,
+                                        get_text(
+                                            "capital_allocation.buybacks"
+                                        ): buy_str,
+                                        get_text(
+                                            "capital_allocation.debt_repayment"
                                         ): debt_str,
                                         "Capex": capex_str,
                                         "M&A": ma_str,
-                                        get_text("cash_increase", "Cash ↑"): cash_str,
+                                        get_text(
+                                            "capital_allocation.cash_increase"
+                                        ): cash_str,
                                     }
                                 )
 
-                            # Display table
                             st.subheader(
-                                f"📊 {get_text('capital_allocation_over_time', 'Capital Allocation Over Time')}"
+                                f"📊 {get_text('capital_allocation.over_time')}"
                             )
                             st.dataframe(
                                 table_data,
@@ -241,16 +213,12 @@ def show_capital_allocation_analysis():
                                 hide_index=True,
                             )
 
-                            # Info box
-                            st.info(
-                                f"💡 {get_text('cap_alloc_info', 'The percentages show how the Free Cash Flow was allocated. Total can exceed 100% if financed from other sources.')}"
-                            )
+                            st.info(f"💡 {get_text('capital_allocation.info')}")
 
                         else:
-                            st.warning(get_text("no_valid_data"))
+                            st.warning(get_text("common.no_valid_data"))
 
                     else:
-                        # Save to persistence
                         persist_data = {
                             "ticker": ticker if use_individual_ticker else "",
                             "use_individual_ticker": use_individual_ticker,
@@ -262,20 +230,15 @@ def show_capital_allocation_analysis():
                         ).update(persist_data)
                         save_persistence_data()
 
-                        # Single year analysis
                         result = capital_allocation_logic.calculate_capital_allocation_from_ticker(
                             ticker, year
                         )
 
                         if result:
                             st.success(
-                                get_text(
-                                    "capital_allocation_completed",
-                                    "Capital allocation analysis completed for {0}",
-                                ).format(ticker)
+                                get_text("capital_allocation.completed").format(ticker)
                             )
 
-                            # Display FCF and context
                             col1, col2, col3 = st.columns(3)
 
                             fcf = result.get("fcf", 0)
@@ -284,30 +247,26 @@ def show_capital_allocation_analysis():
 
                             with col1:
                                 st.metric(
-                                    get_text("free_cash_flow", "Free Cash Flow"),
+                                    get_text("capital_allocation.free_cash_flow"),
                                     f"${fcf / 1_000_000:,.2f}M",
                                 )
                             with col2:
                                 st.metric(
-                                    get_text(
-                                        "shares_outstanding", "Shares Outstanding"
-                                    ),
+                                    get_text("capital_allocation.shares_outstanding"),
                                     f"{shares_outstanding / 1_000_000:,.2f}M",
                                 )
                             with col3:
                                 st.metric(
-                                    get_text("total_debt", "Total Debt"),
+                                    get_text("capital_allocation.total_debt"),
                                     f"${total_debt / 1_000_000:,.2f}M",
                                 )
 
                             st.markdown("---")
 
-                            # Section: Capital Allocation Breakdown
                             st.subheader(
-                                f"📊 {get_text('capital_allocation_breakdown', 'Capital Allocation Breakdown')}"
+                                f"📊 {get_text('capital_allocation.breakdown')}"
                             )
 
-                            # Get values
                             dividends_paid = result.get("dividends_paid", 0)
                             dividends_pct = result.get("dividends_pct", None)
                             dividends_per_share = result.get(
@@ -336,12 +295,11 @@ def show_capital_allocation_analysis():
                             other = result.get("other", 0)
                             other_pct = result.get("other_pct", None)
 
-                            # Display in columns
                             col1, col2, col3 = st.columns(3)
 
                             with col1:
                                 st.metric(
-                                    get_text("dividends", "💵 Dividends"),
+                                    get_text("capital_allocation.dividends"),
                                     f"${dividends_paid / 1_000_000:,.2f}M",
                                     delta=f"{dividends_pct:.1f}% of FCF"
                                     if dividends_pct is not None
@@ -353,7 +311,7 @@ def show_capital_allocation_analysis():
                                     )
 
                                 st.metric(
-                                    get_text("buybacks", "🔄 Buybacks"),
+                                    get_text("capital_allocation.buybacks"),
                                     f"${stock_buybacks / 1_000_000:,.2f}M",
                                     delta=f"{buybacks_pct:.1f}% of FCF"
                                     if buybacks_pct is not None
@@ -366,7 +324,7 @@ def show_capital_allocation_analysis():
 
                             with col2:
                                 st.metric(
-                                    get_text("debt_repayment", "💳 Debt Repayment"),
+                                    get_text("capital_allocation.debt_repayment"),
                                     f"${debt_repayment / 1_000_000:,.2f}M",
                                     delta=f"{debt_repayment_pct:.1f}% of FCF"
                                     if debt_repayment_pct is not None
@@ -394,14 +352,14 @@ def show_capital_allocation_analysis():
                                     else None,
                                 )
                                 st.metric(
-                                    get_text("cash_increase", "💰 Cash Increase"),
+                                    get_text("capital_allocation.cash_increase"),
                                     f"${cash_increase / 1_000_000:,.2f}M",
                                     delta=f"{cash_increase_pct:.1f}% of FCF"
                                     if cash_increase_pct is not None
                                     else None,
                                 )
                                 st.metric(
-                                    get_text("other", "📦 Other"),
+                                    get_text("capital_allocation.other"),
                                     f"${other / 1_000_000:,.2f}M",
                                     delta=f"{other_pct:.1f}% of FCF"
                                     if other_pct is not None
@@ -410,44 +368,35 @@ def show_capital_allocation_analysis():
 
                             st.markdown("---")
 
-                            # Info and explanation
-                            st.info(
-                                f"💡 {get_text('cap_alloc_single_info', 'Shows how the company allocated its Free Cash Flow. Percentages may exceed 100% if financed from other sources.')}"
-                            )
+                            st.info(f"💡 {get_text('capital_allocation.single_info')}")
 
-                            # Explanation expander
                             with st.expander(
-                                f"📖 {get_text('cap_alloc_explanation', 'What do these categories mean?')}"
+                                f"📖 {get_text('capital_allocation.explanation')}"
                             ):
                                 st.write(
-                                    f"**{get_text('dividends', 'Dividends')}:** {get_text('dividends_explanation', 'Cash paid to shareholders as dividends')}"
+                                    f"**{get_text('capital_allocation.dividends')}:** {get_text('capital_allocation.dividends_explanation')}"
                                 )
                                 st.write(
-                                    f"**{get_text('buybacks', 'Buybacks')}:** {get_text('buybacks_explanation', 'Money spent on repurchasing own shares')}"
+                                    f"**{get_text('capital_allocation.buybacks')}:** {get_text('capital_allocation.buybacks_explanation')}"
                                 )
                                 st.write(
-                                    f"**{get_text('debt_repayment', 'Debt Repayment')}:** {get_text('debt_explanation', 'Repayment of debt obligations')}"
+                                    f"**{get_text('capital_allocation.debt_repayment')}:** {get_text('capital_allocation.debt_explanation')}"
                                 )
                                 st.write(
-                                    f"**Capex:** {get_text('capex_explanation', 'Capital expenditure for maintaining and growing the business')}"
+                                    f"**Capex:** {get_text('capital_allocation.capex_explanation')}"
                                 )
                                 st.write(
-                                    f"**M&A:** {get_text('ma_explanation', 'Mergers and acquisitions spending')}"
+                                    f"**M&A:** {get_text('capital_allocation.ma_explanation')}"
                                 )
                                 st.write(
-                                    f"**{get_text('cash_increase', 'Cash Increase')}:** {get_text('cash_increase_explanation', 'Increase in cash and cash equivalents on the balance sheet')}"
+                                    f"**{get_text('capital_allocation.cash_increase')}:** {get_text('capital_allocation.cash_increase_explanation')}"
                                 )
                                 st.write(
-                                    f"**{get_text('other', 'Other')}:** {get_text('other_explanation', 'Other uses of cash not categorized above')}"
+                                    f"**{get_text('capital_allocation.other')}:** {get_text('capital_allocation.other_explanation')}"
                                 )
 
                         else:
-                            st.warning(get_text("no_valid_data"))
+                            st.warning(get_text("common.no_valid_data"))
 
                 except Exception as e:
-                    st.error(
-                        get_text(
-                            "capital_allocation_failed",
-                            "Capital allocation analysis failed: {0}",
-                        ).format(str(e))
-                    )
+                    st.error(get_text("capital_allocation.failed").format(str(e)))

@@ -4,47 +4,47 @@ from ..config import get_text
 
 def show_info():
     """Info page explaining all analysis methods"""
-    st.title(f"💡 {get_text('info_page_title')}")
+    st.title(f"💡 {get_text('info.page_title')}")
 
     # Introduction
-    st.markdown(get_text("info_page_intro"))
+    st.markdown(get_text("info.page_intro"))
 
     # Create tabs for different analysis methods
     tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10 = st.tabs(
         [
-            f"🛡️ {get_text('mos_tab')}",
-            f"💸 {get_text('dcf_tab')}",
-            f"🔟 {get_text('tencap_tab')}",
-            f"⏰ {get_text('pbt_tab')}",
-            f"📈 {get_text('cagr_tab')}",
-            f"💳 {get_text('debt_tab')}",
-            f"💰 {get_text('profitability_tab')}",
-            f"💵 {get_text('capital_allocation_tab')}",
-            f"🌍 {get_text('suffix_guide_title')}",
-            f"💡 {get_text('usage_tab')}",
+            f"🛡️ {get_text('info.mos_tab')}",
+            f"💸 {get_text('info.dcf_tab')}",
+            f"🔟 {get_text('info.tencap_tab')}",
+            f"⏰ {get_text('info.pbt_tab')}",
+            f"📈 {get_text('info.cagr_tab')}",
+            f"💳 {get_text('info.debt_tab')}",
+            f"💰 {get_text('info.profitability_tab')}",
+            f"💵 {get_text('info.capital_allocation_tab')}",
+            f"🌍 {get_text('info.suffix_guide_title')}",
+            f"💡 {get_text('info.usage_tab')}",
         ]
     )
 
     with tab1:
-        st.header(f"🛡️ {get_text('mos_method_title')}")
-        st.markdown(get_text("mos_description"))
+        st.header(f"🛡️ {get_text('info.mos_method_title')}")
+        st.markdown(get_text("info.mos_description"))
 
         col1, col2 = st.columns(2)
         with col1:
-            st.subheader(get_text("how_it_works"))
-            st.markdown(get_text("mos_how_it_works"))
+            st.subheader(get_text("info.how_it_works"))
+            st.markdown(get_text("info.mos_how_it_works"))
 
         with col2:
-            st.subheader(get_text("when_to_use"))
-            st.markdown(get_text("mos_when_to_use"))
+            st.subheader(get_text("info.when_to_use"))
+            st.markdown(get_text("info.mos_when_to_use"))
 
-        st.subheader(get_text("formula"))
+        st.subheader(get_text("info.formula"))
         st.latex(r"MOS\_Price = Intrinsic\_Value \times (1 - MOS\_Rate)")
-        st.markdown(get_text("mos_formula_explanation"))
+        st.markdown(get_text("info.mos_formula_explanation"))
 
     with tab2:
-        st.header(f"💸 {get_text('dcf_method_title')}")
-        st.markdown(get_text("dcf_description"))
+        st.header(f"💸 {get_text('info.dcf_method_title')}")
+        st.markdown(get_text("info.dcf_description"))
 
         # Sub-tabs for the three DCF methods
         dcf_tab1, dcf_tab2, dcf_tab3 = st.tabs(
@@ -52,57 +52,57 @@ def show_info():
         )
 
         with dcf_tab1:
-            st.subheader(f"📊 {get_text('dcf_fmp_method_title')}")
-            st.markdown(get_text("dcf_fmp_method_description"))
+            st.subheader(f"📊 {get_text('info.dcf_fmp_method_title')}")
+            st.markdown(get_text("info.dcf_fmp_method_description"))
 
             col1, col2 = st.columns(2)
             with col1:
-                st.subheader(get_text("how_it_works"))
-                st.markdown(get_text("dcf_fmp_how_it_works"))
+                st.subheader(get_text("info.how_it_works"))
+                st.markdown(get_text("info.dcf_fmp_how_it_works"))
 
             with col2:
-                st.subheader(get_text("when_to_use"))
-                st.markdown(get_text("dcf_fmp_when_to_use"))
+                st.subheader(get_text("info.when_to_use"))
+                st.markdown(get_text("info.dcf_fmp_when_to_use"))
 
-            st.subheader(get_text("formula"))
+            st.subheader(get_text("info.formula"))
             st.latex(r"Buy\_Price = FMP\_DCF \times (1 - MOS\_Rate)")
-            st.markdown(get_text("dcf_fmp_formula_explanation"))
+            st.markdown(get_text("info.dcf_fmp_formula_explanation"))
 
         with dcf_tab2:
-            st.subheader(f"🏭 {get_text('dcf_unlevered_method_title')}")
-            st.markdown(get_text("dcf_unlevered_method_description"))
+            st.subheader(f"🏭 {get_text('info.dcf_unlevered_method_title')}")
+            st.markdown(get_text("info.dcf_unlevered_method_description"))
 
             col1, col2 = st.columns(2)
             with col1:
-                st.subheader(get_text("how_it_works"))
-                st.markdown(get_text("dcf_unlevered_how_it_works"))
+                st.subheader(get_text("info.how_it_works"))
+                st.markdown(get_text("info.dcf_unlevered_how_it_works"))
 
             with col2:
-                st.subheader(get_text("when_to_use"))
-                st.markdown(get_text("dcf_unlevered_when_to_use"))
+                st.subheader(get_text("info.when_to_use"))
+                st.markdown(get_text("info.dcf_unlevered_when_to_use"))
 
-            st.subheader(get_text("formula"))
+            st.subheader(get_text("info.formula"))
             st.latex(r"FCFF = EBIT \times (1 - Tax) + D\&A - CapEx - \Delta NWC")
             st.latex(
                 r"Enterprise\_Value = \sum_{t=1}^{n} \frac{FCFF_t}{(1 + WACC)^t} + \frac{Terminal\_Value}{(1 + WACC)^n}"
             )
             st.latex(r"Equity\_Value = Enterprise\_Value - Net\_Debt")
-            st.markdown(get_text("dcf_unlevered_formula_explanation"))
+            st.markdown(get_text("info.dcf_unlevered_formula_explanation"))
 
         with dcf_tab3:
-            st.subheader(f"🏦 {get_text('dcf_levered_method_title')}")
-            st.markdown(get_text("dcf_levered_method_description"))
+            st.subheader(f"🏦 {get_text('info.dcf_levered_method_title')}")
+            st.markdown(get_text("info.dcf_levered_method_description"))
 
             col1, col2 = st.columns(2)
             with col1:
-                st.subheader(get_text("how_it_works"))
-                st.markdown(get_text("dcf_levered_how_it_works"))
+                st.subheader(get_text("info.how_it_works"))
+                st.markdown(get_text("info.dcf_levered_how_it_works"))
 
             with col2:
-                st.subheader(get_text("when_to_use"))
-                st.markdown(get_text("dcf_levered_when_to_use"))
+                st.subheader(get_text("info.when_to_use"))
+                st.markdown(get_text("info.dcf_levered_when_to_use"))
 
-            st.subheader(get_text("formula"))
+            st.subheader(get_text("info.formula"))
             st.latex(r"FCFE = CFO - CapEx + Net\_Borrowing")
             st.latex(
                 r"Equity\_Value = \sum_{t=1}^{n} \frac{FCFE_t}{(1 + Cost\_of\_Equity)^t} + \frac{Terminal\_Value}{(1 + Cost\_of\_Equity)^n}"
@@ -110,137 +110,137 @@ def show_info():
             st.latex(
                 r"Fair\_Value\_per\_Share = \frac{Equity\_Value}{Shares\_Outstanding}"
             )
-            st.markdown(get_text("dcf_levered_formula_explanation"))
+            st.markdown(get_text("info.dcf_levered_formula_explanation"))
 
     with tab3:
-        st.header(f"🔟 {get_text('tencap_method_title')}")
-        st.markdown(get_text("tencap_description"))
+        st.header(f"🔟 {get_text('info.tencap_method_title')}")
+        st.markdown(get_text("info.tencap_description"))
 
         col1, col2 = st.columns(2)
         with col1:
-            st.subheader(get_text("how_it_works"))
-            st.markdown(get_text("tencap_how_it_works"))
+            st.subheader(get_text("info.how_it_works"))
+            st.markdown(get_text("info.tencap_how_it_works"))
 
         with col2:
-            st.subheader(get_text("when_to_use"))
-            st.markdown(get_text("tencap_when_to_use"))
+            st.subheader(get_text("info.when_to_use"))
+            st.markdown(get_text("info.tencap_when_to_use"))
 
-        st.subheader(get_text("formula"))
+        st.subheader(get_text("info.formula"))
         st.latex(r"TEN\_CAP = \frac{Owner\_Earnings / Shares}{0.10}")
-        st.markdown(get_text("tencap_formula_explanation"))
+        st.markdown(get_text("info.tencap_formula_explanation"))
 
     with tab4:
-        st.header(f"⏰ {get_text('pbt_method_title')}")
-        st.markdown(get_text("pbt_description"))
+        st.header(f"⏰ {get_text('info.pbt_method_title')}")
+        st.markdown(get_text("info.pbt_description"))
 
         col1, col2 = st.columns(2)
         with col1:
-            st.subheader(get_text("how_it_works"))
-            st.markdown(get_text("pbt_how_it_works"))
+            st.subheader(get_text("info.how_it_works"))
+            st.markdown(get_text("info.pbt_how_it_works"))
 
         with col2:
-            st.subheader(get_text("when_to_use"))
-            st.markdown(get_text("pbt_when_to_use"))
+            st.subheader(get_text("info.when_to_use"))
+            st.markdown(get_text("info.pbt_when_to_use"))
 
-        st.subheader(get_text("formula"))
+        st.subheader(get_text("info.formula"))
         st.latex(r"Fair\_Value = \sum_{t=1}^{8} FCF \times (1 + g)^t")
         st.latex(r"PBT\_Buy\_Price = Fair\_Value \times (1 - MOS)")
-        st.markdown(get_text("pbt_formula_explanation"))
+        st.markdown(get_text("info.pbt_formula_explanation"))
 
     with tab5:
-        st.header(f"📈 {get_text('cagr_method_title')}")
-        st.markdown(get_text("cagr_description"))
+        st.header(f"📈 {get_text('info.cagr_method_title')}")
+        st.markdown(get_text("info.cagr_description"))
 
         col1, col2 = st.columns(2)
         with col1:
-            st.subheader(get_text("how_it_works"))
-            st.markdown(get_text("cagr_how_it_works"))
+            st.subheader(get_text("info.how_it_works"))
+            st.markdown(get_text("info.cagr_how_it_works"))
 
         with col2:
-            st.subheader(get_text("when_to_use"))
-            st.markdown(get_text("cagr_when_to_use"))
+            st.subheader(get_text("info.when_to_use"))
+            st.markdown(get_text("info.cagr_when_to_use"))
 
-        st.subheader(get_text("formula"))
+        st.subheader(get_text("info.formula"))
         st.latex(
             r"CAGR = \left(\frac{Ending\_Value}{Beginning\_Value}\right)^{\frac{1}{years}} - 1"
         )
-        st.markdown(get_text("cagr_formula_explanation"))
+        st.markdown(get_text("info.cagr_formula_explanation"))
 
     with tab6:
-        st.header(f"💳 {get_text('debt_method_title')}")
-        st.markdown(get_text("debt_info_description"))
+        st.header(f"💳 {get_text('info.debt_method_title')}")
+        st.markdown(get_text("info.debt_info_description"))
 
         col1, col2 = st.columns(2)
         with col1:
-            st.subheader(get_text("how_it_works"))
-            st.markdown(get_text("debt_how_it_works"))
+            st.subheader(get_text("info.how_it_works"))
+            st.markdown(get_text("info.debt_how_it_works"))
 
         with col2:
-            st.subheader(get_text("when_to_use"))
-            st.markdown(get_text("debt_when_to_use"))
+            st.subheader(get_text("info.when_to_use"))
+            st.markdown(get_text("info.debt_when_to_use"))
 
-        st.subheader(get_text("formula"))
+        st.subheader(get_text("info.formula"))
         st.latex(r"Debt\_Ratio_{Income} = \frac{Debt}{Net\_Income}")
         st.latex(r"Debt\_Ratio_{EBITDA} = \frac{Debt}{EBITDA}")
         st.latex(r"Debt\_Ratio_{CF} = \frac{Debt}{Operating\_Cash\_Flow}")
-        st.markdown(get_text("debt_formula_explanation"))
+        st.markdown(get_text("info.debt_formula_explanation"))
 
     with tab7:
-        st.header(f"💰 {get_text('profitability_method_title')}")
-        st.markdown(get_text("profitability_info_description"))
+        st.header(f"💰 {get_text('info.profitability_method_title')}")
+        st.markdown(get_text("info.profitability_info_description"))
 
         col1, col2 = st.columns(2)
         with col1:
-            st.subheader(get_text("how_it_works"))
-            st.markdown(get_text("profitability_how_it_works"))
+            st.subheader(get_text("info.how_it_works"))
+            st.markdown(get_text("info.profitability_how_it_works"))
 
         with col2:
-            st.subheader(get_text("when_to_use"))
-            st.markdown(get_text("profitability_when_to_use"))
+            st.subheader(get_text("info.when_to_use"))
+            st.markdown(get_text("info.profitability_when_to_use"))
 
-        st.subheader(get_text("formula"))
+        st.subheader(get_text("info.formula"))
         st.latex(r"ROE = \frac{Net\_Income}{Shareholders\_Equity}")
         st.latex(r"ROA = \frac{Net\_Income}{Total\_Assets}")
         st.latex(r"Gross\_Margin = \frac{Gross\_Profit}{Revenue}")
         st.latex(r"Operating\_Margin = \frac{Operating\_Income}{Revenue}")
         st.latex(r"Net\_Margin = \frac{Net\_Income}{Revenue}")
         st.latex(r"Asset\_Turnover = \frac{Revenue}{Total\_Assets}")
-        st.markdown(get_text("profitability_formula_explanation"))
+        st.markdown(get_text("info.profitability_formula_explanation"))
 
     with tab8:
-        st.header(f"💵 {get_text('capital_allocation_method_title')}")
-        st.markdown(get_text("capital_allocation_info_description"))
+        st.header(f"💵 {get_text('info.capital_allocation_method_title')}")
+        st.markdown(get_text("info.capital_allocation_info_description"))
 
         col1, col2 = st.columns(2)
         with col1:
-            st.subheader(get_text("how_it_works"))
-            st.markdown(get_text("capital_allocation_how_it_works"))
+            st.subheader(get_text("info.how_it_works"))
+            st.markdown(get_text("info.capital_allocation_how_it_works"))
 
         with col2:
-            st.subheader(get_text("when_to_use"))
-            st.markdown(get_text("capital_allocation_when_to_use"))
+            st.subheader(get_text("info.when_to_use"))
+            st.markdown(get_text("info.capital_allocation_when_to_use"))
 
-        st.subheader(get_text("formula"))
+        st.subheader(get_text("info.formula"))
         st.latex(r"FCF = Operating\_Cash\_Flow - Capital\_Expenditure")
         st.latex(r"Dividends\_per\_Share = \frac{Dividends\_Paid}{Shares\_Outstanding}")
         st.latex(r"Buybacks\_per\_Share = \frac{Stock\_Buybacks}{Shares\_Outstanding}")
         st.latex(
             r"Debt\_Repayment\_\% = \frac{Debt\_Repayment}{Total\_Debt} \times 100"
         )
-        st.markdown(get_text("capital_allocation_formula_explanation"))
+        st.markdown(get_text("info.capital_allocation_formula_explanation"))
 
-        st.subheader(get_text("capital_allocation_categories"))
-        st.markdown(get_text("capital_allocation_categories_explanation"))
+        st.subheader(get_text("info.capital_allocation_categories"))
+        st.markdown(get_text("info.capital_allocation_categories_explanation"))
 
     with tab9:
-        st.header(f"🌍 {get_text('suffix_guide_title')}")
-        st.markdown(get_text("suffix_guide_intro"))
+        st.header(f"🌍 {get_text('info.suffix_guide_title')}")
+        st.markdown(get_text("info.suffix_guide_intro"))
 
-        # Wichtiger Hinweis für US-Aktien
-        st.info(get_text("no_suffix_note"))
-        st.markdown(f"**💡 {get_text('suffix_usage_tip')}**")
+        # Important note for US stocks
+        st.info(get_text("info.no_suffix_note"))
+        st.markdown(f"**💡 {get_text('info.suffix_usage_tip')}**")
 
-        # Suffix-Tabelle
+        # Suffix table
         suffix_data = [
             ["🇺🇸 USA (NYSE, NASDAQ)", "*(none)*", "AAPL, MSFT", "USD"],
             ["🇨🇦 Canada - TSX", ".TO", "RY.TO", "CAD"],
@@ -270,30 +270,30 @@ def show_info():
             ["🇲🇽 Mexico - BMV", ".MX", "AMXL.MX", "MXN"],
         ]
 
-        # DataFrame erstellen und anzeigen
+        # Create and display DataFrame
         import pandas as pd
 
         df = pd.DataFrame(
             suffix_data, columns=["Country / Exchange", "Suffix", "Example", "Currency"]
         )
 
-        # Suchfunktion
-        search_term = st.text_input("🔍 Search by country, suffix, or currency:")
+        # Search functionality
+        search_term = st.text_input(get_text("info.search_suffix"))
         if search_term:
             mask = df.apply(
                 lambda x: x.astype(str).str.contains(search_term, case=False, na=False)
             ).any(axis=1)
             df_filtered = df[mask]
-            st.dataframe(df_filtered, width="stretch", hide_index=True)
+            st.dataframe(df_filtered, use_container_width=True, hide_index=True)
         else:
-            st.dataframe(df, width="stretch", hide_index=True)
+            st.dataframe(df, use_container_width=True, hide_index=True)
 
     with tab10:
-        st.header(f"💡 {get_text('usage_guide_title')}")
-        st.markdown(get_text("usage_guide_intro"))
+        st.header(f"💡 {get_text('info.usage_guide_title')}")
+        st.markdown(get_text("info.usage_guide_intro"))
 
-        st.subheader(get_text("getting_started"))
-        st.markdown(get_text("getting_started_steps"))
+        st.subheader(get_text("info.getting_started"))
+        st.markdown(get_text("info.getting_started_steps"))
 
-        st.subheader(get_text("tips_and_tricks"))
-        st.markdown(get_text("tips_and_tricks_content"))
+        st.subheader(get_text("info.tips_and_tricks"))
+        st.markdown(get_text("info.tips_and_tricks_content"))

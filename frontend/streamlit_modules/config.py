@@ -87,18 +87,38 @@ def reload_user_config():
 
 
 def get_text(key, fallback=None):
-    """Get localized text from language JSON"""
+    """Get localized text from language JSON with dot notation support"""
     language_data = st.session_state.get("language", {})
-    if key in language_data:
-        return language_data[key]
 
-    # Fallback to English if key not found in current language
-    all_languages = st.session_state.get("all_languages", {})
-    if "en" in all_languages and key in all_languages["en"]:
-        return all_languages["en"][key]
+    # Split key by dot for nested access (e.g., "mos.title")
+    keys = key.split(".")
+    value = language_data
 
-    # Final fallback
-    return fallback if fallback else key
+    # Navigate through nested structure
+    for k in keys:
+        if isinstance(value, dict) and k in value:
+            value = value[k]
+        else:
+            # Key not found - try fallback to English
+            all_languages = st.session_state.get("all_languages", {})
+            if "en" in all_languages:
+                en_value = all_languages["en"]
+                for k in keys:
+                    if isinstance(en_value, dict) and k in en_value:
+                        en_value = en_value[k]
+                    else:
+                        # Not in English either - use fallback
+                        return fallback if fallback else key
+                return (
+                    en_value
+                    if isinstance(en_value, str)
+                    else (fallback if fallback else key)
+                )
+
+            return fallback if fallback else key
+
+    # Return the value if it's a string, otherwise fallback
+    return value if isinstance(value, str) else (fallback if fallback else key)
 
 
 def save_persistence_data():

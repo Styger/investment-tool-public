@@ -18,7 +18,7 @@ from frontend.streamlit_modules.pages import (
     tencap_ui,
 )
 
-# Page configuration
+# Page configurationselect_analysis_mode
 st.set_page_config(
     page_title="Stock Analysis Tool",
     page_icon="📈",
@@ -39,32 +39,32 @@ def main():
 
     load_app_config()
 
-    st.sidebar.title(f"📈 {get_text('window_title')}")
+    st.sidebar.title(f"📈 {get_text('app.window_title')}")
 
     analysis_modes = {
-        f"💡 {get_text('info_help_title')}": info_ui.show_info,
-        f"📈 {get_text('cagr_title')}": cagr_ui.show_cagr_analysis,
-        f"🛡️ {get_text('mos_title')}": mos_ui.show_mos_analysis,
-        f"⏰ {get_text('pbt_title')}": pbt_ui.show_pbt_analysis,
-        f"🔟 {get_text('ten_cap_title')}": tencap_ui.show_tencap_analysis,
-        f"💸 {get_text('dcf_fmp_title')}": dcf_ui.show_dcf_analysis,
-        f"💳 {get_text('debt_title')}": debt_ui.show_debt_analysis,
-        f"💰 {get_text('profitability_title')}": profitability_ui.show_profitability_analysis,
-        f"💵 {get_text('capital_allocation_title')}": capital_allocation_ui.show_capital_allocation_analysis,  # NEU
-        # f"💎 {get_text('quality_title')}": quality.show_quality_analysis,  # SPÄTER!
-        f"⚙️ {get_text('settings_title')}": settings_ui.show_settings_page,
+        f"💡 {get_text('info.page_title')}": info_ui.show_info,
+        f"📈 {get_text('cagr.title')}": cagr_ui.show_cagr_analysis,
+        f"🛡️ {get_text('mos.title')}": mos_ui.show_mos_analysis,
+        f"⏰ {get_text('pbt.title')}": pbt_ui.show_pbt_analysis,
+        f"🔟 {get_text('tencap.title')}": tencap_ui.show_tencap_analysis,
+        f"💸 {get_text('dcf.title')}": dcf_ui.show_dcf_analysis,
+        f"💳 {get_text('debt.title')}": debt_ui.show_debt_analysis,
+        f"💰 {get_text('profitability.title')}": profitability_ui.show_profitability_analysis,
+        f"💵 {get_text('capital_allocation.title')}": capital_allocation_ui.show_capital_allocation_analysis,
+        # f"💎 {get_text('quality_title')}": quality.show_quality_analysis,
+        f"⚙️ {get_text('settings.title')}": settings_ui.show_settings_page,
     }
 
     selected_mode = st.sidebar.selectbox(
-        get_text("select_analysis_mode"),
+        get_text("app.select_analysis_mode"),
         list(analysis_modes.keys()),
         key="analysis_mode",
     )
 
-    st.sidebar.markdown(f"**{get_text('current_mode')}:** {selected_mode}")
+    st.sidebar.markdown(f"**{get_text('app.current_mode')}:** {selected_mode}")
     st.sidebar.markdown("---")
-    st.sidebar.markdown(f"### {get_text('about')}")
-    st.sidebar.info(get_text("about_description"))
+    st.sidebar.markdown(f"### {get_text('app.about')}")
+    st.sidebar.info(get_text("app.about_description"))
 
     analysis_modes[selected_mode]()
     initialize_global_ticker()

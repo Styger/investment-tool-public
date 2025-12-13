@@ -6,8 +6,8 @@ import pandas as pd
 
 def show_cagr_analysis():
     """CAGR Analysis Interface with global ticker support"""
-    st.header(f"📈 {get_text('cagr_title')}")
-    st.write(get_text("cagr_description"))
+    st.header(f"📈 {get_text('cagr.title')}")
+    st.write(get_text("cagr.description"))
 
     # Load persisted values
     persist_data = st.session_state.persist.get("CAGR", {})
@@ -27,7 +27,7 @@ def show_cagr_analysis():
 
     # Checkbox für individuellen Ticker
     use_individual_ticker = st.checkbox(
-        get_text("use_individual_ticker", "Use individual ticker"),
+        get_text("common.use_individual_ticker"),
         value=persist_data.get("use_individual_ticker", False),
         key="cagr_use_individual",
     )
@@ -38,19 +38,17 @@ def show_cagr_analysis():
         if use_individual_ticker:
             # Individueller Ticker für dieses Modul
             ticker = st.text_input(
-                get_text("ticker"),
+                get_text("common.ticker_symbol"),
                 value=persist_data.get("ticker", ""),
                 key="cagr_ticker",
             ).upper()
         else:
             # Globaler Ticker - editierbar und synchronisiert
             ticker = st.text_input(
-                get_text("ticker") + " 🌍",
+                get_text("common.ticker_symbol") + " 🌍",
                 value=st.session_state.global_ticker,
                 key="cagr_ticker_global",
-                help=get_text(
-                    "global_ticker_help", "This ticker will be used across all modules"
-                ),
+                help=get_text("common.global_ticker_help"),
             ).upper()
             # Update global ticker wenn geändert
             if ticker != st.session_state.global_ticker:
@@ -61,7 +59,7 @@ def show_cagr_analysis():
 
     with col2:
         start_year = st.number_input(
-            get_text("start_year"),
+            get_text("common.start_year"),
             min_value=1990,
             max_value=2030,
             value=int(persist_data.get("start_year", 2018)),
@@ -70,7 +68,7 @@ def show_cagr_analysis():
 
     with col3:
         end_year = st.number_input(
-            get_text("end_year"),
+            get_text("common.end_year"),
             min_value=1990,
             max_value=2030,
             value=int(persist_data.get("end_year", 2024)),
@@ -79,7 +77,7 @@ def show_cagr_analysis():
 
     with col4:
         period_years = st.number_input(
-            get_text("period_years"),
+            get_text("cagr.period_years"),
             min_value=1,
             max_value=20,
             value=int(persist_data.get("period_years", 5)),
@@ -87,59 +85,55 @@ def show_cagr_analysis():
         )
 
     # Metric selection checkboxes - JETZT 5 SPALTEN
-    st.markdown(f"**{get_text('select_metrics', 'Select Metrics')}**")
+    st.markdown(f"**{get_text('cagr.select_metrics')}**")
     col_m1, col_m2, col_m3, col_m4, col_m5 = st.columns(5)
 
     with col_m1:
         include_book = st.checkbox(
-            get_text("checkbox_book"),
+            get_text("cagr.checkbox_book"),
             value=persist_data.get("include_book", True),
             key="cagr_book",
         )
 
     with col_m2:
         include_eps = st.checkbox(
-            get_text("checkbox_eps"),
+            get_text("cagr.checkbox_eps"),
             value=persist_data.get("include_eps", True),
             key="cagr_eps",
         )
 
     with col_m3:
         include_revenue = st.checkbox(
-            get_text("checkbox_revenue"),
+            get_text("cagr.checkbox_revenue"),
             value=persist_data.get("include_revenue", True),
             key="cagr_revenue",
         )
 
     with col_m4:
         include_cashflow = st.checkbox(
-            get_text("checkbox_cashflow"),
+            get_text("cagr.checkbox_cashflow"),
             value=persist_data.get("include_cashflow", True),
             key="cagr_cashflow",
         )
 
-    with col_m5:  # NEU: FCF Checkbox
+    with col_m5:
         include_fcf = st.checkbox(
-            get_text("checkbox_fcf", "FCF per Share"),
+            get_text("cagr.checkbox_fcf"),
             value=persist_data.get("include_fcf", True),
             key="cagr_fcf",
         )
 
-    if st.button(get_text("run_cagr_analysis"), key="cagr_run"):
+    if st.button(get_text("cagr.run_analysis"), key="cagr_run"):
         if not ticker:
-            st.error(get_text("please_enter_ticker"))
+            st.error(get_text("common.please_enter_ticker"))
         elif start_year >= end_year:
-            st.error(get_text("start_year_before_end"))
+            st.error(get_text("common.start_year_before_end"))
         elif not any(
             [include_book, include_eps, include_revenue, include_cashflow, include_fcf]
-        ):  # FCF hinzugefügt
-            st.error(
-                get_text(
-                    "select_at_least_one_metric", "Please select at least one metric"
-                )
-            )
+        ):
+            st.error(get_text("cagr.select_at_least_one_metric"))
         else:
-            with st.spinner(get_text("analyzing").format(ticker)):
+            with st.spinner(get_text("common.analyzing").format(ticker)):
                 try:
                     # Save to persistence
                     persist_data = {
@@ -152,7 +146,7 @@ def show_cagr_analysis():
                         "include_eps": include_eps,
                         "include_revenue": include_revenue,
                         "include_cashflow": include_cashflow,
-                        "include_fcf": include_fcf,  # NEU: FCF speichern
+                        "include_fcf": include_fcf,
                     }
                     st.session_state.persist.setdefault("CAGR", {}).update(persist_data)
                     save_persistence_data()
@@ -167,11 +161,11 @@ def show_cagr_analysis():
                         include_eps,
                         include_revenue,
                         include_cashflow,
-                        include_fcf,  # NEU: FCF Parameter übergeben
+                        include_fcf,
                     )
 
                     if output.strip():
-                        st.success(get_text("analysis_completed").format(ticker))
+                        st.success(get_text("common.analysis_completed").format(ticker))
 
                         # Parse the output to create a proper table
                         lines = output.strip().split("\n")
@@ -183,10 +177,8 @@ def show_cagr_analysis():
                                 if len(parts) >= 3 and parts[0].isdigit():
                                     try:
                                         row = {
-                                            get_text("from_year", "From"): int(
-                                                parts[0]
-                                            ),
-                                            get_text("to_year", "To"): int(parts[1]),
+                                            get_text("common.from_year"): int(parts[0]),
+                                            get_text("common.to_year"): int(parts[1]),
                                         }
 
                                         # Dynamically add columns based on selected metrics
@@ -200,7 +192,7 @@ def show_cagr_analysis():
                                             row["EPS"] = f"{float(parts[col_idx]):.2f}%"
                                             col_idx += 1
                                         if include_revenue:
-                                            row[get_text("revenue", "Revenue")] = (
+                                            row[get_text("common.revenue")] = (
                                                 f"{float(parts[col_idx]):.2f}%"
                                             )
                                             col_idx += 1
@@ -209,24 +201,25 @@ def show_cagr_analysis():
                                                 f"{float(parts[col_idx]):.2f}%"
                                             )
                                             col_idx += 1
-                                        if include_fcf:  # NEU: FCF Spalte hinzufügen
+                                        if include_fcf:
                                             row["FCF"] = f"{float(parts[col_idx]):.2f}%"
                                             col_idx += 1
 
                                         # Average is always last
-                                        row["Average"] = f"{float(parts[col_idx]):.2f}%"
-
+                                        row[get_text("cagr.average")] = (
+                                            f"{float(parts[col_idx]):.2f}%"
+                                        )
                                         data_rows.append(row)
                                     except (ValueError, IndexError):
                                         continue
 
                         if data_rows:
                             df = pd.DataFrame(data_rows)
-                            st.dataframe(df, width="stretch")
+                            st.dataframe(df, use_container_width=True, hide_index=True)
                         else:
                             st.text(output)
                     else:
-                        st.warning(get_text("no_output_generated"))
+                        st.warning(get_text("common.no_output_generated"))
 
                 except Exception as e:
-                    st.error(get_text("analysis_failed").format(str(e)))
+                    st.error(get_text("common.analysis_failed").format(str(e)))

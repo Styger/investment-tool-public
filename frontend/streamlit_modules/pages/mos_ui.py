@@ -6,65 +6,55 @@ import pandas as pd
 
 def show_mos_analysis():
     """Margin of Safety Analysis Interface with multi-year support"""
-    st.header(f"🛡️ {get_text('mos_title')}")
-    st.write(get_text("mos_description"))
+    st.header(f"🛡️ {get_text('mos.title')}")
+    st.write(get_text("mos.description"))
 
     persist_data = st.session_state.persist.get("MOS", {})
 
-    # Initialisiere global_ticker falls nicht vorhanden - lade aus Persistence
     if "global_ticker" not in st.session_state:
         st.session_state.global_ticker = st.session_state.persist.get(
             "global_ticker", "MSFT"
         )
 
-    # Checkbox für individuellen Ticker
     use_individual_ticker = st.checkbox(
-        get_text("use_individual_ticker", "Use individual ticker"),
+        get_text("common.use_individual_ticker"),
         value=persist_data.get("use_individual_ticker", False),
         key="mos_use_individual",
     )
 
-    # ============ LAYOUT: 2 SPALTEN (kein Show Details mehr) ============
     col1, col2 = st.columns(2)
 
     with col1:
         if use_individual_ticker:
-            # Individueller Ticker für dieses Modul
             ticker = st.text_input(
-                get_text("ticker_symbol"),
+                get_text("common.ticker_symbol"),
                 value=persist_data.get("ticker", ""),
                 key="mos_ticker",
             ).upper()
         else:
-            # Globaler Ticker - editierbar und synchronisiert
             ticker = st.text_input(
-                get_text("ticker_symbol") + " 🌍",
+                get_text("common.ticker_symbol") + " 🌍",
                 value=st.session_state.global_ticker,
                 key="mos_ticker_global",
-                help=get_text(
-                    "global_ticker_help", "This ticker will be used across all modules"
-                ),
+                help=get_text("common.global_ticker_help"),
             ).upper()
-            # Update global ticker wenn geändert
             if ticker != st.session_state.global_ticker:
                 st.session_state.global_ticker = ticker
-                # Speichere globalen Ticker in Persistence
                 st.session_state.persist["global_ticker"] = ticker
                 save_persistence_data()
 
     with col2:
         multi_year = st.checkbox(
-            get_text("multi_year_checkbox", "Multi Year"),
+            get_text("common.multi_year_checkbox"),
             value=persist_data.get("multi_year", False),
             key="mos_multi",
         )
 
-    # ============ YEAR INPUT - CONDITIONAL ============
     if multi_year:
         col1, col2, col3 = st.columns(3)
         with col1:
             start_year = st.number_input(
-                get_text("start_year", "Start Year"),
+                get_text("common.start_year"),
                 min_value=1990,
                 max_value=2030,
                 value=int(persist_data.get("start_year", 2020)),
@@ -72,7 +62,7 @@ def show_mos_analysis():
             )
         with col2:
             end_year = st.number_input(
-                get_text("end_year", "End Year"),
+                get_text("common.end_year"),
                 min_value=1990,
                 max_value=2030,
                 value=int(persist_data.get("end_year", 2024)),
@@ -80,7 +70,7 @@ def show_mos_analysis():
             )
         with col3:
             growth_rate = st.number_input(
-                get_text("growth_rate", "Growth Rate (%)"),
+                get_text("mos.growth_rate"),
                 min_value=0.0,
                 max_value=100.0,
                 value=float(persist_data.get("growth_rate", 15.0)),
@@ -92,7 +82,7 @@ def show_mos_analysis():
         col1, col2 = st.columns(2)
         with col1:
             single_year = st.number_input(
-                get_text("year", "Year"),
+                get_text("common.year"),
                 min_value=1990,
                 max_value=2030,
                 value=int(persist_data.get("single_year", 2024)),
@@ -100,7 +90,7 @@ def show_mos_analysis():
             )
         with col2:
             growth_rate = st.number_input(
-                get_text("growth_rate", "Growth Rate (%)"),
+                get_text("mos.growth_rate"),
                 min_value=0.0,
                 max_value=100.0,
                 value=float(persist_data.get("growth_rate", 15.0)),
@@ -109,25 +99,18 @@ def show_mos_analysis():
             )
         years = [single_year]
 
-    # ============ INFO BOX: FIXED MOS 50% ============
-    st.info("💡 Margin of Safety is fixed at 50%")
+    st.info(f"💡 {get_text('mos.mos_fixed_info')}")
 
-    if st.button(get_text("run_mos_analysis", "Run MOS Analysis"), key="mos_run"):
+    if st.button(get_text("mos.run_analysis"), key="mos_run"):
         if not ticker:
-            st.error(get_text("please_enter_ticker", "Please enter a ticker symbol"))
+            st.error(get_text("common.please_enter_ticker"))
         elif multi_year and start_year >= end_year:
-            st.error(
-                get_text("start_year_before_end", "Start year must be before end year")
-            )
+            st.error(get_text("common.start_year_before_end"))
         else:
-            with st.spinner(
-                get_text("calculating_mos", "Calculating MOS for {0}...").format(ticker)
-            ):
+            with st.spinner(get_text("mos.calculating").format(ticker)):
                 try:
-                    # Fixed margin of safety at 50%
                     margin_of_safety = 0.50
 
-                    # Save to persistence (ohne show_details)
                     persist_update = {
                         "ticker": ticker if use_individual_ticker else "",
                         "use_individual_ticker": use_individual_ticker,
@@ -146,7 +129,6 @@ def show_mos_analysis():
                     )
                     save_persistence_data()
 
-                    # Calculate for all years
                     results = []
                     for year in years:
                         result = mos_logic.calculate_mos_value_from_ticker(
@@ -159,36 +141,28 @@ def show_mos_analysis():
                             results.append(result)
 
                     if results:
-                        st.success(
-                            get_text(
-                                "mos_analysis_completed",
-                                "MOS analysis completed for {0}",
-                            ).format(ticker)
-                        )
+                        st.success(get_text("mos.analysis_completed").format(ticker))
 
-                        # Get latest year
                         latest_year = max(years)
 
-                        # ============ IMMER TABELLE MIT EPS ============
                         table_data = []
                         for r in results:
                             row = {
-                                get_text("year", "Year"): r.get("Year"),
-                                get_text("eps", "EPS"): f"${r.get('EPS_now', 0):.2f}",
+                                get_text("common.year"): r.get("Year"),
+                                get_text("mos.eps"): f"${r.get('EPS_now', 0):.2f}",
                                 get_text(
-                                    "mos_fair_value_today", "Fair Value"
+                                    "mos.fair_value_today"
                                 ): f"${r.get('Fair Value Today', 0):,.2f}",
                                 get_text(
-                                    "mos_buy_price", "MOS Price (50%)"
+                                    "mos.buy_price"
                                 ): f"${r.get('MOS Price', 0):,.2f}",
                             }
 
-                            # Add current price & valuation only for latest year
                             if r.get("Year") == latest_year:
-                                row[
-                                    get_text("current_stock_price", "Current Price")
-                                ] = f"${r.get('Current Stock Price', 0):,.2f}"
-                                row[get_text("valuation", "Valuation")] = r.get(
+                                row[get_text("common.current_stock_price")] = (
+                                    f"${r.get('Current Stock Price', 0):,.2f}"
+                                )
+                                row[get_text("mos.valuation")] = r.get(
                                     "Price vs Fair Value", "N/A"
                                 )
 
@@ -197,20 +171,17 @@ def show_mos_analysis():
                         df = pd.DataFrame(table_data)
                         st.dataframe(df, use_container_width=True, hide_index=True)
 
-                        # Info für Multi-Year
                         if multi_year:
                             st.info(
-                                get_text(
-                                    "current_price_comparison_info",
-                                    "Current price comparison shown for year {0}",
-                                ).format(latest_year)
+                                get_text("mos.current_price_comparison_info").format(
+                                    latest_year
+                                )
                             )
 
-                        # Investment Recommendation für latest year
                         latest = results[-1]
                         recommendation = latest.get("Investment Recommendation", "N/A")
 
-                        st.markdown("### Investment Recommendation")
+                        st.markdown(f"### {get_text('mos.investment_recommendation')}")
                         if "Strong Buy" in recommendation:
                             st.success(f"🚀 {recommendation}")
                         elif "Buy" in recommendation:
@@ -221,11 +192,7 @@ def show_mos_analysis():
                             st.error(f"❌ {recommendation}")
 
                     else:
-                        st.warning(get_text("no_valid_data", "No valid data available"))
+                        st.warning(get_text("common.no_valid_data"))
 
                 except Exception as e:
-                    st.error(
-                        get_text(
-                            "mos_analysis_failed", "MOS analysis failed: {0}"
-                        ).format(str(e))
-                    )
+                    st.error(get_text("mos.analysis_failed").format(str(e)))
