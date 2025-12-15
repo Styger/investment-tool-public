@@ -3,10 +3,16 @@ Integrated Investment Analyzer
 Combines Quantitative Metrics + Moat Analysis for final decision
 """
 
+import sys
+from pathlib import Path
+
+root_dir = Path(__file__).resolve().parent.parent.parent
+if str(root_dir) not in sys.path:
+    sys.path.insert(0, str(root_dir))
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
-from moat_analyzer import MoatAnalyzer, MoatAnalysis
-from analysis_config import AnalysisConfig
+from backend.valuekit_ai.moat_analyzer import MoatAnalyzer, MoatAnalysis
+from backend.valuekit_ai.analysis_config import AnalysisConfig
 
 
 @dataclass

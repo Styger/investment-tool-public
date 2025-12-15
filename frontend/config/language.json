@@ -44,6 +44,74 @@
       "about": "Über",
       "about_description": "Dieses Tool bietet verschiedene Aktienanalysemethoden einschliesslich CAGR-Berechnungen, Sicherheitsmarge-Analyse, Payback-Zeit, TEN CAP-Bewertungen und DCF-Analyse."
     },
+    "ai": {
+      "title": "KI Investment-Analyse",
+      "description": "Umfassende KI-gestützte Aktienanalyse mit quantitativen und qualitativen Faktoren.",
+      "not_available": "ValueKit AI ist nicht installiert oder nicht verfügbar.",
+      "installation_instructions": "Installiere ValueKit AI im Hauptverzeichnis um diese Funktion zu nutzen.",
+      
+      "preset_label": "Analyse-Modus",
+      "preset_quick": "Schnell (Alles)",
+      "preset_quant_only": "Nur Quantitativ",
+      "preset_qual_only": "Nur Qualitativ",
+      
+      "base_year": "Basisjahr",
+      "growth_rate_manual": "Wachstumsrate (%) - 0 für Auto",
+      "growth_rate_help": "0 = Auto-Schätzung basierend auf historischen Daten",
+      "margin_of_safety": "Sicherheitsmarge (%)",
+      "discount_rate": "Diskontierungssatz (%)",
+      "load_sec_data": "SEC Daten neu laden",
+      
+      "advanced_options": "Erweiterte Optionen",
+      "components_label": "Analyse-Komponenten",
+      "run_mos": "MOS berechnen",
+      "run_cagr": "CAGR berechnen",
+      "run_moats": "Moat-Analyse",
+      "run_red_flags": "Red Flags erkennen",
+      
+      "run_analysis": "KI-Analyse starten",
+      "analyzing": "Analysiere {} mit KI...",
+      "analysis_completed": "KI-Analyse für {} abgeschlossen",
+      "analysis_failed": "KI-Analyse fehlgeschlagen: {}",
+      "error_details": "Fehlerdetails",
+      "raw_output": "Rohe Ausgabe",
+      
+      "growth_analysis_title": "Wachstumsanalyse (CAGR)",
+      "analysis_period": "Analysezeitraum",
+      "average_growth": "Durchschnittswachstum",
+      "book_value_cagr": "Buchwert CAGR",
+      "eps_cagr": "EPS CAGR",
+      "revenue_cagr": "Umsatz CAGR",
+      "cashflow_cagr": "Cashflow CAGR",
+      
+      "intrinsic_value_title": "Innerer Wert (MOS)",
+      "fair_value_today": "Fairer Wert heute",
+      "mos_price": "MOS-Preis (50%)",
+      "mos_recommendation": "MOS-Empfehlung",
+      
+      "moat_analysis_title": "KI Moat-Analyse",
+      "overall_moat_score": "Gesamt-Moat-Score",
+      "moat_strength": "Moat-Stärke",
+      "competitive_position": "Wettbewerbsposition",
+      "individual_moats": "Individuelle Moats",
+      "red_flags_detected": "Red Flags erkannt",
+      "no_red_flags": "Keine signifikanten Red Flags erkannt",
+      
+      "ai_decision_title": "KI Investitionsentscheidung",
+      "decision": "Entscheidung",
+      "confidence": "Konfidenz",
+      "overall_score": "Gesamtscore",
+      "score_breakdown": "Score-Aufschlüsselung",
+      "quantitative_score": "Quantitativ",
+      "qualitative_score": "Qualitativ",
+      "quantitative_weight": "60% Gewichtung",
+      "qualitative_weight": "40% Gewichtung",
+      "red_flag_penalty": "Red Flag Abzug",
+      
+      "final_recommendation_title": "Finale Empfehlung",
+      "no_recommendation": "Keine Empfehlung verfügbar"
+    },
+    
     
     "mos": {
       "title": "MOS-Berechnung",
@@ -443,6 +511,74 @@
       "about": "About",
       "about_description": "This tool provides various stock analysis methods including CAGR calculations, Margin of Safety analysis, Payback Time, TEN CAP valuations, and DCF analysis."
     },
+    "ai": {
+      "title": "AI Investment Analysis",
+      "description": "Comprehensive AI-powered stock analysis with quantitative and qualitative factors.",
+      "not_available": "ValueKit AI is not installed or not available.",
+      "installation_instructions": "Install ValueKit AI in the root directory to use this feature.",
+      
+      "preset_label": "Analysis Mode",
+      "preset_quick": "Quick (All)",
+      "preset_quant_only": "Quantitative Only",
+      "preset_qual_only": "Qualitative Only",
+      
+      "base_year": "Base Year",
+      "growth_rate_manual": "Growth Rate (%) - 0 for Auto",
+      "growth_rate_help": "0 = Auto-estimate based on historical data",
+      "margin_of_safety": "Margin of Safety (%)",
+      "discount_rate": "Discount Rate (%)",
+      "load_sec_data": "Reload SEC Data",
+      
+      "advanced_options": "Advanced Options",
+      "components_label": "Analysis Components",
+      "run_mos": "Calculate MOS",
+      "run_cagr": "Calculate CAGR",
+      "run_moats": "Moat Analysis",
+      "run_red_flags": "Detect Red Flags",
+      
+      "run_analysis": "Run AI Analysis",
+      "analyzing": "Analyzing {} with AI...",
+      "analysis_completed": "AI analysis completed for {}",
+      "analysis_failed": "AI analysis failed: {}",
+      "error_details": "Error Details",
+      "raw_output": "Raw Output",
+      
+      "growth_analysis_title": "Growth Analysis (CAGR)",
+      "analysis_period": "Analysis Period",
+      "average_growth": "Average Growth",
+      "book_value_cagr": "Book Value CAGR",
+      "eps_cagr": "EPS CAGR",
+      "revenue_cagr": "Revenue CAGR",
+      "cashflow_cagr": "Cash Flow CAGR",
+      
+      "intrinsic_value_title": "Intrinsic Value (MOS)",
+      "fair_value_today": "Fair Value Today",
+      "mos_price": "MOS Price (50%)",
+      "mos_recommendation": "MOS Recommendation",
+      
+      "moat_analysis_title": "AI Moat Analysis",
+      "overall_moat_score": "Overall Moat Score",
+      "moat_strength": "Moat Strength",
+      "competitive_position": "Competitive Position",
+      "individual_moats": "Individual Moats",
+      "red_flags_detected": "Red Flags Detected",
+      "no_red_flags": "No significant red flags detected",
+      
+      "ai_decision_title": "AI Investment Decision",
+      "decision": "Decision",
+      "confidence": "Confidence",
+      "overall_score": "Overall Score",
+      "score_breakdown": "Score Breakdown",
+      "quantitative_score": "Quantitative",
+      "qualitative_score": "Qualitative",
+      "quantitative_weight": "60% weight",
+      "qualitative_weight": "40% weight",
+      "red_flag_penalty": "Red Flag Penalty",
+      
+      "final_recommendation_title": "Final Recommendation",
+      "no_recommendation": "No recommendation available"
+    },
+
     
     "mos": {
       "title": "MOS Calculation",

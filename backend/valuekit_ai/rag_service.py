@@ -1,9 +1,15 @@
 from anthropic import Anthropic
 from typing import List, Dict, Any, Optional
 from langchain_core.documents import Document
+import sys
+from pathlib import Path
 
-from config import RAGConfig
-from vector_store import get_vector_store
+root_dir = Path(__file__).resolve().parent.parent.parent
+if str(root_dir) not in sys.path:
+    sys.path.insert(0, str(root_dir))
+
+from backend.valuekit_ai.config import RAGConfig
+from backend.valuekit_ai.vector_store import get_vector_store
 
 
 class RAGService:

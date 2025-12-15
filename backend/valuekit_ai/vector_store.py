@@ -1,4 +1,11 @@
 import chromadb
+import sys
+from pathlib import Path
+
+root_dir = Path(__file__).resolve().parent.parent.parent
+if str(root_dir) not in sys.path:
+    sys.path.insert(0, str(root_dir))
+
 from chromadb.config import Settings
 from langchain_chroma import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -7,7 +14,7 @@ from voyageai import Client as VoyageClient
 from typing import List, Dict, Any
 import os
 
-from config import RAGConfig
+from backend.valuekit_ai.config import RAGConfig
 
 
 class VoyageEmbeddings:

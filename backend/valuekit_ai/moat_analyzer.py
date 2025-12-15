@@ -4,9 +4,15 @@ Analyzes competitive advantages from SEC 10-K filings using RAG
 """
 
 from typing import Dict, List, Optional
-from rag_service import get_rag_service
+from backend.valuekit_ai.rag_service import get_rag_service
 from dataclasses import dataclass
-from analysis_config import AnalysisConfig
+from backend.valuekit_ai.analysis_config import AnalysisConfig
+import sys
+from pathlib import Path
+
+root_dir = Path(__file__).resolve().parent.parent.parent
+if str(root_dir) not in sys.path:
+    sys.path.insert(0, str(root_dir))
 
 
 @dataclass

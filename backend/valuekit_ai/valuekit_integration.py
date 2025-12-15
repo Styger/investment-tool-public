@@ -9,13 +9,14 @@ from typing import Dict, Optional
 
 # Add root to path
 root_dir = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(root_dir))
+if str(root_dir) not in sys.path:
+    sys.path.insert(0, str(root_dir))
 
-from backend.ai.analysis_config import AnalysisConfig
+from backend.valuekit_ai.analysis_config import AnalysisConfig
 from backend.logic.mos import calculate_mos_value_from_ticker
 from backend.logic.cagr import _mos_growth_estimate_auto
 from backend.api import fmp_api
-from backend.ai.investment_analyzer import IntegratedAnalyzer
+from backend.valuekit_ai.investment_analyzer import IntegratedAnalyzer
 
 
 class ValueKitAnalyzer:

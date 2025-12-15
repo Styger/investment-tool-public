@@ -2,9 +2,16 @@
 Integration: Load SEC Edgar data into RAG system
 """
 
-from sec_fetcher import fetch_and_prepare_for_rag
-from rag_service import get_rag_service
+from backend.valuekit_ai.sec_fetcher import fetch_and_prepare_for_rag
+from backend.valuekit_ai.rag_service import get_rag_service
 from langchain_core.documents import Document
+
+import sys
+from pathlib import Path
+
+root_dir = Path(__file__).resolve().parent.parent.parent
+if str(root_dir) not in sys.path:
+    sys.path.insert(0, str(root_dir))
 
 
 def load_company_data(ticker: str) -> dict:
