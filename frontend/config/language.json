@@ -109,7 +109,28 @@
       "red_flag_penalty": "Red Flag Abzug",
       
       "final_recommendation_title": "Finale Empfehlung",
-      "no_recommendation": "Keine Empfehlung verfügbar"
+      "no_recommendation": "Keine Empfehlung verfügbar",
+
+      "general_settings": "Allgemeine Einstellungen",
+      "quantitative_analysis": "Quantitative Analyse",
+      "qualitative_analysis": "Qualitative Analyse (Moats)",
+      "load_sec_help": "⚠️ Empfohlen! Ohne SEC Daten: Low confidence bei Moats",
+      
+      "run_roic": "ROIC berechnen",
+      "run_moat_analysis": "Moat-Analyse durchführen",
+      "individual_moat_selection": "Individuelle Moats auswählen",
+      
+      "moat_brand": "Brand Power",
+      "moat_switching": "Switching Costs",
+      "moat_network": "Network Effects",
+      "moat_cost": "Cost Advantages",
+      "moat_scale": "Efficient Scale",
+      
+      "analysis_results": "Analyse-Ergebnisse",
+
+      "run_profitability": "Profitabilität berechnen (ROE/ROA/ROIC/Margen)",
+      "growth_rate_auto_info": "Wachstumsrate wird automatisch durch CAGR berechnet"
+
     },
     
     
@@ -142,7 +163,6 @@
       "select_metrics": "Metriken auswählen",
       "period_years": "Zeitraum (Jahre)",
       "select_at_least_one_metric": "Bitte wählen Sie mindestens eine Metrik aus",
-      "period_years": "Zeitraum (Jahre)",
       "average": "Durchschnitt"
     },
     
@@ -576,7 +596,27 @@
       "red_flag_penalty": "Red Flag Penalty",
       
       "final_recommendation_title": "Final Recommendation",
-      "no_recommendation": "No recommendation available"
+      "no_recommendation": "No recommendation available",
+
+      "general_settings": "General Settings",
+      "quantitative_analysis": "Quantitative Analysis",
+      "qualitative_analysis": "Qualitative Analysis (Moats)",
+      "load_sec_help": "⚠️ Recommended! Without SEC data: Low confidence for moats",
+      
+      "run_roic": "Calculate ROIC",
+      "run_moat_analysis": "Run Moat Analysis",
+      "individual_moat_selection": "Select Individual Moats",
+      
+      "moat_brand": "Brand Power",
+      "moat_switching": "Switching Costs",
+      "moat_network": "Network Effects",
+      "moat_cost": "Cost Advantages",
+      "moat_scale": "Efficient Scale",
+      
+      "analysis_results": "Analysis Results",
+      "run_profitability": "Calculate Profitability (ROE/ROA/ROIC/Margins)",
+      "growth_rate_auto_info": "Growth rate will be automatically calculated by CAGR"
+
     },
 
     

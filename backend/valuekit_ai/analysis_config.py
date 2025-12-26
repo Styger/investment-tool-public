@@ -6,6 +6,7 @@ Toggle which components to include in analysis
 from dataclasses import dataclass
 import sys
 from pathlib import Path
+from typing import List
 
 root_dir = Path(__file__).resolve().parent.parent.parent
 if str(root_dir) not in sys.path:
@@ -14,15 +15,17 @@ if str(root_dir) not in sys.path:
 
 @dataclass
 class AnalysisConfig:
-    """Configuration for analysis components"""
+    """Configuration for ValueKit AI analysis"""
 
-    # Quantitative
-    run_mos: bool = True
-    run_cagr: bool = True
-    run_roic: bool = False
+    # Quantitative Analysis Flags
+    run_mos: bool = True  # Margin of Safety calculation
+    run_cagr: bool = True  # Growth rate estimation
+    run_profitability: bool = False  # Profitability metrics (ROE, ROA, ROIC, Margins)
 
-    # Moats
-    run_moat_analysis: bool = True
+    # Qualitative Analysis Flags
+    run_moat_analysis: bool = True  # Master toggle for all moat analysis
+
+    # Individual Moat Flags (only used if run_moat_analysis=True)
     run_brand_power: bool = True
     run_switching_costs: bool = True
     run_network_effects: bool = True
@@ -31,19 +34,21 @@ class AnalysisConfig:
 
     # Red Flags
     run_red_flags: bool = True
+
+    # Individual Red Flag Types
     run_regulatory_risk: bool = True
     run_competitive_threats: bool = True
     run_management_issues: bool = True
     run_financial_stress: bool = True
 
-    # Options
-    load_sec_data: bool = False
-    auto_estimate_growth: bool = True
-    margin_of_safety: float = 0.50
-    discount_rate: float = 0.15
+    # Parameters
+    margin_of_safety: float = 0.50  # 50% safety margin
+    discount_rate: float = 0.15  # 15% discount rate
+    auto_estimate_growth: bool = True  # Auto-estimate from CAGR
+    load_sec_data: bool = False  # Load SEC filings for AI analysis
 
-    def get_enabled_moats(self):
-        """Returns list of enabled moats"""
+    def get_enabled_moats(self) -> List[str]:
+        """Get list of enabled moat types"""
         moats = []
         if self.run_brand_power:
             moats.append("brand_power")
@@ -57,8 +62,8 @@ class AnalysisConfig:
             moats.append("efficient_scale")
         return moats
 
-    def get_enabled_red_flags(self):
-        """Returns list of enabled red flag categories"""
+    def get_enabled_red_flags(self) -> List[str]:
+        """Get list of enabled red flag types"""
         flags = []
         if self.run_regulatory_risk:
             flags.append("regulatory_risk")
@@ -71,17 +76,54 @@ class AnalysisConfig:
         return flags
 
 
-# Presets
-def quick_config():
-    """Quick - all enabled"""
-    return AnalysisConfig()
+# Preset Configurations
+def quick_config() -> AnalysisConfig:
+    """Quick analysis - all features enabled except profitability"""
+    return AnalysisConfig(
+        run_mos=True,
+        run_cagr=True,
+        run_profitability=False,
+        run_moat_analysis=True,
+        run_red_flags=True,
+        auto_estimate_growth=True,
+        load_sec_data=False,
+    )
 
 
-def quantitative_only():
-    """Only numbers, no moats"""
-    return AnalysisConfig(run_moat_analysis=False, run_red_flags=False)
+def quantitative_only() -> AnalysisConfig:
+    """Quantitative analysis only - no AI moats"""
+    return AnalysisConfig(
+        run_mos=True,
+        run_cagr=True,
+        run_profitability=True,
+        run_moat_analysis=False,
+        run_red_flags=False,
+        auto_estimate_growth=True,
+        load_sec_data=False,
+    )
 
 
-def qualitative_only():
-    """Only moats, no numbers"""
-    return AnalysisConfig(run_mos=False, run_cagr=False)
+def qualitative_only() -> AnalysisConfig:
+    """Qualitative analysis only - AI moats without numbers"""
+    return AnalysisConfig(
+        run_mos=False,
+        run_cagr=False,
+        run_profitability=False,
+        run_moat_analysis=True,
+        run_red_flags=True,
+        auto_estimate_growth=False,
+        load_sec_data=True,  # Need SEC data for moats
+    )
+
+
+def deep_analysis() -> AnalysisConfig:
+    """Deep analysis - everything enabled"""
+    return AnalysisConfig(
+        run_mos=True,
+        run_cagr=True,
+        run_profitability=True,
+        run_moat_analysis=True,
+        run_red_flags=True,
+        auto_estimate_growth=True,
+        load_sec_data=True,
+    )

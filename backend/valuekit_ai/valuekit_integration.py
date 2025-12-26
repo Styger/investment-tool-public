@@ -17,6 +17,7 @@ from backend.logic.mos import calculate_mos_value_from_ticker
 from backend.logic.cagr import _mos_growth_estimate_auto
 from backend.api import fmp_api
 from backend.valuekit_ai.investment_analyzer import IntegratedAnalyzer
+from backend.logic import profitability
 
 
 class ValueKitAnalyzer:
@@ -203,6 +204,31 @@ class ValueKitAnalyzer:
         else:
             print(f"💰 Intrinsic Value Calculation (MOS): SKIPPED\n")
 
+        # Step 2.5: Profitability Analysis (includes ROIC) - if enabled
+        profitability_result = None
+        if config is None or config.run_profitability:  # ← FIX THIS LINE
+            print(f"📊 Profitability Analysis (ROE, ROA, ROIC, Margins):")
+            profitability_result = (
+                profitability.calculate_profitability_metrics_from_ticker(ticker, year)
+            )
+
+            if profitability_result and not profitability_result.get("error"):
+                if profitability_result.get("roe"):
+                    print(f"   ROE: {profitability_result['roe'] * 100:.1f}%")
+                if profitability_result.get("roa"):
+                    print(f"   ROA: {profitability_result['roa'] * 100:.1f}%")
+                if profitability_result.get("roic"):
+                    print(f"   ROIC: {profitability_result['roic'] * 100:.1f}%")
+                if profitability_result.get("net_margin"):
+                    print(
+                        f"   Net Margin: {profitability_result['net_margin'] * 100:.1f}%"
+                    )
+                print()  # Empty line
+            else:
+                print(f"   ⚠️ Could not calculate profitability metrics\n")
+        else:
+            print(f"📊 Profitability Analysis: SKIPPED\n")
+
         # Step 3: Prepare metrics for AI (if needed)
         ai_decision = None
         if config is None or config.run_moat_analysis:
@@ -224,7 +250,9 @@ class ValueKitAnalyzer:
                 "fair_value": mos_result["Fair Value Today"] if mos_result else 0,
                 "mos_price": mos_result["MOS Price"] if mos_result else 0,
                 "discount_rate": f"{discount_rate * 100:.0f}%",
-                "roic": "None",  # TODO: Add when profitability.py integrated
+                "roic": f"{profitability_result['roic'] * 100:.1f}%"
+                if (profitability_result and profitability_result.get("roic"))
+                else "None",
             }
 
             # Step 4: AI Moat Analysis
@@ -234,6 +262,8 @@ class ValueKitAnalyzer:
                 quantitative_metrics=quantitative_metrics,
                 load_sec_data=load_sec_data,
                 config=config,
+                mos_result=mos_result,  # ← ADD THIS
+                profitability_result=profitability_result,  # ← ADD THIS
             )
         else:
             print(f"🏰 AI Moat Analysis: SKIPPED\n")
@@ -260,7 +290,8 @@ class ValueKitAnalyzer:
             "ticker": ticker.upper(),
             "growth_analysis": growth_data,
             "intrinsic_value": mos_result,
-            "ai_analysis": ai_decision,  # Can be None!
+            "profitability_analysis": profitability_result,
+            "ai_analysis": ai_decision,
             "final_recommendation": final_rec,
         }
 

@@ -61,8 +61,8 @@ def run_analysis(
             quant.append("MOS")
         if config.run_cagr:
             quant.append("CAGR")
-        if config.run_roic:
-            quant.append("ROIC")
+        if config.run_profitability:
+            quant.append("Profitability")
         print(f"  Quantitative: {', '.join(quant)}")
 
     if config.run_moat_analysis:
@@ -135,6 +135,59 @@ def _print_results(result: dict):
         print(f"MOS Price (50%):      ${mos['MOS Price']:>10.2f}")
         print(f"\nValuation: {mos['Price vs Fair Value']}")
         print(f"MOS Recommendation: {mos['Investment Recommendation']}")
+
+    # Profitability Analysis
+    if result.get("profitability_analysis"):
+        prof = result["profitability_analysis"]
+
+        print(f"\n📊 PROFITABILITY ANALYSIS")
+        print(f"{'─' * 80}")
+
+        # Return Ratios
+        print(f"Return Ratios:")
+        if prof.get("roe"):
+            roe_emoji = (
+                "🟢" if prof["roe"] > 0.20 else ("🟡" if prof["roe"] > 0.15 else "🔴")
+            )
+            print(
+                f"  {roe_emoji} ROE (Return on Equity):    {prof['roe'] * 100:>6.1f}%"
+            )
+
+        if prof.get("roa"):
+            roa_emoji = (
+                "🟢" if prof["roa"] > 0.10 else ("🟡" if prof["roa"] > 0.07 else "🔴")
+            )
+            print(
+                f"  {roa_emoji} ROA (Return on Assets):    {prof['roa'] * 100:>6.1f}%"
+            )
+
+        if prof.get("roic"):
+            roic_emoji = (
+                "🟢" if prof["roic"] > 0.15 else ("🟡" if prof["roic"] > 0.10 else "🔴")
+            )
+            print(
+                f"  {roic_emoji} ROIC (Return on Inv. Cap): {prof['roic'] * 100:>6.1f}%"
+            )
+
+        # Profit Margins
+        print(f"\nProfit Margins:")
+        if prof.get("gross_margin"):
+            print(f"     Gross Margin:     {prof['gross_margin'] * 100:>6.1f}%")
+        if prof.get("operating_margin"):
+            print(f"     Operating Margin: {prof['operating_margin'] * 100:>6.1f}%")
+        if prof.get("net_margin"):
+            nm_emoji = (
+                "🟢"
+                if prof["net_margin"] > 0.15
+                else ("🟡" if prof["net_margin"] > 0.10 else "🔴")
+            )
+            print(f"  {nm_emoji} Net Margin:       {prof['net_margin'] * 100:>6.1f}%")
+
+        # Efficiency
+        print(f"\nEfficiency:")
+        if prof.get("asset_turnover"):
+            at_emoji = "🟢" if prof["asset_turnover"] > 1.0 else "🔴"
+            print(f"  {at_emoji} Asset Turnover:    {prof['asset_turnover']:>6.2f}x")
 
     # AI Moat Analysis
     if result.get("ai_analysis"):
@@ -221,6 +274,11 @@ Examples:
         "--no-cagr", action="store_true", help="Disable CAGR calculation"
     )
     parser.add_argument(
+        "--no-profitability",
+        action="store_true",
+        help="Disable profitability analysis (ROE/ROA/ROIC/Margins)",
+    )
+    parser.add_argument(
         "--no-moats", action="store_true", help="Disable all moat analysis"
     )
     parser.add_argument(
@@ -276,6 +334,8 @@ Examples:
         config.run_mos = False
     if args.no_cagr:
         config.run_cagr = False
+    if args.no_profitability:
+        config.run_profitability = False
     if args.no_moats:
         config.run_moat_analysis = False
     if args.no_red_flags:

@@ -32,6 +32,10 @@ def show_ai_analysis():
             "global_ticker", "MSFT"
         )
 
+    # Initialize CAGR state for live growth_rate field disabling
+    if "ai_cagr_enabled" not in st.session_state:
+        st.session_state.ai_cagr_enabled = persist_data.get("run_cagr", True)
+
     # Checkbox for individual ticker
     use_individual_ticker = st.checkbox(
         get_text("common.use_individual_ticker"),
@@ -39,43 +43,32 @@ def show_ai_analysis():
         key="ai_use_individual",
     )
 
-    # Main inputs in columns
-    col1, col2, col3 = st.columns([2, 1, 1])
+    # Main inputs
+    col1, col2 = st.columns([3, 1])
 
     with col1:
         if use_individual_ticker:
+            # Individual ticker for this module
             ticker = st.text_input(
                 get_text("common.ticker_symbol"),
                 value=persist_data.get("ticker", ""),
                 key="ai_ticker",
             ).upper()
         else:
+            # Global ticker - editable and synchronized
             ticker = st.text_input(
                 get_text("common.ticker_symbol") + " 🌍",
                 value=st.session_state.global_ticker,
                 key="ai_ticker_global",
                 help=get_text("common.global_ticker_help"),
             ).upper()
+            # Update global ticker when changed
             if ticker != st.session_state.global_ticker:
                 st.session_state.global_ticker = ticker
                 st.session_state.persist["global_ticker"] = ticker
                 save_persistence_data()
 
     with col2:
-        preset = st.selectbox(
-            get_text("ai.preset_label"),
-            [
-                get_text("ai.preset_quick"),
-                get_text("ai.preset_quant_only"),
-                get_text("ai.preset_qual_only"),
-            ],
-            index=["quick", "quant_only", "qual_only"].index(
-                persist_data.get("preset", "quick")
-            ),
-            key="ai_preset",
-        )
-
-    with col3:
         year = st.number_input(
             get_text("ai.base_year"),
             min_value=2010,
@@ -84,301 +77,245 @@ def show_ai_analysis():
             key="ai_year",
         )
 
-    # Advanced options in expander
-    with st.expander(get_text("ai.advanced_options")):
-        col1, col2, col3, col4 = st.columns(4)
+    st.markdown("---")
 
-        with col1:
-            growth_rate = st.number_input(
-                get_text("ai.growth_rate_manual"),
+    # ===================================================================
+    # 3-COLUMN LAYOUT: General | Quantitative | Qualitative
+    # ===================================================================
+    col_general, col_quant, col_qual = st.columns(3)
+
+    # ───────────────────────────────────────────────────────────────────
+    # COLUMN 1: GENERAL SETTINGS
+    # ───────────────────────────────────────────────────────────────────
+    with col_general:
+        st.subheader(f"⚙️ {get_text('ai.general_settings')}")
+
+        # Growth rate - disabled when CAGR is active
+        growth_rate = st.number_input(
+            get_text("ai.growth_rate_manual"),
+            min_value=0.0,
+            max_value=50.0,
+            value=float(persist_data.get("growth_rate", 0.0)),
+            step=1.0,
+            help=get_text("ai.growth_rate_help"),
+            key="ai_growth",
+            disabled=st.session_state.ai_cagr_enabled,  # Live disable
+        )
+
+        # Info caption when disabled
+        if st.session_state.ai_cagr_enabled:
+            st.caption("⚙️ " + get_text("ai.growth_rate_auto_info"))
+
+        # Margin of safety
+        mos = (
+            st.number_input(
+                get_text("ai.margin_of_safety"),
                 min_value=0.0,
-                max_value=50.0,
-                value=float(persist_data.get("growth_rate", 0.0)),
+                max_value=75.0,
+                value=float(persist_data.get("mos", 50.0)),
+                step=5.0,
+                key="ai_mos",
+            )
+            / 100
+        )
+
+        # Discount rate
+        discount_rate = (
+            st.number_input(
+                get_text("ai.discount_rate"),
+                min_value=1.0,
+                max_value=30.0,
+                value=float(persist_data.get("discount_rate", 15.0)),
                 step=1.0,
-                help=get_text("ai.growth_rate_help"),
-                key="ai_growth",
+                key="ai_discount",
+            )
+            / 100
+        )
+
+        # Load SEC data - recommended for best moat results
+        load_sec = st.checkbox(
+            get_text("ai.load_sec_data"),
+            value=persist_data.get("load_sec", True),
+            key="ai_load_sec",
+            help=get_text("ai.load_sec_help"),
+        )
+
+    # ───────────────────────────────────────────────────────────────────
+    # COLUMN 2: QUANTITATIVE ANALYSIS
+    # ───────────────────────────────────────────────────────────────────
+    with col_quant:
+        st.subheader(f"📊 {get_text('ai.quantitative_analysis')}")
+
+        # MOS calculation
+        run_mos = st.checkbox(
+            get_text("ai.run_mos"),
+            value=persist_data.get("run_mos", True),
+            key="ai_toggle_mos",
+        )
+
+        # CAGR calculation - controls growth_rate field in column 1
+        run_cagr = st.checkbox(
+            get_text("ai.run_cagr"),
+            value=st.session_state.ai_cagr_enabled,
+            key="ai_toggle_cagr",
+            on_change=lambda: setattr(
+                st.session_state, "ai_cagr_enabled", st.session_state.ai_toggle_cagr
+            ),
+        )
+
+        # Profitability analysis (ROE, ROA, ROIC, Margins)
+        run_profitability = st.checkbox(
+            get_text("ai.run_profitability"),
+            value=persist_data.get("run_profitability", False),
+            key="ai_toggle_profitability",
+        )
+
+    # ───────────────────────────────────────────────────────────────────
+    # COLUMN 3: QUALITATIVE ANALYSIS (MOATS)
+    # ───────────────────────────────────────────────────────────────────
+    with col_qual:
+        st.subheader(f"🏰 {get_text('ai.qualitative_analysis')}")
+
+        # Master toggle for all moat analysis
+        run_moat_analysis = st.checkbox(
+            get_text("ai.run_moat_analysis"),
+            value=persist_data.get("run_moat_analysis", True),
+            key="ai_master_moats",
+        )
+
+        if run_moat_analysis:
+            # Individual moat checkboxes - vertically stacked
+            run_brand = st.checkbox(
+                get_text("ai.moat_brand"),
+                value=persist_data.get("run_brand", True),
+                key="ai_moat_brand",
             )
 
-        with col2:
-            mos = (
-                st.number_input(
-                    get_text("ai.margin_of_safety"),
-                    min_value=0.0,
-                    max_value=75.0,
-                    value=float(persist_data.get("mos", 50.0)),
-                    step=5.0,
-                    key="ai_mos",
-                )
-                / 100
+            run_switching = st.checkbox(
+                get_text("ai.moat_switching"),
+                value=persist_data.get("run_switching", True),
+                key="ai_moat_switching",
             )
 
-        with col3:
-            discount_rate = (
-                st.number_input(
-                    get_text("ai.discount_rate"),
-                    min_value=1.0,
-                    max_value=30.0,
-                    value=float(persist_data.get("discount_rate", 15.0)),
-                    step=1.0,
-                    key="ai_discount",
-                )
-                / 100
+            run_network = st.checkbox(
+                get_text("ai.moat_network"),
+                value=persist_data.get("run_network", True),
+                key="ai_moat_network",
             )
 
-        with col4:
-            load_sec = st.checkbox(
-                get_text("ai.load_sec_data"),
-                value=persist_data.get("load_sec", False),
-                key="ai_load_sec",
+            run_cost = st.checkbox(
+                get_text("ai.moat_cost"),
+                value=persist_data.get("run_cost", True),
+                key="ai_moat_cost",
             )
 
-        # Component toggles
-        st.markdown(f"**{get_text('ai.components_label')}**")
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            run_mos = st.checkbox(
-                get_text("ai.run_mos"), value=True, key="ai_toggle_mos"
-            )
-            run_cagr = st.checkbox(
-                get_text("ai.run_cagr"), value=True, key="ai_toggle_cagr"
+            run_scale = st.checkbox(
+                get_text("ai.moat_scale"),
+                value=persist_data.get("run_scale", True),
+                key="ai_moat_scale",
             )
 
-        with col2:
-            run_moats = st.checkbox(
-                get_text("ai.run_moats"), value=True, key="ai_toggle_moats"
-            )
+            st.markdown("---")
+
+            # Red flags detection
             run_red_flags = st.checkbox(
-                get_text("ai.run_red_flags"), value=True, key="ai_toggle_flags"
+                get_text("ai.run_red_flags"),
+                value=persist_data.get("run_red_flags", True),
+                key="ai_toggle_flags",
             )
+        else:
+            # Defaults when moat analysis is disabled
+            run_brand = run_switching = run_network = run_cost = run_scale = False
+            run_red_flags = False
 
-    # Run Analysis Button
-    if st.button(get_text("ai.run_analysis"), key="ai_run", type="primary"):
+    st.markdown("---")
+
+    # ===================================================================
+    # RUN ANALYSIS BUTTON
+    # ===================================================================
+    if st.button(
+        get_text("ai.run_analysis"),
+        key="ai_run",
+        type="primary",
+        use_container_width=True,
+    ):
         if not ticker:
             st.error(get_text("common.please_enter_ticker"))
         else:
-            # Build config based on preset and toggles
-            if get_text("ai.preset_quant_only") in preset:
-                config = analysis_config.quantitative_only()
-            elif get_text("ai.preset_qual_only") in preset:
-                config = analysis_config.qualitative_only()
-            else:
-                config = analysis_config.quick_config()
+            # Build config manually with all settings
+            config = analysis_config.AnalysisConfig()
 
-            # Apply toggles
+            # Quantitative settings
             config.run_mos = run_mos
             config.run_cagr = run_cagr
-            config.run_moat_analysis = run_moats
+            config.run_profitability = run_profitability
+
+            # Qualitative settings
+            config.run_moat_analysis = run_moat_analysis
+            config.run_brand_power = run_brand
+            config.run_switching_costs = run_switching
+            config.run_network_effects = run_network
+            config.run_cost_advantages = run_cost
+            config.run_efficient_scale = run_scale
             config.run_red_flags = run_red_flags
+
+            # General settings
             config.load_sec_data = load_sec
             config.margin_of_safety = mos
             config.discount_rate = discount_rate
+            config.auto_estimate_growth = growth_rate == 0
 
-            # Save to persistence
+            # Save all settings to persistence
             persist_data_update = {
                 "ticker": ticker if use_individual_ticker else "",
                 "use_individual_ticker": use_individual_ticker,
-                "preset": ["quick", "quant_only", "qual_only"][
-                    [
-                        get_text("ai.preset_quick"),
-                        get_text("ai.preset_quant_only"),
-                        get_text("ai.preset_qual_only"),
-                    ].index(preset)
-                ],
                 "year": str(year),
                 "growth_rate": str(growth_rate),
                 "mos": str(mos * 100),
                 "discount_rate": str(discount_rate * 100),
                 "load_sec": load_sec,
+                "run_mos": run_mos,
+                "run_cagr": run_cagr,
+                "run_profitability": run_profitability,
+                "run_moat_analysis": run_moat_analysis,
+                "run_brand": run_brand,
+                "run_switching": run_switching,
+                "run_network": run_network,
+                "run_cost": run_cost,
+                "run_scale": run_scale,
+                "run_red_flags": run_red_flags,
             }
             st.session_state.persist.setdefault("AI", {}).update(persist_data_update)
             save_persistence_data()
 
-            # Run analysis with progress
+            # Run analysis with progress indicator
             with st.spinner(get_text("ai.analyzing").format(ticker)):
-                # Initialize analyzer
-                analyzer = valuekit_ai.ValueKitAnalyzer()
+                try:
+                    # Initialize analyzer
+                    analyzer = valuekit_ai.ValueKitAnalyzer()
 
-                # Capture output
-                with capture_stdout() as output:
-                    result = analyzer.analyze_stock_complete(
-                        ticker=ticker,
-                        year=year,
-                        growth_rate=growth_rate if growth_rate > 0 else None,
-                        discount_rate=discount_rate,
-                        margin_of_safety=mos,
-                        auto_estimate_growth=(growth_rate == 0),
-                        load_sec_data=load_sec,
-                        config=config,
-                    )
+                    # Capture stdout output
+                    with capture_stdout() as output:
+                        result = analyzer.analyze_stock_complete(
+                            ticker=ticker,
+                            year=year,
+                            growth_rate=growth_rate if growth_rate > 0 else None,
+                            discount_rate=discount_rate,
+                            margin_of_safety=mos,
+                            auto_estimate_growth=(growth_rate == 0),
+                            load_sec_data=load_sec,
+                            config=config,
+                        )
 
-                st.success(get_text("ai.analysis_completed").format(ticker))
+                    st.success(get_text("ai.analysis_completed").format(ticker))
 
-                # Display results in formatted sections
-                _display_results(result)
-
-                # Show raw output in expander
-                with st.expander(f"📋 {get_text('ai.raw_output')}", expanded=False):
+                    # Display ONLY raw output in a big code block
+                    st.subheader(f"📋 {get_text('ai.analysis_results')}")
                     st.code(output.getvalue(), language=None)
 
+                except Exception as e:
+                    st.error(get_text("ai.analysis_failed").format(str(e)))
+                    import traceback
 
-def _display_results(result: dict):
-    """Display formatted AI analysis results"""
-
-    # Growth Analysis
-    if result.get("growth_analysis"):
-        growth = result["growth_analysis"]
-        st.subheader(f"📈 {get_text('ai.growth_analysis_title')}")
-
-        col1, col2 = st.columns([1, 2])
-        with col1:
-            st.metric(
-                get_text("ai.analysis_period"),
-                f"{growth['start_year']}-{growth['end_year']} ({growth['period_years']}y)",
-            )
-            st.metric(
-                get_text("ai.average_growth"),
-                f"{growth['avg_growth_rate'] * 100:.2f}%",
-            )
-
-        with col2:
-            metrics_data = {
-                get_text("ai.book_value_cagr"): f"{growth['book_cagr']:.2f}%",
-                get_text("ai.eps_cagr"): f"{growth['eps_cagr']:.2f}%",
-                get_text("ai.revenue_cagr"): f"{growth['revenue_cagr']:.2f}%",
-                get_text("ai.cashflow_cagr"): f"{growth['cashflow_cagr']:.2f}%",
-            }
-            st.table(metrics_data)
-
-        st.markdown("---")
-
-    # Intrinsic Value
-    if result.get("intrinsic_value"):
-        mos = result["intrinsic_value"]
-        st.subheader(f"💰 {get_text('ai.intrinsic_value_title')}")
-
-        col1, col2, col3, col4 = st.columns(4)
-
-        with col1:
-            st.metric(
-                get_text("common.current_stock_price"),
-                f"${mos['Current Stock Price']:,.2f}",
-            )
-
-        with col2:
-            st.metric(
-                get_text("ai.fair_value_today"), f"${mos['Fair Value Today']:,.2f}"
-            )
-
-        with col3:
-            st.metric(get_text("ai.mos_price"), f"${mos['MOS Price']:,.2f}")
-
-        with col4:
-            valuation = mos["Price vs Fair Value"]
-            if "Undervalued" in valuation:
-                st.success(f"📈 {valuation}")
-            elif "Overvalued" in valuation:
-                st.warning(f"📉 {valuation}")
-            else:
-                st.info(f"⚖️ {valuation}")
-
-        st.info(
-            f"**{get_text('ai.mos_recommendation')}:** {mos['Investment Recommendation']}"
-        )
-        st.markdown("---")
-
-    # AI Moat Analysis
-    if result.get("ai_analysis"):
-        ai = result["ai_analysis"]
-        moat = ai.moat_analysis
-
-        st.subheader(f"🏰 {get_text('ai.moat_analysis_title')}")
-
-        # Overall scores
-        num_moats = len(moat.moats)
-        max_possible = num_moats * 10
-
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric(
-                get_text("ai.overall_moat_score"),
-                f"{moat.overall_score}/{max_possible}",
-            )
-        with col2:
-            st.metric(get_text("ai.moat_strength"), moat.moat_strength)
-        with col3:
-            st.metric(get_text("ai.competitive_position"), moat.competitive_position)
-
-        # Individual moat scores
-        st.markdown(f"**{get_text('ai.individual_moats')}:**")
-
-        sorted_moats = sorted(
-            moat.moats.items(), key=lambda x: x[1].score, reverse=True
-        )
-
-        for key, m in sorted_moats:
-            emoji = "🟢" if m.score >= 7 else ("🟡" if m.score >= 4 else "🔴")
-            col1, col2, col3 = st.columns([3, 1, 1])
-            with col1:
-                st.write(f"{emoji} **{m.name}**")
-            with col2:
-                st.write(f"{m.score}/10")
-            with col3:
-                st.write(m.confidence)
-
-        # Red Flags
-        if moat.red_flags:
-            st.warning(
-                f"🚩 **{get_text('ai.red_flags_detected')} ({len(moat.red_flags)}):**"
-            )
-            for i, flag in enumerate(moat.red_flags, 1):
-                st.write(f"{i}. {flag}")
-        else:
-            st.success(f"✅ {get_text('ai.no_red_flags')}")
-
-        st.markdown("---")
-
-        # AI Decision
-        st.subheader(f"🤖 {get_text('ai.ai_decision_title')}")
-
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            decision = ai.decision
-            if "Buy" in decision:
-                st.success(f"**{get_text('ai.decision')}:** {decision}")
-            elif "Hold" in decision:
-                st.warning(f"**{get_text('ai.decision')}:** {decision}")
-            else:
-                st.error(f"**{get_text('ai.decision')}:** {decision}")
-
-        with col2:
-            st.metric(get_text("ai.confidence"), ai.confidence)
-
-        with col3:
-            st.metric(get_text("ai.overall_score"), f"{ai.overall_score}/100")
-
-        # Score breakdown
-        st.markdown(f"**{get_text('ai.score_breakdown')}:**")
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric(
-                get_text("ai.quantitative_score"),
-                f"{ai.quantitative_score}/100",
-                help=get_text("ai.quantitative_weight"),
-            )
-        with col2:
-            st.metric(
-                get_text("ai.qualitative_score"),
-                f"{ai.qualitative_score}/100",
-                help=get_text("ai.qualitative_weight"),
-            )
-        with col3:
-            penalty = ai.overall_score - int(
-                (ai.quantitative_score * 0.6 + ai.qualitative_score * 0.4)
-            )
-            st.metric(get_text("ai.red_flag_penalty"), f"{penalty}")
-
-    # Final Recommendation
-    st.markdown("---")
-    st.subheader(f"🎯 {get_text('ai.final_recommendation_title')}")
-    st.info(result.get("final_recommendation", get_text("ai.no_recommendation")))
+                    with st.expander(get_text("ai.error_details")):
+                        st.code(traceback.format_exc())
