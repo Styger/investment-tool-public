@@ -53,7 +53,7 @@ def main():
         f"💰 {get_text('profitability.title')}": profitability_ui.show_profitability_analysis,
         f"💵 {get_text('capital_allocation.title')}": capital_allocation_ui.show_capital_allocation_analysis,
         # f"💎 {get_text('quality_title')}": quality.show_quality_analysis,
-        f"🤖 {get_text('ai.title')}": ai_ui.show_ai_analysis,
+        # f"🤖 {get_text('ai.title')}": ai_ui.show_ai_analysis,
         f"⚙️ {get_text('settings.title')}": settings_ui.show_settings_page,
     }
 
