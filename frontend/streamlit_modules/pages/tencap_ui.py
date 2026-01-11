@@ -124,6 +124,49 @@ def show_tencap_analysis():
                         # MODIFIED: Load current language from session state
                         current_language_data = st.session_state.get("language", {})
 
+                        # Convert nested structure to flat structure
+                        flat_language = {
+                            "ten_cap_calc_title": current_language_data.get(
+                                "tencap", {}
+                            ).get("calc_title", "TEN CAP Analyse für"),
+                            "ten_cap_profit_before_tax": current_language_data.get(
+                                "tencap", {}
+                            ).get("profit_before_tax", "Gewinn vor Steuern:"),
+                            "ten_cap_depreciation": current_language_data.get(
+                                "tencap", {}
+                            ).get("depreciation", "+ Abschreibungen:"),
+                            "ten_cap_working_capital": current_language_data.get(
+                                "tencap", {}
+                            ).get("working_capital", "Δ Working Capital:"),
+                            "ten_cap_capex": current_language_data.get(
+                                "tencap", {}
+                            ).get("capex", "- 50% Maintenance CapEx:"),
+                            "ten_cap_owner_earnings": current_language_data.get(
+                                "tencap", {}
+                            ).get("owner_earnings", "= Owner Earnings:"),
+                            "ten_cap_shares": current_language_data.get(
+                                "tencap", {}
+                            ).get("shares", "Aktien (Mio):"),
+                            "ten_cap_eps": current_language_data.get("tencap", {}).get(
+                                "eps", "Earnings per Share:"
+                            ),
+                            "ten_cap_fair_value": current_language_data.get(
+                                "tencap", {}
+                            ).get("fair_value", "TEN CAP Fair Value:"),
+                            "ten_cap_price": current_language_data.get(
+                                "tencap", {}
+                            ).get("buy_price", "TEN CAP Buy Price:"),
+                            "current_stock_price": current_language_data.get(
+                                "common", {}
+                            ).get("current_stock_price", "Current Stock Price:"),
+                            "price_comparison": current_language_data.get(
+                                "common", {}
+                            ).get("price_comparison", "Price vs. Fair Value:"),
+                            "price_vs_fair_value_tencap": current_language_data.get(
+                                "tencap", {}
+                            ).get("price_vs_fair_value", "Preis vs. Fair Value:"),
+                        }
+
                         # Show details - formatted reports with correct language
                         for year in years:
                             try:
@@ -131,7 +174,7 @@ def show_tencap_analysis():
                                     tencap_logic.print_ten_cap_analysis,
                                     ticker,
                                     year,
-                                    current_language_data,  # MODIFIED: Use current language
+                                    flat_language,  # MODIFIED: Use current language
                                 )
                                 if output.strip():
                                     st.code(output, language=None)

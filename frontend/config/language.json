@@ -179,7 +179,16 @@
       "price_vs_fair_value": "Preis vs. Fairer Wert",
       "analysis_for": "Ten Cap Analyse für {}",
       "calculation_info": "Ten Cap Methode: Berechnet basierend auf 10-jähriger durchschnittlicher Eigenkapitalrendite",
-      "no_details_available": "Keine Details verfügbar für Jahr {}"
+      "no_details_available": "Keine Details verfügbar für Jahr {}",
+
+      "calc_title": "TEN CAP Analyse für",
+      "profit_before_tax": "Gewinn vor Steuern:",
+      "depreciation": "+ Abschreibungen:",
+      "working_capital": "Δ Working Capital:",
+      "capex": "- 50% Maintenance CapEx:",
+      "owner_earnings": "= Owner Earnings:",
+      "shares": "Aktien (Mio):",
+      "eps": "Earnings per Share:"
     },
     
     "pbt": {
@@ -665,7 +674,16 @@
       "price_vs_fair_value": "Price vs. Fair Value",
       "analysis_for": "Ten Cap Analysis for {}",
       "calculation_info": "Ten Cap Method: Calculated based on 10-year average return on equity",
-      "no_details_available": "No details available for year {}"
+      "no_details_available": "No details available for year {}",
+
+      "calc_title": "TEN CAP Analyse for",
+      "profit_before_tax": "  Profit before Tax:",
+      "depreciation": " + Depreciation:",
+      "working_capital": "Δ Working Capital:",
+      "capex": "- 50% Maintenance CapEx:",
+      "owner_earnings": "= Owner Earnings:",
+      "shares": "Shares (Million):",
+      "eps": "Earnings per Share:"
     },
     
     "pbt": {

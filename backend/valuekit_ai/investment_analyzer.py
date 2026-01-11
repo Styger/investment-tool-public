@@ -28,6 +28,8 @@ class InvestmentDecision:
     reasoning: str
     moat_analysis: MoatAnalysis
     quantitative_metrics: Dict[str, Any]
+    mos_result: Optional[Dict[str, Any]] = None
+    profitability_result: Optional[Dict[str, Any]] = None
 
 
 class IntegratedAnalyzer:
@@ -154,6 +156,8 @@ class IntegratedAnalyzer:
         quantitative_metrics: Dict,
         load_sec_data: bool = False,
         config: Optional["AnalysisConfig"] = None,
+        mos_result: Optional[Dict] = None,
+        profitability_result: Optional[Dict] = None,
     ) -> InvestmentDecision:
         """
         Run complete investment analysis
@@ -163,6 +167,8 @@ class IntegratedAnalyzer:
             quantitative_metrics: Dict with MOS, ROIC, etc.
             load_sec_data: Whether to reload SEC data
             config: AnalysisConfig object (optional)
+            mos_result: Complete MOS calculation result (optional)
+            profitability_result: Complete profitability metrics (optional)
 
         Returns:
             InvestmentDecision with final recommendation
@@ -219,6 +225,8 @@ class IntegratedAnalyzer:
 
         # Add quantitative metrics to result
         decision.quantitative_metrics = quantitative_metrics
+        decision.mos_result = mos_result
+        decision.profitability_result = profitability_result
 
         # Print decision
         self._print_decision(decision)
