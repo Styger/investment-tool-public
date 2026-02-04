@@ -14,7 +14,7 @@ from voyageai import Client as VoyageClient
 from typing import List, Dict, Any
 import os
 
-from backend.valuekit_ai.config import RAGConfig
+from backend.valuekit_ai.config.config import RAGConfig
 
 
 class VoyageEmbeddings:

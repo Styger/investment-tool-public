@@ -1,7 +1,7 @@
 import streamlit as st
 from ..config import get_text, save_persistence_data
-import backend.valuekit_ai.valuekit_integration as valuekit_ai
-import backend.valuekit_ai.analysis_config as analysis_config
+import backend.valuekit_ai.core.valuekit_integration as valuekit_ai
+import backend.valuekit_ai.config.analysis_config as analysis_config
 from io import StringIO
 import contextlib
 

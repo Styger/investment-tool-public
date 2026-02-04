@@ -8,8 +8,8 @@ root_dir = Path(__file__).resolve().parent.parent.parent
 if str(root_dir) not in sys.path:
     sys.path.insert(0, str(root_dir))
 
-from backend.valuekit_ai.config import RAGConfig
-from backend.valuekit_ai.vector_store import get_vector_store
+from backend.valuekit_ai.config.config import RAGConfig
+from backend.valuekit_ai.rag.vector_store import get_vector_store
 
 
 class RAGService:

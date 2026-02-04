@@ -2,8 +2,8 @@
 Integration: Load SEC Edgar data into RAG system
 """
 
-from backend.valuekit_ai.sec_fetcher import fetch_and_prepare_for_rag
-from backend.valuekit_ai.rag_service import get_rag_service
+from backend.valuekit_ai.data_pipeline.sec_fetcher import fetch_and_prepare_for_rag
+from backend.valuekit_ai.rag.rag_service import get_rag_service
 from langchain_core.documents import Document
 
 import sys

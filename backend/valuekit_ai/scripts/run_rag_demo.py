@@ -64,7 +64,7 @@ print("\n✅ All imports successful!\n")
 # Test config and API keys
 print("🔑 Checking API keys...")
 try:
-    from config import RAGConfig
+    from backend.valuekit_ai.config.config import RAGConfig
 
     RAGConfig.validate()
     print("✅ API keys found and validated\n")
@@ -75,7 +75,7 @@ except Exception as e:
 # Now import our modules
 try:
     print("📦 Importing RAG service...")
-    from rag_service import get_rag_service
+    from backend.valuekit_ai.rag.rag_service import get_rag_service
 
     print("✅ RAG service imported\n")
 except Exception as e:

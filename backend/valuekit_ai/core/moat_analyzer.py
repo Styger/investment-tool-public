@@ -4,9 +4,11 @@ Analyzes competitive advantages from SEC 10-K filings using RAG
 """
 
 from typing import Dict, List, Optional
-from backend.valuekit_ai.rag_service import get_rag_service
+from backend.valuekit_ai.rag.rag_service import get_rag_service
 from dataclasses import dataclass
-from backend.valuekit_ai.analysis_config import AnalysisConfig
+from backend.valuekit_ai.config.analysis_config import (
+    AnalysisConfig,
+)
 import sys
 from pathlib import Path
 

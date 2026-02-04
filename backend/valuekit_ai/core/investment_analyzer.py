@@ -11,8 +11,8 @@ if str(root_dir) not in sys.path:
     sys.path.insert(0, str(root_dir))
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
-from backend.valuekit_ai.moat_analyzer import MoatAnalyzer, MoatAnalysis
-from backend.valuekit_ai.analysis_config import AnalysisConfig
+from backend.valuekit_ai.core.moat_analyzer import MoatAnalyzer, MoatAnalysis
+from backend.valuekit_ai.config.analysis_config import AnalysisConfig
 
 
 @dataclass
@@ -182,7 +182,9 @@ class IntegratedAnalyzer:
             f"📥 Step 1: {'Loading SEC data...' if load_sec_data else 'Using previously loaded SEC data...'}"
         )
         if load_sec_data:
-            from load_sec_data import load_company_data
+            from backend.valuekit_ai.data_pipeline.load_sec_data import (
+                load_company_data,
+            )
 
             success = load_company_data(ticker)
             if not success:

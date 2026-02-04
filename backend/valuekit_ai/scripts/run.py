@@ -16,8 +16,8 @@ from pathlib import Path
 root_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(root_dir))
 
-from valuekit_integration import ValueKitAnalyzer
-from analysis_config import (
+from backend.valuekit_ai.core.valuekit_integration import ValueKitAnalyzer
+from backend.valuekit_ai.config.analysis_config import (
     AnalysisConfig,
     quick_config,
     quantitative_only,
