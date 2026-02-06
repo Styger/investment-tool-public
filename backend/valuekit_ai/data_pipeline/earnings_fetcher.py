@@ -1,6 +1,6 @@
 """
 FMP Earnings Call Transcripts Fetcher
-Fetches earnings call transcripts for moat analysis
+Fetches earnings call transcripts for moat analysis with intelligent caching
 """
 
 import requests
@@ -13,6 +13,7 @@ if str(root_dir) not in sys.path:
     sys.path.insert(0, str(root_dir))
 
 from backend.api.fmp_api import get_api_key
+from backend.valuekit_ai.data.cache import get_cache_manager
 
 
 class EarningsTranscriptFetcher:
@@ -21,16 +22,42 @@ class EarningsTranscriptFetcher:
     def __init__(self):
         self.api_key = get_api_key()
         self.base_url = "https://financialmodelingprep.com/api/v3"
+        # 🆕 Cache manager
+        self.cache = get_cache_manager()
 
+    # 🆕 NEW: Cache-enabled method
     def get_latest_transcripts(
         self, ticker: str, limit: int = 4
     ) -> List[Dict[str, any]]:
         """
-        Get latest earnings call transcripts
+        Get latest earnings call transcripts with caching
 
         Args:
             ticker: Stock ticker
             limit: Number of transcripts to fetch (default 4 = last 4 quarters)
+
+        Returns:
+            List of transcript data
+        """
+        cache_key = f"{ticker}_earnings_Q{limit}"
+
+        # Try cache first, fetch if miss
+        cached_data = self.cache.get_or_fetch(
+            key=cache_key,
+            data_type="earnings",
+            fetch_fn=lambda: self._fetch_transcripts_uncached(ticker, limit),
+        )
+
+        return cached_data
+
+    # 🆕 NEW: Private method with original logic
+    def _fetch_transcripts_uncached(self, ticker: str, limit: int) -> List[Dict]:
+        """
+        Fetch transcripts without cache (internal use)
+
+        Args:
+            ticker: Stock ticker
+            limit: Number of transcripts
 
         Returns:
             List of transcript data
@@ -179,7 +206,7 @@ def fetch_and_prepare_for_rag(
     """
     fetcher = EarningsTranscriptFetcher()
 
-    # Get transcripts from FMP
+    # Get transcripts from FMP (uses cache automatically)
     raw_transcripts = fetcher.get_latest_transcripts(ticker, limit)
 
     if not raw_transcripts:
@@ -214,23 +241,38 @@ def fetch_and_prepare_for_rag(
 
 
 def test_fetcher(ticker: str = "AAPL"):
-    """Test the earnings fetcher"""
+    """Test the earnings fetcher with cache"""
     print(f"\n{'=' * 70}")
     print(f"Testing Earnings Transcript Fetcher for {ticker}")
     print(f"{'=' * 70}\n")
 
-    docs = fetch_and_prepare_for_rag(ticker, limit=2)
+    # 🆕 Test 1: First fetch (should hit API)
+    print("1st fetch (should download from API):")
+    docs1 = fetch_and_prepare_for_rag(ticker, limit=2)
 
     print(f"\n{'=' * 70}")
-    print(f"RESULT: Found {len(docs)} transcripts\n")
+    print(f"RESULT: Found {len(docs1)} transcripts\n")
 
-    for i, doc in enumerate(docs, 1):
+    for i, doc in enumerate(docs1, 1):
         meta = doc["metadata"]
         print(f"{i}. Earnings Call Q{meta['quarter']} {meta['year']}")
         print(f"   Date: {meta['date']}")
         print(f"   Length: {len(doc['text']):,} characters")
-        print(f"   Preview: {doc['text'][:300]}...")
+        print(f"   Preview: {doc['text'][:200]}...")
         print()
+
+    # 🆕 Test 2: Second fetch (should use cache)
+    print(f"\n{'=' * 70}")
+    print("TESTING CACHE")
+    print(f"{'=' * 70}\n")
+
+    print("2nd fetch (should use cache):")
+    docs2 = fetch_and_prepare_for_rag(ticker, limit=2)
+
+    # 🆕 Cache stats
+    fetcher = EarningsTranscriptFetcher()
+    print(f"\n✅ Cache test complete!")
+    print(f"Cache stats: {fetcher.cache.get_stats()}")
 
 
 if __name__ == "__main__":

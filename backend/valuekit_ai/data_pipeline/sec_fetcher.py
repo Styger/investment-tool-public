@@ -1,6 +1,6 @@
 """
 SEC Edgar Data Fetcher - Using sec-edgar-downloader library
-Reliable way to fetch 10-K filings
+Reliable way to fetch 10-K filings with intelligent caching
 """
 
 from sec_edgar_downloader import Downloader
@@ -16,6 +16,9 @@ from pathlib import Path
 root_dir = Path(__file__).resolve().parent.parent.parent
 if str(root_dir) not in sys.path:
     sys.path.insert(0, str(root_dir))
+
+# 🆕 Cache Integration
+from backend.valuekit_ai.data.cache import get_cache_manager
 
 
 class SECEdgarFetcher:
@@ -44,6 +47,9 @@ class SECEdgarFetcher:
         # Initialize downloader
         self.dl = Downloader(company_name, email)
         self.temp_dir = Path("./sec_temp")
+
+        # 🆕 Cache manager
+        self.cache = get_cache_manager()
 
     def cleanup_temp(self):
         """Clean up temporary download directory"""
@@ -211,9 +217,32 @@ class SECEdgarFetcher:
 
         return section
 
+    # 🆕 NEW: Cache-enabled method
     def get_latest_10k(self, ticker: str) -> Optional[Dict]:
         """
-        Get latest 10-K with extracted sections
+        Get latest 10-K with caching
+
+        Args:
+            ticker: Stock ticker
+
+        Returns:
+            Dict with sections or None
+        """
+        cache_key = f"{ticker}_10K_latest"
+
+        # Try cache first, fetch if miss
+        cached_data = self.cache.get_or_fetch(
+            key=cache_key,
+            data_type="sec_10k",
+            fetch_fn=lambda: self._fetch_10k_uncached(ticker),
+        )
+
+        return cached_data
+
+    # 🆕 NEW: Private method with original logic
+    def _fetch_10k_uncached(self, ticker: str) -> Optional[Dict]:
+        """
+        Fetch 10-K without cache (internal use)
 
         Args:
             ticker: Stock ticker
@@ -301,7 +330,7 @@ def fetch_and_prepare_for_rag(ticker: str) -> List[Dict[str, any]]:
     fetcher = SECEdgarFetcher()
 
     try:
-        # Get latest 10-K with extracted sections
+        # Get latest 10-K with extracted sections (uses cache automatically)
         filing_data = fetcher.get_latest_10k(ticker)
 
         if not filing_data:
@@ -360,3 +389,18 @@ if __name__ == "__main__":
 
     print("\n💡 Files downloaded to: sec-edgar-filings/")
     print("   (You can delete this folder after testing)")
+
+    # 🆕 Test cache
+    print("\n" + "=" * 60)
+    print("TESTING CACHE")
+    print("=" * 60)
+
+    print("\n1st fetch (should download):")
+    fetcher = SECEdgarFetcher()
+    data1 = fetcher.get_latest_10k(ticker)
+
+    print("\n2nd fetch (should use cache):")
+    data2 = fetcher.get_latest_10k(ticker)
+
+    print("\n✅ Cache test complete!")
+    print(f"Cache stats: {fetcher.cache.get_stats()}")
