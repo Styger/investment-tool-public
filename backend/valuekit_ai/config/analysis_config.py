@@ -46,6 +46,8 @@ class AnalysisConfig:
     discount_rate: float = 0.15  # 15% discount rate
     auto_estimate_growth: bool = True  # Auto-estimate from CAGR
     load_sec_data: bool = False  # Load SEC filings for AI analysis
+    load_earnings_data: bool = False  # 🆕 Load earnings call transcripts (FMP API)
+    earnings_quarters: int = 4  # 🆕 Number of quarters to fetch (default 1 year)
 
     def get_enabled_moats(self) -> List[str]:
         """Get list of enabled moat types"""
@@ -87,6 +89,7 @@ def quick_config() -> AnalysisConfig:
         run_red_flags=True,
         auto_estimate_growth=True,
         load_sec_data=False,
+        load_earnings_data=False,
     )
 
 
@@ -126,4 +129,6 @@ def deep_analysis() -> AnalysisConfig:
         run_red_flags=True,
         auto_estimate_growth=True,
         load_sec_data=True,
+        load_earnings_data=True,
+        earnings_quarters=4,
     )

@@ -140,6 +140,27 @@ def show_ai_analysis():
             help=get_text("ai.load_sec_help"),
         )
 
+        # Load Earnings Transcripts - NEW
+        load_earnings = st.checkbox(
+            "📞 Load Earnings Call Transcripts",
+            value=persist_data.get("load_earnings", False),
+            key="ai_load_earnings",
+            help="Fetch latest earnings call transcripts from FMP API for deeper moat analysis (requires FMP API key)",
+        )
+
+        # Earnings quarters selector (only show if load_earnings is checked)
+        if load_earnings:
+            earnings_quarters = st.slider(
+                "Number of quarters",
+                min_value=1,
+                max_value=8,
+                value=int(persist_data.get("earnings_quarters", 4)),
+                key="ai_earnings_quarters",
+                help="How many recent quarters to analyze (4 = 1 year)",
+            )
+        else:
+            earnings_quarters = 4  # Default
+
     # ───────────────────────────────────────────────────────────────────
     # COLUMN 2: QUANTITATIVE ANALYSIS
     # ───────────────────────────────────────────────────────────────────
@@ -261,6 +282,8 @@ def show_ai_analysis():
 
             # General settings
             config.load_sec_data = load_sec
+            config.load_earnings_data = load_earnings
+            config.earnings_quarters = earnings_quarters
             config.margin_of_safety = mos
             config.discount_rate = discount_rate
             config.auto_estimate_growth = growth_rate == 0
@@ -274,6 +297,8 @@ def show_ai_analysis():
                 "mos": str(mos * 100),
                 "discount_rate": str(discount_rate * 100),
                 "load_sec": load_sec,
+                "load_earnings": load_earnings,
+                "earnings_quarters": str(earnings_quarters),
                 "run_mos": run_mos,
                 "run_cagr": run_cagr,
                 "run_profitability": run_profitability,
@@ -304,6 +329,7 @@ def show_ai_analysis():
                             margin_of_safety=mos,
                             auto_estimate_growth=(growth_rate == 0),
                             load_sec_data=load_sec,
+                            load_earnings_data=load_earnings,
                             config=config,
                         )
 

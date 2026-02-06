@@ -153,6 +153,7 @@ class ValueKitAnalyzer:
         margin_of_safety: float = 0.50,
         auto_estimate_growth: bool = True,
         load_sec_data: bool = False,
+        load_earnings_data: bool = False,
         config: Optional["AnalysisConfig"] = None,
     ) -> Dict:
         """Complete stock analysis with config support"""
@@ -163,6 +164,7 @@ class ValueKitAnalyzer:
             margin_of_safety = config.margin_of_safety
             auto_estimate_growth = config.auto_estimate_growth
             load_sec_data = config.load_sec_data
+            load_earnings_data = config.load_earnings_data
 
         print(f"\n{'=' * 70}")
         print(f"🎯 VALUEKIT COMPLETE ANALYSIS: {ticker.upper()}")
@@ -265,6 +267,7 @@ class ValueKitAnalyzer:
                 ticker=ticker,
                 quantitative_metrics=quantitative_metrics,
                 load_sec_data=load_sec_data,
+                load_earnings_data=load_earnings_data,
                 config=config,
                 mos_result=mos_result,  # ← ADD THIS
                 profitability_result=profitability_result,  # ← ADD THIS

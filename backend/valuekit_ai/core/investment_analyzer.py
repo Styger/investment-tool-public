@@ -155,6 +155,7 @@ class IntegratedAnalyzer:
         ticker: str,
         quantitative_metrics: Dict,
         load_sec_data: bool = False,
+        load_earnings_data: bool = False,  # 🆕 NEU
         config: Optional["AnalysisConfig"] = None,
         mos_result: Optional[Dict] = None,
         profitability_result: Optional[Dict] = None,
@@ -166,6 +167,7 @@ class IntegratedAnalyzer:
             ticker: Stock ticker
             quantitative_metrics: Dict with MOS, ROIC, etc.
             load_sec_data: Whether to reload SEC data
+            load_earnings_data: Whether to load earnings transcripts (NEW)
             config: AnalysisConfig object (optional)
             mos_result: Complete MOS calculation result (optional)
             profitability_result: Complete profitability metrics (optional)
@@ -177,18 +179,38 @@ class IntegratedAnalyzer:
         print(f"🎯 INTEGRATED INVESTMENT ANALYSIS: {ticker.upper()}")
         print(f"{'=' * 70}\n")
 
-        # Step 1: Load SEC Data
-        print(
-            f"📥 Step 1: {'Loading SEC data...' if load_sec_data else 'Using previously loaded SEC data...'}"
-        )
+        # Step 1: Load Data Sources
+        print(f"📥 Step 1: Loading Data Sources...")
+        print("-" * 70)
+
+        # 1a: SEC Filings
         if load_sec_data:
+            print("📊 Loading SEC 10-K filings...")
             from backend.valuekit_ai.data_pipeline.load_sec_data import (
                 load_company_data,
             )
 
-            success = load_company_data(ticker)
-            if not success:
-                raise ValueError(f"Failed to load SEC data for {ticker}")
+            sec_result = load_company_data(ticker)
+            if sec_result.get("status") != "success":
+                print(f"  ⚠️ Warning: SEC data loading failed")
+        else:
+            print("📊 SEC Data: Using previously loaded data (if any)")
+
+        # 1b: Earnings Transcripts (NEW)
+        if load_earnings_data:
+            print("📞 Loading earnings call transcripts...")
+            from backend.valuekit_ai.data_pipeline.load_earnings_data import (
+                load_earnings_data as load_earnings,
+            )
+
+            quarters = config.earnings_quarters if config else 4
+            earnings_result = load_earnings(ticker, quarters=quarters)
+            if earnings_result.get("status") != "success":
+                print(f"  ⚠️ Warning: Earnings data loading failed")
+        else:
+            print("📞 Earnings Data: Skipped")
+
+        print()  # Empty line after Step 1
 
         # Step 2: Quantitative Score
         if config is None or config.run_mos or config.run_cagr:
