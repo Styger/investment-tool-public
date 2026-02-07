@@ -21,9 +21,15 @@ class _Resp:
 
 
 def test_fetch_historical_price_json_calls_requests_get(monkeypatch):
+    # 🆕 Clear cache before test to ensure API call happens
+    from backend.valuekit_ai.data.cache import get_cache_manager
+
+    cache = get_cache_manager()
+    cache.clear("AAPL_price_2024-01-02", "historical_prices")
+
     captured = {"url": None, "params": None}
 
-    def fake_get(url, params=None):
+    def fake_get(url, params=None, **kwargs):  # 🆕 **kwargs for timeout etc.
         captured["url"] = url
         captured["params"] = params
         return _Resp({"ok": True})
