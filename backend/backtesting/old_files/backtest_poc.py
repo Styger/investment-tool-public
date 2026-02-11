@@ -86,6 +86,14 @@ def fetch_fmp_historical_data(ticker, from_date, to_date):
     # Select only needed columns
     df = df[["open", "high", "low", "close", "volume"]]
 
+    # ================================================================
+    # CRITICAL FIX: Force very high volume for backtesting
+    # Without this line, SELL orders only fill 1 share at a time!
+    # ================================================================
+    print(f"   🔧 Forcing high volume for backtest (was: {df['volume'].iloc[0]:,.0f})")
+    df["volume"] = 1_000_000_000  # 1 billion shares per bar
+    # ================================================================
+
     print(f"   ✅ Loaded {len(df)} days of data")
 
     return df

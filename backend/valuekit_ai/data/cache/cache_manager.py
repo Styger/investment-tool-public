@@ -27,11 +27,13 @@ class CacheManager:
     """
 
     # Cache Rules: TTL in Sekunden (None = never expires)
+    # Cache Rules: TTL in Sekunden (None = never expires)
     CACHE_RULES = {
         "sec_10k": None,  # Forever (immutable)
         "earnings": None,  # Forever (immutable)
         "historical_prices": None,  # Forever (immutable)
-        "fundamentals": 90 * 86400,  # 90 days
+        "historical_fundamentals": None,  # ← NEW: Forever (historical data immutable!)
+        "fundamentals": 90 * 86400,  # 90 days (current/recent data)
         "current_price": 86400,  # 1 day
         "news": 7 * 86400,  # 7 days
         "short_interest": 30 * 86400,  # 30 days
@@ -91,16 +93,7 @@ class CacheManager:
             print(f"⚠️  Could not save metadata: {e}")
 
     def _get_cache_path(self, key: str, data_type: str) -> Path:
-        """
-        Get cache file path for a key
-
-        Args:
-            key: Cache key (e.g., "AAPL_10K_2024")
-            data_type: Type of data (determines subdirectory)
-
-        Returns:
-            Path to cache file
-        """
+        """Get cache file path for a key"""
         # Map data types to subdirectories
         subdir_map = {
             "sec_10k": "sec_filings",
@@ -108,6 +101,7 @@ class CacheManager:
             "historical_prices": "prices",
             "current_price": "prices",
             "fundamentals": "fundamentals",
+            "historical_fundamentals": "fundamentals",  # ← NEW
             "news": "news",
             "short_interest": "fundamentals",
         }
@@ -116,7 +110,6 @@ class CacheManager:
         cache_subdir = self.cache_dir / subdir
         cache_subdir.mkdir(exist_ok=True)
 
-        # Sanitize key for filename
         safe_key = key.replace("/", "_").replace("\\", "_")
         return cache_subdir / f"{safe_key}.pkl"
 
@@ -281,23 +274,20 @@ class CacheManager:
             print(f"  🗑️  Cleared {cleared} cache entries")
 
     def get_stats(self) -> Dict:
-        """
-        Get cache statistics
+        """Get cache statistics"""
+        import os  # ← ADD THIS
 
-        Returns:
-            Dict with cache stats (size, count, etc.)
-        """
         total_size = 0
         file_count = 0
 
-        for root, dirs, files in self.cache_dir.walk():
+        # FIX: Use os.walk() instead of Path.walk()
+        for root, dirs, files in os.walk(self.cache_dir):  # ← CHANGE THIS
             for file in files:
                 if file.endswith(".pkl"):
-                    file_path = root / file
+                    file_path = Path(root) / file  # ← Convert to Path
                     total_size += file_path.stat().st_size
                     file_count += 1
 
-        # Convert bytes to MB
         size_mb = total_size / (1024 * 1024)
 
         return {
