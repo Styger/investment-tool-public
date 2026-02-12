@@ -1,6 +1,6 @@
 """
 Run ValueKit Strategy Backtest
-With Performance Metrics and Benchmark Comparison
+With Performance Metrics, Benchmark Comparison, and Consensus Valuation
 """
 
 import backtrader as bt
@@ -29,9 +29,12 @@ def run_valuekit_backtest(
     commission=0.001,
     mos_threshold=10.0,
     moat_threshold=30.0,
+    use_dcf=True,
+    use_pbt=True,
+    use_tencap=True,
 ):
     """
-    Run backtest with ValueKit Strategy + Metrics + Benchmark
+    Run backtest with ValueKit Strategy + Metrics + Benchmark + Consensus Valuation
 
     Args:
         universe_name: Stock universe to test
@@ -41,12 +44,16 @@ def run_valuekit_backtest(
         commission: Commission rate
         mos_threshold: Minimum MOS for buy (%)
         moat_threshold: Minimum Moat Score for buy (0-50)
+        use_dcf: Use DCF valuation method
+        use_pbt: Use PBT valuation method
+        use_tencap: Use TEN CAP valuation method
+        pbt_growth_rate: Growth rate for PBT calculation (e.g., 0.15 = 15%)
 
     Returns:
         Dict with all results
     """
     print("=" * 70)
-    print("VALUEKIT STRATEGY BACKTEST")
+    print("VALUEKIT STRATEGY BACKTEST - CONSENSUS VALUATION")
     print("=" * 70)
 
     # Get universe
@@ -54,18 +61,40 @@ def run_valuekit_backtest(
     print(f"Universe: {universe_name.upper()} ({len(universe)} stocks)")
     print(f"Period: {from_year}-{to_year}")
     print(f"Starting Cash: ${starting_cash:,.0f}")
-    print(f"MOS Threshold: {mos_threshold}%")
-    print(f"Moat Threshold: {moat_threshold}/50")
+    print()
+
+    # Print valuation methods
+    methods_enabled = []
+    if use_dcf:
+        methods_enabled.append("DCF")
+    if use_pbt:
+        methods_enabled.append("PBT")
+    if use_tencap:
+        methods_enabled.append("TEN CAP")
+
+    print("Valuation Methods:")
+    for method in methods_enabled:
+        print(f"  ✅ {method}")
+    if not methods_enabled:
+        print("  ⚠️  WARNING: No valuation methods enabled!")
+    print()
+
+    print(f"Thresholds:")
+    print(f"  MOS > {mos_threshold}%")
+    print(f"  Moat > {moat_threshold}/50")
     print()
 
     # Create Cerebro
     cerebro = bt.Cerebro()
 
-    # Add strategy
+    # Add strategy with new parameters
     cerebro.addstrategy(
         ValueKitStrategy,
         mos_threshold=mos_threshold,
         moat_threshold=moat_threshold,
+        use_dcf=use_dcf,
+        use_pbt=use_pbt,
+        use_tencap=use_tencap,
     )
 
     # Load data
@@ -144,7 +173,7 @@ def run_valuekit_backtest(
     portfolio_values = strategy.portfolio_values
     closed_trades = strategy.trade_tracker.closed_trades
 
-    # Calculate daily returns (with safety check)
+    # Calculate daily returns
     if len(portfolio_values) > 1:
         import numpy as np
 
@@ -256,6 +285,7 @@ def run_valuekit_backtest(
         "trades": closed_trades,
         "charts": charts,
         "exports": exports,
+        "valuation_methods": methods_enabled,  # NEW: Track which methods were used
     }
 
 
@@ -266,4 +296,7 @@ if __name__ == "__main__":
         from_year=2018,
         to_year=2022,
         starting_cash=100000.0,
+        use_dcf=True,
+        use_pbt=True,
+        use_tencap=True,
     )

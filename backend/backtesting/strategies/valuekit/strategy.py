@@ -1,8 +1,8 @@
 """
 ValueKit Trading Strategy
-Warren Buffett Value Investing: MOS + Moat Score
+Warren Buffett Value Investing: Consensus Valuation + Moat Score
 
-Main strategy implementation using modular calculators
+Main strategy implementation with multiple valuation methods
 """
 
 import backtrader as bt
@@ -21,6 +21,8 @@ from backend.api.fmp_api import (
 )
 from .mos_calculator import MOSCalculator
 from .moat_calculator import MoatCalculator
+from .pbt_calculator import PBTCalculator
+from .ten_cap_calculator import TenCapCalculator
 from .trade_tracker import TradeTracker
 
 
@@ -28,6 +30,7 @@ class ValueKitStrategy(bt.Strategy):
     """
     ValueKit Value Investing Strategy
 
+    Valuation: Consensus from DCF/PBT/TEN CAP (user selectable)
     Buy Signal:  MOS > 10% AND Moat Score > 30/50
     Sell Signal: MOS < -5% OR Moat Score < 20/50
 
@@ -36,10 +39,17 @@ class ValueKitStrategy(bt.Strategy):
     """
 
     params = (
+        # Valuation Methods
+        ("use_dcf", True),  # Use DCF (MOS) valuation
+        ("use_pbt", True),  # Use PBT valuation
+        ("use_tencap", True),  # Use TEN CAP valuation
+        # NOTE: CAGR is now calculated automatically for DCF and PBT
+        # Thresholds
         ("mos_threshold", 10.0),  # Minimum MOS for buy (%)
         ("moat_threshold", 30.0),  # Minimum Moat Score for buy (0-50)
         ("sell_mos_threshold", -5.0),  # Sell if MOS falls below this
         ("sell_moat_threshold", 20.0),  # Sell if Moat falls below this
+        # Portfolio Management
         ("max_positions", 20),  # Maximum number of positions
         ("rebalance_days", 90),  # Rebalance every 90 days (quarterly)
         ("printlog", True),  # Print logs
@@ -58,9 +68,11 @@ class ValueKitStrategy(bt.Strategy):
         # Initialize calculators and tracker
         self.mos_calc = MOSCalculator()
         self.moat_calc = MoatCalculator()
+        self.pbt_calc = PBTCalculator()
+        self.tencap_calc = TenCapCalculator()
         self.trade_tracker = TradeTracker(self)
 
-        # ✨ Track portfolio values for metrics
+        # Track portfolio values for metrics
         self.portfolio_values = []
         self.dates = []
 
@@ -208,17 +220,193 @@ class ValueKitStrategy(bt.Strategy):
             self.log(f"ERROR: Failed to get fundamentals for {ticker}: {e}")
             return None
 
-    def calculate_margin_of_safety(self, ticker: str):
+    def calculate_cagr_for_ticker(self, ticker: str):
         """
-        Calculate Margin of Safety using MOSCalculator
+        Calculate CAGR (Compound Annual Growth Rate) from historical fundamentals
+
+        Uses backend/logic/cagr.py to compute average CAGR across multiple metrics
 
         Args:
             ticker: Stock ticker
 
         Returns:
-            Dict with MOS data or None
+            Float: CAGR as decimal (e.g., 0.15 for 15%) or 0.10 as fallback
         """
-        return self.mos_calc.calculate(self, ticker)
+        try:
+            # Get fundamentals data (already cached)
+            fundamentals = self.get_fundamentals(ticker)
+            if not fundamentals:
+                self.log(f"WARNING: No fundamentals for CAGR calculation ({ticker})")
+                return 0.10  # Fallback to 10%
+
+            # Import CAGR logic
+            from backend.logic.cagr import _mos_growth_estimate_auto
+            from backend.api.fmp_api import get_year_data_by_range
+
+            # Find data feed to get current year
+            data_feed = None
+            for data in self.datas:
+                if data._name == ticker:
+                    data_feed = data
+                    break
+
+            if data_feed is None:
+                return 0.10
+
+            current_year = data_feed.datetime.date(0).year
+            max_year = current_year - 1  # Use previous year's data
+
+            # Get historical data for CAGR calculation (5-year lookback)
+            start_year = max_year - 5
+            data, mos_input = get_year_data_by_range(
+                ticker, start_year=start_year, years=5
+            )
+
+            if not mos_input:
+                self.log(f"WARNING: No CAGR data for {ticker}, using 10% default")
+                return 0.10
+
+            # Calculate CAGR (5-year average)
+            cagr_result = _mos_growth_estimate_auto(
+                data_dict=mos_input,
+                start_year=start_year,
+                end_year=max_year,
+                period_years=5,
+                known_start_year=start_year,
+                include_book=True,
+                include_eps=True,
+                include_revenue=True,
+                include_cashflow=True,
+                include_fcf=True,
+            )
+
+            # Get average CAGR
+            avg_cagr_pct = cagr_result.get("avg", 10.0)  # Default 10% if missing
+            avg_cagr = avg_cagr_pct / 100.0  # Convert to decimal
+
+            # Sanity check: CAGR should be reasonable (-50% to +100%)
+            if avg_cagr < -0.5 or avg_cagr > 1.0:
+                self.log(
+                    f"WARNING: Extreme CAGR {avg_cagr * 100:.1f}% for {ticker}, capping to 10%"
+                )
+                return 0.10
+
+            self.log(f"📈 CAGR for {ticker}: {avg_cagr * 100:.1f}%")
+            return avg_cagr
+
+        except Exception as e:
+            self.log(f"ERROR: CAGR calculation failed for {ticker}: {e}")
+            return 0.10  # Safe fallback
+
+    def calculate_margin_of_safety(self, ticker: str):
+        """
+        Calculate Margin of Safety using CONSENSUS from multiple valuation methods
+
+        User can select which methods to use (DCF, PBT, TEN CAP)
+        Fair Value = Average of selected methods
+        MOS = (Fair Value - Current Price) / Fair Value * 100
+
+        Args:
+            ticker: Stock ticker
+
+        Returns:
+            Dict with consensus MOS data or None
+        """
+        valuations = []
+        methods_used = []
+
+        # Method 1: DCF (from MOS calculator)
+        if self.params.use_dcf:
+            try:
+                dcf_result = self.mos_calc.calculate(self, ticker)
+                if dcf_result:
+                    valuations.append(
+                        {
+                            "method": "DCF",
+                            "fair_value": dcf_result["fair_value"],
+                            "buy_price": dcf_result["mos_price"],  # Price with 50% MOS
+                        }
+                    )
+                    methods_used.append("DCF")
+            except Exception as e:
+                self.log(f"  DCF calculation failed for {ticker}: {e}")
+
+        # Method 2: PBT (Payback Time)
+        if self.params.use_pbt:
+            try:
+                pbt_result = self.pbt_calc.calculate(
+                    self, ticker
+                )  # ✅ No growth_rate param!
+                if pbt_result:
+                    valuations.append(
+                        {
+                            "method": "PBT",
+                            "fair_value": pbt_result["fair_value"],
+                            "buy_price": pbt_result["buy_price"],
+                        }
+                    )
+                    methods_used.append("PBT")
+            except Exception as e:
+                self.log(f"  PBT calculation failed for {ticker}: {e}")
+
+        # Method 3: TEN CAP (Owner Earnings)
+        if self.params.use_tencap:
+            try:
+                tencap_result = self.tencap_calc.calculate(self, ticker)
+                if tencap_result:
+                    valuations.append(
+                        {
+                            "method": "TEN_CAP",
+                            "fair_value": tencap_result["fair_value"],
+                            "buy_price": tencap_result["buy_price"],
+                        }
+                    )
+                    methods_used.append("TEN_CAP")
+            except Exception as e:
+                self.log(f"  TEN CAP calculation failed for {ticker}: {e}")
+
+        # Need at least one successful method
+        if not valuations:
+            self.log(f"WARNING: No valuation methods available for {ticker}")
+            return None
+
+        # Calculate consensus (simple average)
+        avg_fair_value = sum(v["fair_value"] for v in valuations) / len(valuations)
+        avg_buy_price = sum(v["buy_price"] for v in valuations) / len(valuations)
+
+        # Get current price from data feed
+        current_price = None
+        for data in self.datas:
+            if data._name == ticker:
+                current_price = float(data.close[0])
+                break
+
+        if current_price is None:
+            return None
+
+        # Calculate MOS percentage
+        mos_percentage = ((avg_fair_value - current_price) / avg_fair_value) * 100
+
+        # Determine recommendation
+        if current_price <= avg_buy_price:
+            recommendation = "STRONG BUY"
+        elif current_price <= avg_fair_value:
+            recommendation = "BUY"
+        elif mos_percentage >= -5:
+            recommendation = "HOLD"
+        else:
+            recommendation = "SELL"
+
+        return {
+            "mos_percentage": mos_percentage,
+            "current_price": current_price,
+            "fair_value": avg_fair_value,
+            "buy_price": avg_buy_price,
+            "recommendation": recommendation,
+            "methods_used": methods_used,
+            "num_methods": len(valuations),
+            "individual_valuations": valuations,  # For debugging
+        }
 
     def calculate_moat_score(self, ticker: str):
         """
@@ -242,7 +430,7 @@ class ValueKitStrategy(bt.Strategy):
         Returns:
             True if buy signal, False otherwise
         """
-        # Calculate MOS
+        # Calculate Consensus MOS
         mos_data = self.calculate_margin_of_safety(ticker)
         if mos_data is None:
             return False
@@ -261,9 +449,10 @@ class ValueKitStrategy(bt.Strategy):
         )
 
         if buy_signal:
+            methods_str = "+".join(mos_data["methods_used"])
             self.log(
                 f"BUY SIGNAL: {ticker} - "
-                f"MOS: {mos_percentage:.1f}% "
+                f"MOS: {mos_percentage:.1f}% ({methods_str}) "
                 f"(Fair: ${mos_data['fair_value']:.2f}, "
                 f"Current: ${mos_data['current_price']:.2f}), "
                 f"Moat: {moat_score:.0f}/50"
@@ -281,7 +470,7 @@ class ValueKitStrategy(bt.Strategy):
         Returns:
             True if sell signal, False otherwise
         """
-        # Calculate current metrics
+        # Calculate current consensus metrics
         mos_data = self.calculate_margin_of_safety(ticker)
         moat_score = self.calculate_moat_score(ticker)
 
@@ -298,9 +487,10 @@ class ValueKitStrategy(bt.Strategy):
 
         if sell_signal:
             moat_display = f"{moat_score:.0f}/50" if moat_score else "N/A"
+            methods_str = "+".join(mos_data["methods_used"])
             self.log(
                 f"SELL SIGNAL: {ticker} - "
-                f"MOS: {mos_percentage:.1f}% "
+                f"MOS: {mos_percentage:.1f}% ({methods_str}) "
                 f"(Fair: ${mos_data['fair_value']:.2f}, "
                 f"Current: ${mos_data['current_price']:.2f}), "
                 f"Moat: {moat_display} "
@@ -316,7 +506,7 @@ class ValueKitStrategy(bt.Strategy):
         if len(self) != len(self.datas[0]):
             return
 
-        # ✨ Track portfolio value daily
+        # Track portfolio value daily
         current_date = self.datas[0].datetime.date(0)
         current_value = self.broker.getvalue()
         self.portfolio_values.append(current_value)
@@ -381,8 +571,9 @@ class ValueKitStrategy(bt.Strategy):
                     if not mos_pass:
                         debug_mos_fails += 1
                         if debug_mos_fails <= 5:
+                            methods_str = "+".join(mos_data["methods_used"])
                             self.log(
-                                f"  ❌ {ticker}: MOS {mos_pct:.1f}% "
+                                f"  ❌ {ticker}: MOS {mos_pct:.1f}% ({methods_str}) "
                                 f"(need >{self.params.mos_threshold}%) "
                                 f"Fair=${mos_data['fair_value']:.2f} vs ${mos_data['current_price']:.2f}"
                             )
@@ -412,7 +603,7 @@ class ValueKitStrategy(bt.Strategy):
         self.log(f"📊 EVALUATION SUMMARY:")
         self.log(f"   Total Evaluated: {debug_counter} stocks")
 
-        # ✅ ADD SAFETY CHECK for division by zero
+        # Safety check for division by zero
         if debug_counter > 0:
             self.log(
                 f"   ⚠️  Data Unavailable: {debug_data_fails} ({debug_data_fails / debug_counter * 100:.1f}%)"
@@ -482,9 +673,10 @@ class ValueKitStrategy(bt.Strategy):
             size = int(cash_per_position / price)
 
             if size > 0:
+                methods_str = "+".join(mos_data["methods_used"])
                 self.log(
                     f"BUY SIGNAL: {ticker} - "
-                    f"MOS: {candidate['mos']:.1f}% "
+                    f"MOS: {candidate['mos']:.1f}% ({methods_str}) "
                     f"(Fair: ${mos_data['fair_value']:.2f}, "
                     f"Current: ${price:.2f}), "
                     f"Moat: {candidate['moat']:.0f}/50"
@@ -494,6 +686,49 @@ class ValueKitStrategy(bt.Strategy):
 
     def stop(self):
         """Called when backtest ends"""
+
+        # ========================================================================
+        # FORCE CLOSE ALL OPEN POSITIONS AT MARKET CLOSE
+        # ========================================================================
+        self.log("=" * 70)
+        self.log("END OF BACKTEST - FORCE CLOSING ALL OPEN POSITIONS")
+        self.log("=" * 70)
+
+        # Get last trading date and close all positions at last price
+        last_date = self.datas[0].datetime.date(0)
+
+        forced_closes = 0
+        for data in self.datas:
+            position = self.getposition(data)
+            if position.size > 0:
+                ticker = data._name
+                current_price = data.close[0]
+
+                self.log(
+                    f"FORCE CLOSE: {ticker} - {position.size} shares @ ${current_price:.2f}"
+                )
+
+                # Manually close the position in trade tracker
+                # This simulates selling at market close on the last day
+                self.trade_tracker.handle_sell_execution(
+                    order=None,  # No actual order object
+                    ticker=ticker,
+                    price=current_price,
+                    size=position.size,
+                    force_close=True,  # Flag to indicate this is a force close
+                )
+
+                forced_closes += 1
+
+        if forced_closes > 0:
+            self.log(f"\n⚠️  Force closed {forced_closes} open positions")
+            self.log(
+                "These positions are now included in Trade Log with exit price = last close\n"
+            )
+
+        # ========================================================================
+        # STRATEGY PERFORMANCE SUMMARY
+        # ========================================================================
         self.log("=" * 70)
         self.log("STRATEGY PERFORMANCE SUMMARY")
         self.log("=" * 70)
@@ -516,12 +751,14 @@ class ValueKitStrategy(bt.Strategy):
         else:
             self.log("No closed trades")
 
-        # Get unrealized P&L
+        # Check for any remaining unrealized P&L (should be 0 now)
         unrealized = self.trade_tracker.get_unrealized_pnl()
 
         if unrealized["count"] > 0:
             self.log("")
-            self.log(f"⚠️  Open Positions at End: {unrealized['count']}")
+            self.log(
+                f"⚠️  WARNING: Still {unrealized['count']} open positions (this shouldn't happen!)"
+            )
 
             for pos_info in unrealized["positions"]:
                 self.log(

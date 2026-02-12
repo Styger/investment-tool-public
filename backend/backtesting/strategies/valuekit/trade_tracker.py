@@ -20,7 +20,7 @@ class TradeTracker:
             strategy: Parent strategy instance (for logging, getposition)
         """
         self.strategy = strategy
-        self.open_positions = {}  # {ticker: {'buy_price': float, 'buy_size': int, ...}}
+        self.open_positions = {}  # {ticker: {'buy_price': float, 'size': int, ...}}
         self.closed_trades = []  # List of completed trades
 
     def handle_buy_execution(self, order, ticker, price, size):
@@ -28,11 +28,14 @@ class TradeTracker:
         Handle buy order execution
 
         Args:
-            order: Backtrader order
+            order: Backtrader order object
             ticker: Stock ticker
-            price: Execution price
-            size: Number of shares
+            price: Buy price
+            size: Number of shares bought
         """
+        # Get buy date as datetime.date object (NOT string!)
+        buy_date = order.data.datetime.date(0)
+
         self.strategy.log(f"BUY EXECUTED: {ticker} @ ${price:.2f} ({size} shares)")
 
         # Track position (handle multiple buys by averaging)
@@ -40,7 +43,7 @@ class TradeTracker:
             # Already have position - calculate new average price
             old_info = self.open_positions[ticker]
             old_price = old_info["buy_price"]
-            old_size = old_info["buy_size"]
+            old_size = old_info["size"]
 
             # New weighted average
             total_size = old_size + size
@@ -48,132 +51,128 @@ class TradeTracker:
 
             self.open_positions[ticker] = {
                 "buy_price": avg_price,
-                "buy_size": total_size,
-                "buy_date": old_info["buy_date"],  # Keep first buy date
-                "total_sold": old_info.get("total_sold", 0),
-                "total_sell_value": old_info.get("total_sell_value", 0.0),
+                "size": total_size,
+                "buy_date": old_info["buy_date"],  # Keep first buy date (datetime.date)
             }
 
             self.strategy.log(
                 f"  Updated position: {total_size} shares @ ${avg_price:.2f} (avg)"
             )
         else:
-            # New position
-            date = self.strategy.datas[0].datetime.date(0).isoformat()
+            # New position - store as datetime.date object
             self.open_positions[ticker] = {
                 "buy_price": price,
-                "buy_size": size,
-                "buy_date": date,
-                "total_sold": 0,
-                "total_sell_value": 0.0,
+                "size": size,
+                "buy_date": buy_date,  # ✅ datetime.date object
             }
 
-    def handle_sell_execution(self, order, ticker, price, size):
+            self.strategy.log(
+                f"TRADE OPENED: {ticker} - {size} shares @ ${price:.2f} on {buy_date}"
+            )
+
+    def handle_sell_execution(self, order, ticker, price, size, force_close=False):
         """
         Handle sell order execution
 
         Args:
-            order: Backtrader order
+            order: Backtrader order object (can be None for force close)
             ticker: Stock ticker
-            price: Execution price
-            size: Number of shares
+            price: Sell price
+            size: Number of shares sold
+            force_close: True if this is a forced close at end of backtest
         """
-        if ticker in self.open_positions:
-            buy_info = self.open_positions[ticker]
-            buy_price = buy_info["buy_price"]
+        if ticker not in self.open_positions or size <= 0:
+            return
 
-            # Track this sell
-            buy_info["total_sold"] += size
-            buy_info["total_sell_value"] += price * size
+        position = self.open_positions[ticker]
 
-            # Check current position
-            position = self.strategy.getposition(order.data)
+        # Calculate P&L
+        buy_price = position["buy_price"]
+        pnl = (price - buy_price) * size
 
-            if position.size == 0:
-                # Position fully closed - calculate P&L
-                total_size = buy_info["total_sold"]
-                avg_sell_price = buy_info["total_sell_value"] / total_size
-                total_pnl = (avg_sell_price - buy_price) * total_size
-                pnl_pct = ((avg_sell_price - buy_price) / buy_price) * 100
-
-                # Store trade
-                self.closed_trades.append(
-                    {
-                        "ticker": ticker,
-                        "buy_price": buy_price,
-                        "sell_price": avg_sell_price,
-                        "size": total_size,
-                        "pnl": total_pnl,
-                        "pnl_pct": pnl_pct,
-                        "is_win": total_pnl > 0,
-                        "buy_date": buy_info["buy_date"],
-                        "sell_date": self.strategy.datas[0]
-                        .datetime.date(0)
-                        .isoformat(),
-                    }
-                )
-
-                result = "✅ WIN" if total_pnl > 0 else "❌ LOSS"
-                self.strategy.log(
-                    f"TRADE #{len(self.closed_trades)}: {ticker} CLOSED - "
-                    f"{result} ${total_pnl:.2f} ({pnl_pct:+.1f}%) "
-                    f"[{int(total_size)} shares: ${buy_price:.2f} → ${avg_sell_price:.2f}]"
-                )
-
-                del self.open_positions[ticker]
-            else:
-                # Partial sell
-                pnl = (price - buy_price) * size
-                result = "✅" if pnl > 0 else "❌"
-                self.strategy.log(
-                    f"SELL EXECUTED: {ticker} @ ${price:.2f} ({size} shares) "
-                    f"{result} ${pnl:.2f} [Partial: {position.size} remaining]"
-                )
+        # Get sell date as datetime.date object
+        if order is not None:
+            sell_date = order.data.datetime.date(0)
         else:
-            # No tracking info - just log
-            self.strategy.log(
-                f"SELL EXECUTED: {ticker} @ ${price:.2f} ({size} shares) [No tracking]"
-            )
+            # Force close - use last available date from strategy
+            sell_date = self.strategy.datas[0].datetime.date(0)
+
+        # Get buy date (already a datetime.date object)
+        buy_date = position["buy_date"]
+
+        # Calculate hold time (both are datetime.date objects now)
+        hold_days = (sell_date - buy_date).days
+
+        # Determine if win or loss
+        is_win = pnl > 0
+
+        # Create closed trade record
+        closed_trade = {
+            "ticker": ticker,
+            "buy_date": buy_date,  # datetime.date object
+            "sell_date": sell_date,  # datetime.date object
+            "buy_price": buy_price,
+            "sell_price": price,
+            "size": size,
+            "pnl": pnl,
+            "hold_days": hold_days,
+            "is_win": is_win,
+            "force_closed": force_close,
+        }
+
+        self.closed_trades.append(closed_trade)
+
+        # Remove from open positions
+        del self.open_positions[ticker]
+
+        # Log the trade
+        status = "FORCE CLOSED" if force_close else "CLOSED"
+        win_loss = "WIN" if is_win else "LOSS"
+        self.strategy.log(
+            f"TRADE {status} ({win_loss}): {ticker} - "
+            f"Buy: ${buy_price:.2f} ({buy_date}) → "
+            f"Sell: ${price:.2f} ({sell_date}) | "
+            f"P&L: ${pnl:,.2f} ({hold_days} days)"
+        )
 
     def get_statistics(self):
         """
-        Get trade statistics
+        Calculate trading statistics from closed trades
 
         Returns:
-            Dict with trade statistics
+            Dict with statistics or None if no trades
         """
-        total_closed = len(self.closed_trades)
-
-        if total_closed == 0:
+        if not self.closed_trades:
             return None
 
-        wins = sum(1 for t in self.closed_trades if t["is_win"])
-        losses = total_closed - wins
-        win_rate = (wins / total_closed) * 100
-
-        total_pnl = sum(t["pnl"] for t in self.closed_trades)
-        avg_pnl = total_pnl / total_closed
-
+        total_trades = len(self.closed_trades)
         winning_trades = [t for t in self.closed_trades if t["is_win"]]
         losing_trades = [t for t in self.closed_trades if not t["is_win"]]
 
-        avg_win = (
-            sum(t["pnl"] for t in winning_trades) / len(winning_trades)
-            if winning_trades
-            else 0
-        )
-        avg_loss = (
-            sum(t["pnl"] for t in losing_trades) / len(losing_trades)
-            if losing_trades
-            else 0
-        )
+        wins = len(winning_trades)
+        losses = len(losing_trades)
+        win_rate = (wins / total_trades * 100) if total_trades > 0 else 0
 
-        profit_factor = None
-        if avg_loss != 0 and losses > 0:
-            profit_factor = abs(avg_win * wins) / abs(avg_loss * losses)
+        total_pnl = sum(t["pnl"] for t in self.closed_trades)
+        avg_pnl = total_pnl / total_trades if total_trades > 0 else 0
+
+        avg_win = sum(t["pnl"] for t in winning_trades) / wins if wins > 0 else 0
+        avg_loss = sum(t["pnl"] for t in losing_trades) / losses if losses > 0 else 0
+
+        # Profit factor
+        gross_profit = sum(t["pnl"] for t in winning_trades) if winning_trades else 0
+        gross_loss = abs(sum(t["pnl"] for t in losing_trades)) if losing_trades else 0
+        profit_factor = gross_profit / gross_loss if gross_loss > 0 else None
+
+        # Average hold time
+        avg_hold_time = (
+            sum(t["hold_days"] for t in self.closed_trades) / total_trades
+            if total_trades > 0
+            else 0
+        )
 
         return {
-            "total_trades": total_closed,
+            "total_trades": total_trades,
             "wins": wins,
             "losses": losses,
             "win_rate": win_rate,
@@ -182,6 +181,7 @@ class TradeTracker:
             "avg_win": avg_win,
             "avg_loss": avg_loss,
             "profit_factor": profit_factor,
+            "avg_hold_time_days": avg_hold_time,
         }
 
     def get_unrealized_pnl(self):
@@ -200,7 +200,7 @@ class TradeTracker:
                 if data._name == ticker:
                     current_price = float(data.close[0])
                     buy_price = info["buy_price"]
-                    size = info["buy_size"]
+                    size = info["size"]
 
                     position_pnl = (current_price - buy_price) * size
                     unrealized_pnl += position_pnl

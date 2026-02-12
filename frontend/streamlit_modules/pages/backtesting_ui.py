@@ -48,6 +48,7 @@ def show_backtesting_page():
             "VALUE_3 (3 stocks)": "value_3",
             "VALUE_10 (10 stocks)": "value_10",
             "VALUE_20 (20 stocks)": "value_20",
+            "SP_100 (100 stocks)": "sp_100",
         }
 
         selected_universe = st.selectbox(
@@ -94,96 +95,266 @@ def show_backtesting_page():
             key="backtest_end_year",
         )
 
-    # Strategy Parameters
+    # ========================================================================
+    # VALUATION METHODS
+    # ========================================================================
+    st.subheader("📊 Valuation Methods")
+    st.markdown(
+        "**Select which valuation methods to combine for consensus fair value:**"
+    )
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        use_dcf = st.checkbox(
+            "✅ DCF",
+            value=persist_data.get("use_dcf", "true").lower() == "true",
+            key="backtest_use_dcf",
+            help="Discounted Cash Flow - Graham's intrinsic value method",
+        )
+
+    with col2:
+        use_pbt = st.checkbox(
+            "✅ PBT",
+            value=persist_data.get("use_pbt", "true").lower() == "true",
+            key="backtest_use_pbt",
+            help="Payback Time - 8-year payback period valuation",
+        )
+
+    with col3:
+        use_tencap = st.checkbox(
+            "✅ TEN CAP",
+            value=persist_data.get("use_tencap", "true").lower() == "true",
+            key="backtest_use_tencap",
+            help="TEN CAP - Owner earnings valuation method",
+        )
+
+    # Warning if no methods selected
+    if not (use_dcf or use_pbt or use_tencap):
+        st.error("⚠️ Please select at least one valuation method!")
+
+    # Show which methods are active
+    methods_active = []
+    if use_dcf:
+        methods_active.append("DCF (Auto CAGR)")
+    if use_pbt:
+        methods_active.append("PBT (Auto CAGR)")
+    if use_tencap:
+        methods_active.append("TEN CAP")
+
+    methods_str = " + ".join(methods_active) if methods_active else "None"
+
+    st.info(
+        f"**📐 Consensus Valuation:** {methods_str}\n\n"
+        f"Fair Value = Average of selected methods\n\n"
+        f"💡 CAGR is calculated automatically from 5-year historical data"  # ✅ Add note
+    )
+
+    # ========================================================================
+    # STRATEGY PARAMETERS
+    # ========================================================================
     st.subheader("🎯 Strategy Parameters")
 
+    # Parameter Presets
+    st.markdown("**🎨 Quick Presets:**")
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        if st.button(
+            "🛡️ Conservative",
+            use_container_width=True,
+            help="High thresholds = fewer, safer trades",
+        ):
+            st.session_state["preset_mos"] = 15.0
+            st.session_state["preset_moat"] = 35.0
+            st.rerun()
+
+    with col2:
+        if st.button(
+            "⚖️ Balanced",
+            use_container_width=True,
+            help="Moderate thresholds = balanced approach",
+        ):
+            st.session_state["preset_mos"] = 10.0
+            st.session_state["preset_moat"] = 30.0
+            st.rerun()
+
+    with col3:
+        if st.button(
+            "🚀 Aggressive",
+            use_container_width=True,
+            help="Low thresholds = more trades, higher risk",
+        ):
+            st.session_state["preset_mos"] = 5.0
+            st.session_state["preset_moat"] = 25.0
+            st.rerun()
+
+    st.divider()
+
+    # Advanced Settings (Collapsible)
+    with st.expander("⚙️ Advanced Settings", expanded=False):
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("**Sell Thresholds:**")
+            st.caption("MOS < -5% OR Moat < 25")
+            st.caption("(Currently hardcoded in strategy)")
+
+        with col2:
+            st.markdown("**Position Management:**")
+            st.caption("Max Positions: 20")
+            st.caption("Rebalance: Quarterly (90 days)")
+            st.caption("Equal Weight: 95% max allocation")
+
+        st.info(
+            "💡 **Coming Soon:** Customizable sell thresholds, position limits, and rebalancing frequency!"
+        )
+
+    # Sliders (with preset values)
     col1, col2 = st.columns(2)
 
     with col1:
+        # Get value from preset or persistence
+        default_mos = st.session_state.get(
+            "preset_mos", float(persist_data.get("mos_threshold", 10.0))
+        )
+
         mos_threshold = st.slider(
             "📊 Margin of Safety Threshold (%)",
             min_value=0.0,
             max_value=30.0,
-            value=float(persist_data.get("mos_threshold", 10.0)),
+            value=default_mos,
             step=1.0,
             key="backtest_mos",
             help="Minimum MOS required to buy. Lower = more trades, Higher = fewer trades",
         )
 
+        # Clear preset after use
+        if "preset_mos" in st.session_state:
+            del st.session_state["preset_mos"]
+
     with col2:
+        # Get value from preset or persistence
+        default_moat = st.session_state.get(
+            "preset_moat", float(persist_data.get("moat_threshold", 30.0))
+        )
+
         moat_threshold = st.slider(
             "🏰 Moat Score Threshold (0-50)",
             min_value=0.0,
             max_value=50.0,
-            value=float(persist_data.get("moat_threshold", 30.0)),
+            value=default_moat,
             step=1.0,
             key="backtest_moat",
             help="Minimum Moat Score required to buy. Lower = more trades, Higher = fewer trades",
         )
 
-    # Info box
+        # Clear preset after use
+        if "preset_moat" in st.session_state:
+            del st.session_state["preset_moat"]
+
+    # Info box with strategy summary
     st.info(
-        "**📖 Strategy:** ValueKit Value Investing\n\n"
+        f"**📖 Strategy:** ValueKit Consensus Valuation\n\n"
+        f"- **Valuation:** {methods_str}\n"
         f"- **Buy when:** MOS > {mos_threshold:.0f}% AND Moat > {moat_threshold:.0f}\n"
         f"- **Sell when:** MOS < -5% OR Moat < 25\n"
         f"- **Position Size:** Equal weight, 95% max allocation\n"
         f"- **Universe:** {selected_universe}"
     )
-
     # Run Button
     if st.button(
         "🚀 Run Backtest", key="backtest_run", type="primary", use_container_width=True
     ):
         if start_year >= end_year:
             st.error("Start year must be before end year!")
+        elif not (use_dcf or use_pbt or use_tencap):
+            st.error("Please select at least one valuation method!")
         else:
-            with st.spinner(
-                f"Running backtest on {selected_universe}... This may take a minute."
-            ):
-                try:
-                    # Save to persistence
-                    persist_data = {
-                        "initial_cash": str(initial_cash),
-                        "start_year": str(start_year),
-                        "end_year": str(end_year),
-                        "mos_threshold": str(mos_threshold),
-                        "moat_threshold": str(moat_threshold),
-                        "universe": selected_universe,  # ← ADD to persistence instead!
-                    }
-                    st.session_state.persist.setdefault("Backtesting", {}).update(
-                        persist_data
-                    )
-                    save_persistence_data()
+            # Create a placeholder for status updates
+            status_placeholder = st.empty()
+            progress_bar = st.progress(0)
 
-                    # Import and run ValueKit backtest
-                    from backend.backtesting.scripts.run_valuekit import (
-                        run_valuekit_backtest,
-                    )
+            try:
+                # Step 1: Initialize
+                status_placeholder.info("🔧 Initializing backtest...")
+                progress_bar.progress(10)
 
-                    results = run_valuekit_backtest(
-                        universe_name=universe_name,
-                        from_year=start_year,
-                        to_year=end_year,
-                        starting_cash=float(initial_cash),
-                        mos_threshold=mos_threshold,
-                        moat_threshold=moat_threshold,
-                    )
+                # Save to persistence
+                persist_data = {
+                    "initial_cash": str(initial_cash),
+                    "start_year": str(start_year),
+                    "end_year": str(end_year),
+                    "mos_threshold": str(mos_threshold),
+                    "moat_threshold": str(moat_threshold),
+                    "universe": selected_universe,
+                    "use_dcf": str(use_dcf),
+                    "use_pbt": str(use_pbt),
+                    "use_tencap": str(use_tencap),
+                }
+                st.session_state.persist.setdefault("Backtesting", {}).update(
+                    persist_data
+                )
+                save_persistence_data()
 
-                    # Store results with universe info
-                    results["universe_display"] = (
-                        selected_universe  # ← ADD to results dict instead!
-                    )
-                    st.session_state["backtest_results"] = results
+                # Step 2: Loading data
+                status_placeholder.info(
+                    f"📊 Loading {selected_universe} data ({start_year}-{end_year})..."
+                )
+                progress_bar.progress(30)
 
-                    st.success(f"✅ Backtest complete!")
-                    st.rerun()
+                # Import and run ValueKit backtest
+                from backend.backtesting.scripts.run_valuekit import (
+                    run_valuekit_backtest,
+                )
 
-                except Exception as e:
-                    st.error(f"Backtest failed: {str(e)}")
-                    import traceback
+                # Step 3: Running backtest
+                status_placeholder.info("⚙️ Running backtest strategy...")
+                progress_bar.progress(50)
 
-                    with st.expander("🔍 Error Details"):
-                        st.code(traceback.format_exc())
+                results = run_valuekit_backtest(
+                    universe_name=universe_name,
+                    from_year=start_year,
+                    to_year=end_year,
+                    starting_cash=float(initial_cash),
+                    mos_threshold=mos_threshold,
+                    moat_threshold=moat_threshold,
+                    use_dcf=use_dcf,
+                    use_pbt=use_pbt,
+                    use_tencap=use_tencap,
+                )
+
+                # Step 4: Generating reports
+                status_placeholder.info("📈 Generating charts and reports...")
+                progress_bar.progress(90)
+
+                # Store results with universe info
+                results["universe_display"] = selected_universe
+                st.session_state["backtest_results"] = results
+
+                # Step 5: Complete
+                progress_bar.progress(100)
+                status_placeholder.success("✅ Backtest complete!")
+
+                # Small delay to show completion
+                import time
+
+                time.sleep(0.5)
+
+                # Clear status
+                status_placeholder.empty()
+                progress_bar.empty()
+
+                st.rerun()
+
+            except Exception as e:
+                progress_bar.empty()
+                status_placeholder.error(f"❌ Backtest failed: {str(e)}")
+
+                import traceback
+
+                with st.expander("🔍 Error Details"):
+                    st.code(traceback.format_exc())
 
     # ========================================================================
     # RESULTS SECTION
@@ -193,6 +364,11 @@ def show_backtesting_page():
 
         st.divider()
         st.header("📈 Backtest Results")
+
+        # Show which valuation methods were used
+        valuation_methods = results.get("valuation_methods", [])
+        if valuation_methods:
+            st.caption(f"🔬 Valuation Methods Used: {', '.join(valuation_methods)}")
 
         # ====================================================================
         # KPI METRICS
@@ -332,11 +508,15 @@ def show_backtesting_page():
         # Get chart data from results
         charts = results.get("charts", {})
 
-        # DEBUG: Check what charts are available
-        # st.write("DEBUG: Available charts:", list(charts.keys()) if charts else "None")  # ← Uncomment to debug
-
         # Tab for different charts
-        tab1, tab2 = st.tabs(["📊 Equity Curve", "📉 Drawdown"])
+        tab1, tab2, tab3, tab4 = st.tabs(
+            [
+                "📊 Equity Curve",
+                "📉 Drawdown",
+                "🔥 Monthly Returns",
+                "📈 Trade Analysis",
+            ]
+        )
 
         with tab1:
             # Display equity curve
@@ -354,6 +534,30 @@ def show_backtesting_page():
             else:
                 st.warning(
                     "⚠️ Drawdown chart not available. Charts are generated during backtest run."
+                )
+
+        with tab3:
+            # Display monthly returns heatmap
+            if charts and "monthly" in charts and charts["monthly"] is not None:
+                st.plotly_chart(charts["monthly"], use_container_width=True)
+                st.caption(
+                    "💡 Green = positive months, Red = negative months. Darker colors = larger returns."
+                )
+            else:
+                st.warning(
+                    "⚠️ Monthly returns heatmap not available. Charts are generated during backtest run."
+                )
+
+        with tab4:
+            # Display trade analysis
+            if charts and "trades" in charts and charts["trades"] is not None:
+                st.plotly_chart(charts["trades"], use_container_width=True)
+                st.caption(
+                    "💡 Top Left: P&L per trade | Top Right: Win/Loss ratio | Bottom: Hold time & returns distribution"
+                )
+            else:
+                st.info(
+                    "💡 Trade analysis shows detailed statistics for all closed trades. Run a backtest to see results."
                 )
 
         # ====================================================================
@@ -426,13 +630,18 @@ def show_backtesting_page():
             import json
 
             summary = {
-                "strategy": "ValueKit Value Investing",
+                "strategy": "ValueKit Consensus Valuation",
                 "universe": results.get("universe_display", "Unknown"),
                 "period": f"{start_year}-{end_year}",
+                "valuation_methods": valuation_methods,
                 "parameters": {
                     "mos_threshold": mos_threshold,
                     "moat_threshold": moat_threshold,
                     "starting_cash": initial_cash,
+                    "use_dcf": use_dcf,
+                    "use_pbt": use_pbt,
+                    "use_tencap": use_tencap,
+                    "cagr_method": "Auto (5-year historical)",
                 },
                 "performance": {
                     "total_return": results["return_pct"],
@@ -470,15 +679,17 @@ def show_backtesting_page():
             st.markdown("""
             **🎯 How to use:**
             1. Select stock universe (start with VALUE_3)
-            2. Set date range and initial capital
-            3. Adjust strategy parameters
-            4. Click "Run Backtest"
-            5. Analyze results and download data
+            2. Choose valuation methods (DCF/PBT/TEN CAP)
+            3. Set date range and initial capital
+            4. Adjust strategy parameters
+            5. Click "Run Backtest"
+            6. Analyze results and download data
             """)
 
         with col2:
             st.markdown("""
             **📊 What you'll get:**
+            - Consensus valuation from multiple methods
             - Performance metrics & risk analysis
             - S&P 500 benchmark comparison
             - Interactive charts
@@ -490,6 +701,7 @@ def show_backtesting_page():
 
         st.info("""
         **💡 Tips:**
+        - **Valuation Methods:** More methods = more robust consensus, but requires complete data
         - **MOS Threshold:** Lower values (5-10%) = more trades, Higher values (15-20%) = fewer but "safer" trades
         - **Moat Threshold:** 25-30 is balanced, 35+ is very conservative
         - **Universe:** Start small (VALUE_3), then expand (VALUE_10, VALUE_20)

@@ -1,6 +1,6 @@
 """
 MOS Calculator Wrapper for Backtesting
-Uses existing backend/logic/mos.py with historical data
+Uses existing backend/logic/mos.py with historical data and AUTO CAGR
 """
 
 import sys
@@ -14,12 +14,12 @@ from backend.logic.mos import calculate_mos_from_data
 
 
 class MOSCalculator:
-    """Calculate Margin of Safety for backtesting"""
+    """Calculate Margin of Safety for backtesting with AUTO CAGR"""
 
     @staticmethod
     def calculate(strategy, ticker: str):
         """
-        Calculate MOS using historical price and fundamentals
+        Calculate MOS using historical price, fundamentals, and AUTO CAGR
 
         Args:
             strategy: Parent strategy instance
@@ -48,13 +48,17 @@ class MOSCalculator:
             if not fundamentals:
                 return None
 
-            # Use existing MOS logic with historical data!
+            # ✅ GET AUTO CAGR from strategy
+            growth_rate = strategy.calculate_cagr_for_ticker(ticker)
+
+            # Use existing MOS logic with historical data + AUTO CAGR
             result = calculate_mos_from_data(
                 ticker=ticker,
                 current_price=historical_price,  # Historical!
                 income_statement=fundamentals["income_statement"],
                 balance_sheet=fundamentals["balance_sheet"],
                 cashflow=fundamentals["cashflow"],
+                growth_rate=growth_rate,  # ✅ AUTO CAGR!
             )
 
             # Return simplified format for strategy
@@ -67,6 +71,7 @@ class MOSCalculator:
                 "mos_price": result["MOS Price"],
                 "eps_now": result["EPS_now"],
                 "recommendation": result["Investment Recommendation"],
+                "growth_rate_used": growth_rate,  # ✅ Track which CAGR was used
             }
 
         except Exception as e:
