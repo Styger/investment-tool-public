@@ -48,7 +48,6 @@ def show_backtesting_page():
             "VALUE_3 (3 stocks)": "value_3",
             "VALUE_10 (10 stocks)": "value_10",
             "VALUE_20 (20 stocks)": "value_20",
-            "SP_100 (100 stocks)": "sp_100",
         }
 
         selected_universe = st.selectbox(
@@ -136,7 +135,7 @@ def show_backtesting_page():
     # Show which methods are active
     methods_active = []
     if use_dcf:
-        methods_active.append("DCF (Auto CAGR)")
+        methods_active.append("MOS (Auto CAGR)")
     if use_pbt:
         methods_active.append("PBT (Auto CAGR)")
     if use_tencap:
@@ -147,7 +146,7 @@ def show_backtesting_page():
     st.info(
         f"**📐 Consensus Valuation:** {methods_str}\n\n"
         f"Fair Value = Average of selected methods\n\n"
-        f"💡 CAGR is calculated automatically from 5-year historical data"  # ✅ Add note
+        f"💡 CAGR is calculated automatically from 5-year historical data"
     )
 
     # ========================================================================
@@ -190,25 +189,6 @@ def show_backtesting_page():
             st.rerun()
 
     st.divider()
-
-    # Advanced Settings (Collapsible)
-    with st.expander("⚙️ Advanced Settings", expanded=False):
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.markdown("**Sell Thresholds:**")
-            st.caption("MOS < -5% OR Moat < 25")
-            st.caption("(Currently hardcoded in strategy)")
-
-        with col2:
-            st.markdown("**Position Management:**")
-            st.caption("Max Positions: 20")
-            st.caption("Rebalance: Quarterly (90 days)")
-            st.caption("Equal Weight: 95% max allocation")
-
-        st.info(
-            "💡 **Coming Soon:** Customizable sell thresholds, position limits, and rebalancing frequency!"
-        )
 
     # Sliders (with preset values)
     col1, col2 = st.columns(2)
@@ -253,15 +233,89 @@ def show_backtesting_page():
         if "preset_moat" in st.session_state:
             del st.session_state["preset_moat"]
 
-    # Info box with strategy summary
-    st.info(
-        f"**📖 Strategy:** ValueKit Consensus Valuation\n\n"
-        f"- **Valuation:** {methods_str}\n"
-        f"- **Buy when:** MOS > {mos_threshold:.0f}% AND Moat > {moat_threshold:.0f}\n"
-        f"- **Sell when:** MOS < -5% OR Moat < 25\n"
-        f"- **Position Size:** Equal weight, 95% max allocation\n"
-        f"- **Universe:** {selected_universe}"
-    )
+    # ========================================================================
+    # ADVANCED SETTINGS (NOW AFTER MAIN PARAMETERS!)
+    # ========================================================================
+    with st.expander("⚙️ Advanced Settings", expanded=False):
+        st.markdown("### Portfolio Management")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            # Rebalance Frequency
+            rebalance_options = {
+                "Monthly (30 days)": 30,
+                "Bi-Monthly (60 days)": 60,
+                "Quarterly (90 days) ⭐": 90,
+                "Semi-Annual (180 days)": 180,
+            }
+
+            rebalance_label = st.selectbox(
+                "Rebalance Frequency",
+                options=list(rebalance_options.keys()),
+                index=2,  # Default: Quarterly
+                key="backtest_rebalance_freq",
+                help="How often to review and rebalance the portfolio. Quarterly is recommended for value investing.",
+            )
+
+            rebalance_days = rebalance_options[rebalance_label]
+
+        with col2:
+            # Max Positions
+            max_positions = st.slider(
+                "Max Positions",
+                min_value=5,
+                max_value=30,
+                value=int(persist_data.get("max_positions", 20)),
+                step=5,
+                key="backtest_max_positions",
+                help="Maximum number of stocks to hold simultaneously. Lower = concentrated, Higher = diversified",
+            )
+
+        st.divider()
+
+        st.markdown("### Sell Signals")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            # Sell MOS Threshold
+            sell_mos_threshold = st.slider(
+                "Sell MOS Threshold (%)",
+                min_value=-20.0,
+                max_value=0.0,
+                value=float(persist_data.get("sell_mos_threshold", -5.0)),
+                step=1.0,
+                key="backtest_sell_mos",
+                help="Sell when MOS falls below this. -5% = sell when overvalued by 5%. More negative = more tolerant.",
+            )
+
+        with col2:
+            # Sell Moat Threshold
+            sell_moat_threshold = st.slider(
+                "Sell Moat Threshold (0-50)",
+                min_value=0.0,
+                max_value=40.0,
+                value=float(persist_data.get("sell_moat_threshold", 25.0)),
+                step=5.0,
+                key="backtest_sell_moat",
+                help="Sell when Moat Score falls below this. Lower = more aggressive selling.",
+            )
+
+        # ✅ NOW we can safely use mos_threshold and moat_threshold!
+        st.info(
+            f"**💡 Current Strategy:**\n\n"
+            f"- **Buy Signal:** MOS > {mos_threshold}% AND Moat > {moat_threshold}\n"
+            f"- **Sell Signal:** MOS < {sell_mos_threshold}% OR Moat < {sell_moat_threshold}\n"
+            f"- **Portfolio:** Up to {max_positions} positions, equal weighted\n"
+            f"- **Rebalancing:** Every {rebalance_days} days"
+        )
+
+        st.caption(
+            "💡 Position sizing: Available cash is divided equally among all positions. "
+            "⚠️ Lower rebalancing frequencies may show higher returns in backtests "
+            "but incur higher transaction costs and taxes in real trading."
+        )
     # Run Button
     if st.button(
         "🚀 Run Backtest", key="backtest_run", type="primary", use_container_width=True
@@ -291,6 +345,10 @@ def show_backtesting_page():
                     "use_dcf": str(use_dcf),
                     "use_pbt": str(use_pbt),
                     "use_tencap": str(use_tencap),
+                    "rebalance_days": str(rebalance_days),
+                    "max_positions": str(max_positions),
+                    "sell_mos_threshold": str(sell_mos_threshold),
+                    "sell_moat_threshold": str(sell_moat_threshold),
                 }
                 st.session_state.persist.setdefault("Backtesting", {}).update(
                     persist_data
@@ -322,6 +380,10 @@ def show_backtesting_page():
                     use_dcf=use_dcf,
                     use_pbt=use_pbt,
                     use_tencap=use_tencap,
+                    rebalance_days=rebalance_days,
+                    max_positions=max_positions,
+                    sell_mos_threshold=sell_mos_threshold,
+                    sell_moat_threshold=sell_moat_threshold,
                 )
 
                 # Step 4: Generating reports
@@ -642,6 +704,10 @@ def show_backtesting_page():
                     "use_pbt": use_pbt,
                     "use_tencap": use_tencap,
                     "cagr_method": "Auto (5-year historical)",
+                    "rebalance_days": rebalance_days,
+                    "max_positions": max_positions,
+                    "sell_mos_threshold": sell_mos_threshold,
+                    "sell_moat_threshold": sell_moat_threshold,
                 },
                 "performance": {
                     "total_return": results["return_pct"],

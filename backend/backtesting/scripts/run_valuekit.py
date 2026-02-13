@@ -32,9 +32,15 @@ def run_valuekit_backtest(
     use_dcf=True,
     use_pbt=True,
     use_tencap=True,
+    rebalance_days=90,
+    max_positions=20,
+    sell_mos_threshold=-5.0,
+    sell_moat_threshold=25.0,
 ):
     """
     Run backtest with ValueKit Strategy + Metrics + Benchmark + Consensus Valuation
+
+    NOTE: CAGR is now calculated automatically for DCF and PBT methods
 
     Args:
         universe_name: Stock universe to test
@@ -44,10 +50,13 @@ def run_valuekit_backtest(
         commission: Commission rate
         mos_threshold: Minimum MOS for buy (%)
         moat_threshold: Minimum Moat Score for buy (0-50)
-        use_dcf: Use DCF valuation method
-        use_pbt: Use PBT valuation method
+        use_dcf: Use DCF valuation method (AUTO CAGR)
+        use_pbt: Use PBT valuation method (AUTO CAGR)
         use_tencap: Use TEN CAP valuation method
-        pbt_growth_rate: Growth rate for PBT calculation (e.g., 0.15 = 15%)
+        rebalance_days: How often to rebalance portfolio (default 90 = quarterly)
+        max_positions: Maximum number of positions (default 20)
+        sell_mos_threshold: Sell when MOS falls below this (default -5%)
+        sell_moat_threshold: Sell when Moat falls below this (default 25)
 
     Returns:
         Dict with all results
@@ -72,22 +81,18 @@ def run_valuekit_backtest(
     if use_tencap:
         methods_enabled.append("TEN CAP")
 
-    print("Valuation Methods:")
-    for method in methods_enabled:
-        print(f"  ✅ {method}")
-    if not methods_enabled:
-        print("  ⚠️  WARNING: No valuation methods enabled!")
-    print()
-
     print(f"Thresholds:")
-    print(f"  MOS > {mos_threshold}%")
-    print(f"  Moat > {moat_threshold}/50")
+    print(f"  Buy: MOS > {mos_threshold}% AND Moat > {moat_threshold}")
+    print(f"  Sell: MOS < {sell_mos_threshold}% OR Moat < {sell_moat_threshold}")
+    print(f"  Max Positions: {max_positions}")
+    print(f"  Rebalance: Every {rebalance_days} days")
     print()
 
     # Create Cerebro
     cerebro = bt.Cerebro()
 
     # Add strategy with new parameters
+    # Add strategy
     cerebro.addstrategy(
         ValueKitStrategy,
         mos_threshold=mos_threshold,
@@ -95,6 +100,10 @@ def run_valuekit_backtest(
         use_dcf=use_dcf,
         use_pbt=use_pbt,
         use_tencap=use_tencap,
+        rebalance_days=rebalance_days,
+        max_positions=max_positions,
+        sell_mos_threshold=sell_mos_threshold,
+        sell_moat_threshold=sell_moat_threshold,
     )
 
     # Load data
@@ -299,4 +308,8 @@ if __name__ == "__main__":
         use_dcf=True,
         use_pbt=True,
         use_tencap=True,
+        rebalance_days=90,
+        max_positions=20,
+        sell_mos_threshold=-5.0,
+        sell_moat_threshold=25.0,
     )

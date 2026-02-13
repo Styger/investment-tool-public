@@ -131,6 +131,14 @@ class ValueKitStrategy(bt.Strategy):
         """
         Get fundamental data for ticker AS OF the current backtest date
 
+        CRITICAL: Prevents look-ahead bias by accounting for reporting delays
+        - Annual reports (10-K) are filed ~60-90 days after fiscal year end
+        - Conservative approach: Assume available April 1st
+
+        Example:
+        - Backtest Date: 2020-03-15 → Use 2018 data (2019 not yet published)
+        - Backtest Date: 2020-04-15 → Use 2019 data (2019 published)
+
         2-Layer Caching Architecture:
         - Layer 1 (fmp_api.py): Raw API responses (90 day TTL)
         - Layer 2 (this method): Filtered historical data (NEVER expires)
@@ -156,10 +164,28 @@ class ValueKitStrategy(bt.Strategy):
         # Get current backtest date
         current_date = data_feed.datetime.date(0)
         current_year = current_date.year
+        current_month = current_date.month
 
-        # For fundamentals, we can only use data up to previous year
-        # (annual reports are published with delay)
-        max_year = current_year - 1
+        # ========================================================================
+        # PREVENT LOOK-AHEAD BIAS: Account for reporting delays
+        # ========================================================================
+        # Annual reports (10-K) are published ~60-90 days after fiscal year end
+        # For calendar year companies (year end = Dec 31):
+        # - Large Accelerated Filers: 60 days → End of February
+        # - Most major companies file by end of February
+        # Conservative cutoff: March 1st
+
+        if current_month < 3:  # January, February
+            # Q1 (Jan-Feb): Annual reports for previous year not yet available
+            # Use data from 2 years ago
+            max_year = current_year - 2
+            self.log(
+                f"📅 {current_year}-{current_month:02d}: Using {max_year} data (reporting lag)"
+            )
+        else:  # March onwards (month >= 3)
+            # March-December: Previous year's annual report now available
+            max_year = current_year - 1
+            self.log(f"📅 {current_year}-{current_month:02d}: Using {max_year} data")
 
         # ========================================================================
         # LAYER 2 CACHE: Filtered historical fundamentals (NEVER EXPIRES!)
@@ -213,6 +239,11 @@ class ValueKitStrategy(bt.Strategy):
             # ====================================================================
             self.cache.set(cache_key, "historical_fundamentals", fundamentals)
             self.log(f"💾 L2 Cached: {cache_key} (immutable - never expires)")
+
+            # Debug output
+            print(
+                f"🔬 [{ticker}] {current_date} (month {current_month}) → Using {max_year} fundamentals"
+            )
 
             return fundamentals
 
