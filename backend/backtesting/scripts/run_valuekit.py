@@ -29,7 +29,7 @@ def run_valuekit_backtest(
     commission=0.001,
     mos_threshold=10.0,
     moat_threshold=30.0,
-    use_dcf=True,
+    use_mos=True,
     use_pbt=True,
     use_tencap=True,
     rebalance_days=90,
@@ -50,7 +50,7 @@ def run_valuekit_backtest(
         commission: Commission rate
         mos_threshold: Minimum MOS for buy (%)
         moat_threshold: Minimum Moat Score for buy (0-50)
-        use_dcf: Use DCF valuation method (AUTO CAGR)
+        use_mos: Use MOS valuation method (AUTO CAGR)
         use_pbt: Use PBT valuation method (AUTO CAGR)
         use_tencap: Use TEN CAP valuation method
         rebalance_days: How often to rebalance portfolio (default 90 = quarterly)
@@ -74,8 +74,8 @@ def run_valuekit_backtest(
 
     # Print valuation methods
     methods_enabled = []
-    if use_dcf:
-        methods_enabled.append("DCF")
+    if use_mos:
+        methods_enabled.append("MOS")
     if use_pbt:
         methods_enabled.append("PBT")
     if use_tencap:
@@ -97,7 +97,7 @@ def run_valuekit_backtest(
         ValueKitStrategy,
         mos_threshold=mos_threshold,
         moat_threshold=moat_threshold,
-        use_dcf=use_dcf,
+        use_mos=use_mos,
         use_pbt=use_pbt,
         use_tencap=use_tencap,
         rebalance_days=rebalance_days,
@@ -305,7 +305,7 @@ if __name__ == "__main__":
         from_year=2018,
         to_year=2022,
         starting_cash=100000.0,
-        use_dcf=True,
+        use_mos=True,
         use_pbt=True,
         use_tencap=True,
         rebalance_days=90,

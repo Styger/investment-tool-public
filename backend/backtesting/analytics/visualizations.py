@@ -104,7 +104,7 @@ class BacktestVisualizer:
                     x=df["date"],
                     y=df["benchmark_normalized"],
                     name="S&P 500",
-                    line=dict(color=self.colors["benchmark"], width=3, dash="dash"),
+                    line=dict(color=self.colors["benchmark"], width=3),
                     mode="lines",
                     hovertemplate="<b>S&P 500</b><br>"
                     + "Date: %{x|%Y-%m-%d}<br>"

@@ -105,11 +105,11 @@ def show_backtesting_page():
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        use_dcf = st.checkbox(
-            "✅ DCF",
-            value=persist_data.get("use_dcf", "true").lower() == "true",
-            key="backtest_use_dcf",
-            help="Discounted Cash Flow - Graham's intrinsic value method",
+        use_mos = st.checkbox(
+            "✅ MOS",
+            value=persist_data.get("use_mos", "true").lower() == "true",
+            key="backtest_use_mos",
+            help="Margin of Safety - Warren Buffett's intrinsic value method",
         )
 
     with col2:
@@ -129,12 +129,12 @@ def show_backtesting_page():
         )
 
     # Warning if no methods selected
-    if not (use_dcf or use_pbt or use_tencap):
+    if not (use_mos or use_pbt or use_tencap):
         st.error("⚠️ Please select at least one valuation method!")
 
     # Show which methods are active
     methods_active = []
-    if use_dcf:
+    if use_mos:
         methods_active.append("MOS (Auto CAGR)")
     if use_pbt:
         methods_active.append("PBT (Auto CAGR)")
@@ -322,7 +322,7 @@ def show_backtesting_page():
     ):
         if start_year >= end_year:
             st.error("Start year must be before end year!")
-        elif not (use_dcf or use_pbt or use_tencap):
+        elif not (use_mos or use_pbt or use_tencap):
             st.error("Please select at least one valuation method!")
         else:
             # Create a placeholder for status updates
@@ -342,7 +342,7 @@ def show_backtesting_page():
                     "mos_threshold": str(mos_threshold),
                     "moat_threshold": str(moat_threshold),
                     "universe": selected_universe,
-                    "use_dcf": str(use_dcf),
+                    "use_mos": str(use_mos),
                     "use_pbt": str(use_pbt),
                     "use_tencap": str(use_tencap),
                     "rebalance_days": str(rebalance_days),
@@ -377,7 +377,7 @@ def show_backtesting_page():
                     starting_cash=float(initial_cash),
                     mos_threshold=mos_threshold,
                     moat_threshold=moat_threshold,
-                    use_dcf=use_dcf,
+                    use_mos=use_mos,
                     use_pbt=use_pbt,
                     use_tencap=use_tencap,
                     rebalance_days=rebalance_days,
@@ -670,7 +670,7 @@ def show_backtesting_page():
         # ====================================================================
         st.subheader("💾 Download Results")
 
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
 
         with col1:
             # Download trades CSV
@@ -700,7 +700,7 @@ def show_backtesting_page():
                     "mos_threshold": mos_threshold,
                     "moat_threshold": moat_threshold,
                     "starting_cash": initial_cash,
-                    "use_dcf": use_dcf,
+                    "use_mos": use_mos,
                     "use_pbt": use_pbt,
                     "use_tencap": use_tencap,
                     "cagr_method": "Auto (5-year historical)",
@@ -732,6 +732,115 @@ def show_backtesting_page():
                 mime="application/json",
             )
 
+        # PDF Report Download
+        with col3:
+            if st.button("📄 Generate PDF Report", use_container_width=True):
+                with st.spinner("Generating PDF report..."):
+                    try:
+                        from backend.backtesting.analytics.pdf_export import (
+                            BacktestPDFExporter,
+                        )
+
+                        # Prepare parameters
+                        params = {
+                            "mos_threshold": mos_threshold,
+                            "moat_threshold": moat_threshold,
+                            "max_positions": max_positions,
+                            "rebalance_days": rebalance_days,
+                            "sell_mos_threshold": sell_mos_threshold,
+                            "sell_moat_threshold": sell_moat_threshold,
+                        }
+
+                        # Generate PDF
+                        pdf_bytes = BacktestPDFExporter.generate_report(
+                            results=results,
+                            charts=charts,
+                            universe_name=results.get("universe_display", "Unknown"),
+                            parameters=params,
+                        )
+
+                        # Download button
+                        st.download_button(
+                            label="💾 Download PDF Report",
+                            data=pdf_bytes,
+                            file_name=f"valuekit_report_{date.today()}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True,
+                        )
+
+                        st.success("✅ PDF Report generated!")
+                        st.info("ℹ️ Charts available in PowerPoint export")
+
+                    except ImportError as e:
+                        st.error(
+                            "⚠️ PDF generation requires ReportLab. "
+                            "Install with: `pip install reportlab`"
+                        )
+                    except Exception as e:
+                        st.error(f"❌ Failed to generate PDF: {str(e)}")
+                        with st.expander("🔍 Error Details"):
+                            import traceback
+
+                            st.code(traceback.format_exc())
+
+        # ✅ NEW: PowerPoint Report (Second Row)
+        st.divider()
+
+        col1, col2, col3 = st.columns(3)
+
+        with col2:  # Center column
+            if st.button(
+                "📊 Generate PowerPoint Report",
+                use_container_width=True,
+                type="primary",
+            ):
+                with st.spinner("Generating PowerPoint with charts..."):
+                    try:
+                        from backend.backtesting.analytics.pptx_export import (
+                            BacktestPPTXExporter,
+                        )
+
+                        # Prepare parameters
+                        params = {
+                            "mos_threshold": mos_threshold,
+                            "moat_threshold": moat_threshold,
+                            "max_positions": max_positions,
+                            "rebalance_days": rebalance_days,
+                            "sell_mos_threshold": sell_mos_threshold,
+                            "sell_moat_threshold": sell_moat_threshold,
+                        }
+
+                        # Generate PowerPoint
+                        pptx_bytes = BacktestPPTXExporter.generate_report(
+                            results=results,
+                            charts=charts,
+                            universe_name=results.get("universe_display", "Unknown"),
+                            parameters=params,
+                        )
+
+                        # Download button
+                        st.download_button(
+                            label="💾 Download PowerPoint",
+                            data=pptx_bytes,
+                            file_name=f"valuekit_presentation_{date.today()}.pptx",
+                            mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                            use_container_width=True,
+                        )
+
+                        st.success("✅ PowerPoint generated with charts!")
+
+                    except ImportError as e:
+                        st.error(
+                            "⚠️ PowerPoint requires python-pptx. "
+                            "Install with: `pip install python-pptx`"
+                        )
+                    except Exception as e:
+                        st.error(f"❌ Failed to generate PowerPoint: {str(e)}")
+                        with st.expander("🔍 Error Details"):
+                            import traceback
+
+                            st.code(traceback.format_exc())
+
     else:
         # ====================================================================
         # LANDING PAGE (NO RESULTS YET)
@@ -745,7 +854,7 @@ def show_backtesting_page():
             st.markdown("""
             **🎯 How to use:**
             1. Select stock universe (start with VALUE_3)
-            2. Choose valuation methods (DCF/PBT/TEN CAP)
+            2. Choose valuation methods (MOS/PBT/TEN CAP)
             3. Set date range and initial capital
             4. Adjust strategy parameters
             5. Click "Run Backtest"

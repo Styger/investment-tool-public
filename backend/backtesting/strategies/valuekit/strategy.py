@@ -30,7 +30,7 @@ class ValueKitStrategy(bt.Strategy):
     """
     ValueKit Value Investing Strategy
 
-    Valuation: Consensus from DCF/PBT/TEN CAP (user selectable)
+    Valuation: Consensus from MOS/PBT/TEN CAP (user selectable)
     Buy Signal:  MOS > 10% AND Moat Score > 30/50
     Sell Signal: MOS < -5% OR Moat Score < 20/50
 
@@ -40,10 +40,10 @@ class ValueKitStrategy(bt.Strategy):
 
     params = (
         # Valuation Methods
-        ("use_dcf", True),  # Use DCF (MOS) valuation
+        ("use_mos", True),  # Use MOS (Margin of Safety) valuation
         ("use_pbt", True),  # Use PBT valuation
         ("use_tencap", True),  # Use TEN CAP valuation
-        # NOTE: CAGR is now calculated automatically for DCF and PBT
+        # NOTE: CAGR is now calculated automatically for MOS and PBT
         # Thresholds
         ("mos_threshold", 10.0),  # Minimum MOS for buy (%)
         ("moat_threshold", 30.0),  # Minimum Moat Score for buy (0-50)
@@ -333,7 +333,7 @@ class ValueKitStrategy(bt.Strategy):
         """
         Calculate Margin of Safety using CONSENSUS from multiple valuation methods
 
-        User can select which methods to use (DCF, PBT, TEN CAP)
+        User can select which methods to use (MOS, PBT, TEN CAP)
         Fair Value = Average of selected methods
         MOS = (Fair Value - Current Price) / Fair Value * 100
 
@@ -346,21 +346,21 @@ class ValueKitStrategy(bt.Strategy):
         valuations = []
         methods_used = []
 
-        # Method 1: DCF (from MOS calculator)
-        if self.params.use_dcf:
+        # Method 1: MOS (from MOS calculator)
+        if self.params.use_mos:
             try:
-                dcf_result = self.mos_calc.calculate(self, ticker)
-                if dcf_result:
+                mos_result = self.mos_calc.calculate(self, ticker)
+                if mos_result:
                     valuations.append(
                         {
-                            "method": "DCF",
-                            "fair_value": dcf_result["fair_value"],
-                            "buy_price": dcf_result["mos_price"],  # Price with 50% MOS
+                            "method": "MOS",
+                            "fair_value": mos_result["fair_value"],
+                            "buy_price": mos_result["mos_price"],  # Price with 50% MOS
                         }
                     )
-                    methods_used.append("DCF")
+                    methods_used.append("MOS")
             except Exception as e:
-                self.log(f"  DCF calculation failed for {ticker}: {e}")
+                self.log(f"  MOS calculation failed for {ticker}: {e}")
 
         # Method 2: PBT (Payback Time)
         if self.params.use_pbt:
