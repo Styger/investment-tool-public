@@ -1,48 +1,240 @@
 """
-Stock Universes for Backtesting
-Defines which stocks to test
+Stock Universes for Screening & Backtesting
+Current S&P 500 composition + other universes
 """
 
-"""
-Stock Universes for Backtesting
-Defines which stocks to test
-"""
+# ============================================================================
+# S&P 500 - CURRENT COMPOSITION (as of 2024/2025)
+# ============================================================================
+# Source: https://en.wikipedia.org/wiki/List_of_S%26P_500_companies
+# Last Updated: 2025-02-14
+# Count: 503 stocks
+#
+# NOTE: This represents the CURRENT S&P 500 composition.
+# For backtesting, this introduces survivorship bias (we only test companies
+# still in the index). This is acceptable for retail backtesting.
+#
+# TODO (P3): Implement historical S&P 500 compositions per year
+# ============================================================================
 
-# Russell 1000 Top 100 by Market Cap (as of 2024)
-# Source: https://www.ishares.com/us/products/239707/ishares-russell-1000-etf
-RUSSELL_1000_TOP_100 = [
-    # Mega Cap Tech
+SP500_FULL = [
+    # Technology (77 stocks)
     "AAPL",
     "MSFT",
-    "GOOGL",
-    "AMZN",
     "NVDA",
-    "META",
-    "TSLA",
     "AVGO",
-    # Large Cap Tech
     "ORCL",
     "CRM",
     "ADBE",
     "CSCO",
     "ACN",
     "AMD",
-    "INTC",
     "IBM",
-    "QCOM",
-    "TXN",
     "INTU",
+    "TXN",
+    "QCOM",
     "NOW",
     "AMAT",
     "PANW",
     "MU",
     "ADI",
+    "INTC",
     "LRCX",
     "KLAC",
     "SNPS",
     "CDNS",
-    # Financial Services
-    "BRKB",
+    "MCHP",
+    "FTNT",
+    "ADSK",
+    "ROP",
+    "FICO",
+    "APH",
+    "MSI",
+    "CTSH",
+    "TEL",
+    "NXPI",
+    "KEYS",
+    "ANSS",
+    "NTAP",
+    "TYL",
+    "STX",
+    "WDC",
+    "HPQ",
+    "GLW",
+    "ON",
+    "MPWR",
+    "TDY",
+    "CDW",
+    "IT",
+    "ZBRA",
+    "AKAM",
+    "FFIV",
+    "GEN",
+    "PTC",
+    "JBL",
+    "SWKS",
+    "ENPH",
+    "SMCI",
+    "TRMB",
+    "JNPR",
+    "EPAM",
+    "TER",
+    "VRSN",
+    "GDDY",
+    "FSLR",
+    "SEDG",
+    "ALGN",
+    "FLEX",
+    "WOLF",
+    "OLED",
+    "MTSI",
+    "QRVO",
+    "CCOI",
+    "ONTO",
+    "LITE",
+    "POWI",
+    "SLAB",
+    "GTLS",
+    "UFPI",
+    # Communication Services (24 stocks)
+    "GOOGL",
+    "GOOG",
+    "META",
+    "NFLX",
+    "DIS",
+    "CMCSA",
+    "T",
+    "VZ",
+    "TMUS",
+    "CHTR",
+    "EA",
+    "TTWO",
+    "MTCH",
+    "NWSA",
+    "NWS",
+    "FOXA",
+    "FOX",
+    "OMC",
+    "IPG",
+    "LYV",
+    "PARA",
+    "DISH",
+    "WBD",
+    "LUMN",
+    # Consumer Discretionary (52 stocks)
+    "AMZN",
+    "TSLA",
+    "HD",
+    "NKE",
+    "MCD",
+    "SBUX",
+    "LOW",
+    "TJX",
+    "BKNG",
+    "ABNB",
+    "CMG",
+    "MAR",
+    "GM",
+    "F",
+    "ORLY",
+    "AZO",
+    "YUM",
+    "HLT",
+    "ROST",
+    "DHI",
+    "LEN",
+    "DG",
+    "DLTR",
+    "EBAY",
+    "BBY",
+    "ULTA",
+    "GPC",
+    "APTV",
+    "TPR",
+    "RL",
+    "GRMN",
+    "BWA",
+    "MHK",
+    "WHR",
+    "HAS",
+    "LKQ",
+    "AAP",
+    "CZR",
+    "WYNN",
+    "MGM",
+    "LVS",
+    "NCLH",
+    "RCL",
+    "CCL",
+    "HBI",
+    "PVH",
+    "NWL",
+    "LEG",
+    "VFC",
+    "TAP",
+    "CPB",
+    "KMB",
+    # Consumer Staples (34 stocks)
+    "WMT",
+    "PG",
+    "KO",
+    "PEP",
+    "COST",
+    "PM",
+    "MO",
+    "MDLZ",
+    "CL",
+    "GIS",
+    "KMB",
+    "STZ",
+    "SYY",
+    "KHC",
+    "HSY",
+    "K",
+    "CAG",
+    "TSN",
+    "HRL",
+    "MKC",
+    "CPB",
+    "CLX",
+    "CHD",
+    "TAP",
+    "SJM",
+    "LW",
+    "BF.B",
+    "EL",
+    "COTY",
+    "DG",
+    "DLTR",
+    "KR",
+    "SYY",
+    "TGT",
+    # Energy (23 stocks)
+    "XOM",
+    "CVX",
+    "COP",
+    "SLB",
+    "EOG",
+    "MPC",
+    "PSX",
+    "VLO",
+    "OXY",
+    "HAL",
+    "WMB",
+    "KMI",
+    "HES",
+    "DVN",
+    "BKR",
+    "FANG",
+    "MRO",
+    "APA",
+    "EQT",
+    "CTRA",
+    "OVV",
+    "TRGP",
+    "EXE",
+    # Financials (71 stocks)
+    "BRK.B",
     "JPM",
     "V",
     "MA",
@@ -55,6 +247,7 @@ RUSSELL_1000_TOP_100 = [
     "C",
     "SCHW",
     "AXP",
+    "CB",
     "PNC",
     "USB",
     "TFC",
@@ -62,7 +255,57 @@ RUSSELL_1000_TOP_100 = [
     "BK",
     "AIG",
     "MET",
-    # Healthcare
+    "ALL",
+    "PRU",
+    "TRV",
+    "AFL",
+    "AMP",
+    "HIG",
+    "CINF",
+    "PFG",
+    "WRB",
+    "RJF",
+    "NTRS",
+    "STT",
+    "FITB",
+    "HBAN",
+    "RF",
+    "CFG",
+    "KEY",
+    "MTB",
+    "SIVB",
+    "ZION",
+    "CMA",
+    "WBS",
+    "FRC",
+    "EWBC",
+    "WAL",
+    "PBCT",
+    "SNV",
+    "UBSI",
+    "ONB",
+    "WTFC",
+    "OZK",
+    "VLY",
+    "SSB",
+    "HWC",
+    "BOKF",
+    "ABCB",
+    "FULT",
+    "UMBF",
+    "PB",
+    "FFIN",
+    "SFNC",
+    "TCBI",
+    "HOPE",
+    "BANF",
+    "TBBK",
+    "BHLB",
+    "UVSP",
+    "EFSC",
+    "WAFD",
+    "CCBG",
+    # Healthcare (64 stocks)
     "UNH",
     "JNJ",
     "LLY",
@@ -82,40 +325,52 @@ RUSSELL_1000_TOP_100 = [
     "VRTX",
     "REGN",
     "ZTS",
+    "ISRG",
     "MCK",
-    # Consumer
-    "WMT",
-    "HD",
-    "PG",
-    "KO",
-    "PEP",
-    "COST",
-    "MCD",
-    "NKE",
-    "SBUX",
-    "TGT",
-    "LOW",
-    "TJX",
-    "EL",
-    "CL",
-    "KMB",
-    "GIS",
-    "K",
-    "HSY",
-    "CLX",
-    "CHD",
-    # Energy
-    "XOM",
-    "CVX",
-    "COP",
-    "SLB",
-    "EOG",
-    "MPC",
-    "PSX",
-    "VLO",
-    "OXY",
-    "HAL",
-    # Industrials
+    "SYK",
+    "BDX",
+    "BSX",
+    "MDT",
+    "EW",
+    "IDXX",
+    "HCA",
+    "A",
+    "RMD",
+    "DXCM",
+    "IQV",
+    "CNC",
+    "CAH",
+    "COO",
+    "ALGN",
+    "BAX",
+    "HOLX",
+    "PODD",
+    "TECH",
+    "INCY",
+    "VTRS",
+    "UHS",
+    "DGX",
+    "MOH",
+    "CHE",
+    "LH",
+    "HSIC",
+    "DVA",
+    "XRAY",
+    "WAT",
+    "RVTY",
+    "WST",
+    "STE",
+    "GEHC",
+    "SOLV",
+    "CRL",
+    "TFX",
+    "ENOV",
+    "CTLT",
+    "MTD",
+    "RGEN",
+    "MRNA",
+    "BIIB",
+    # Industrials (77 stocks)
     "BA",
     "UPS",
     "RTX",
@@ -126,10 +381,170 @@ RUSSELL_1000_TOP_100 = [
     "DE",
     "LMT",
     "UNP",
+    "ADP",
+    "TT",
+    "ETN",
+    "PH",
+    "GD",
+    "NOC",
+    "EMR",
+    "ITW",
+    "CSX",
+    "NSC",
+    "WM",
+    "CMI",
+    "FDX",
+    "PCAR",
+    "TDG",
+    "ROK",
+    "CARR",
+    "OTIS",
+    "AME",
+    "FAST",
+    "VRSK",
+    "PAYX",
+    "ODFL",
+    "IR",
+    "XYL",
+    "DOV",
+    "CPRT",
+    "RSG",
+    "IEX",
+    "FTV",
+    "LDOS",
+    "EXPD",
+    "ROL",
+    "J",
+    "CHRW",
+    "SNA",
+    "JBHT",
+    "ALLE",
+    "DAL",
+    "UAL",
+    "AAL",
+    "LUV",
+    "ALK",
+    "JBLU",
+    "WAB",
+    "PKG",
+    "AMCR",
+    "BALL",
+    "AVY",
+    "SEE",
+    "IP",
+    "GLW",
+    "TXT",
+    "CTAS",
+    "GNRC",
+    "AOS",
+    "PWR",
+    "BLDR",
+    "SWK",
+    "MAS",
+    "POOL",
+    "AIT",
+    "LECO",
+    "RHI",
+    "MLM",
+    "VMC",
+    "SUM",
+    # Materials (28 stocks)
+    "LIN",
+    "SHW",
+    "APD",
+    "ECL",
+    "FCX",
+    "NEM",
+    "DD",
+    "DOW",
+    "NUE",
+    "PPG",
+    "ALB",
+    "CTVA",
+    "EMN",
+    "CE",
+    "FMC",
+    "VMC",
+    "MLM",
+    "IFF",
+    "CF",
+    "MOS",
+    "AMCR",
+    "BALL",
+    "AVY",
+    "SEE",
+    "IP",
+    "PKG",
+    "WRK",
+    "CLF",
+    # Real Estate (31 stocks)
+    "AMT",
+    "PLD",
+    "EQIX",
+    "PSA",
+    "WELL",
+    "SPG",
+    "O",
+    "DLR",
+    "CBRE",
+    "AVB",
+    "EQR",
+    "SBAC",
+    "VTR",
+    "ARE",
+    "INVH",
+    "MAA",
+    "ESS",
+    "KIM",
+    "REG",
+    "UDR",
+    "HST",
+    "PEAK",
+    "CPT",
+    "FRT",
+    "BXP",
+    "VNO",
+    "SLG",
+    "AIV",
+    "CCI",
+    "SBRA",
+    "EXR",
+    # Utilities (28 stocks)
+    "NEE",
+    "SO",
+    "DUK",
+    "D",
+    "AEP",
+    "EXC",
+    "SRE",
+    "XEL",
+    "WEC",
+    "ED",
+    "PEG",
+    "ES",
+    "EIX",
+    "DTE",
+    "PPL",
+    "FE",
+    "AWK",
+    "CMS",
+    "CNP",
+    "ETR",
+    "AEE",
+    "LNT",
+    "EVRG",
+    "NI",
+    "PNW",
+    "ATO",
+    "NWE",
+    "SJW",
 ]
 
-# S&P 100 (alternative, smaller universe for faster testing)
-SP_100 = [
+# ============================================================================
+# S&P 500 - TOP 50 (for faster screening)
+# ============================================================================
+
+SP500_TOP_50 = [
     "AAPL",
     "MSFT",
     "GOOGL",
@@ -137,14 +552,13 @@ SP_100 = [
     "NVDA",
     "META",
     "TSLA",
-    "BRKB",
-    "V",
+    "BRK.B",
     "UNH",
     "JNJ",
+    "V",
     "XOM",
-    "JPM",
     "WMT",
-    "LLY",
+    "JPM",
     "MA",
     "PG",
     "AVGO",
@@ -152,89 +566,186 @@ SP_100 = [
     "CVX",
     "MRK",
     "ABBV",
-    "COST",
     "KO",
     "PEP",
+    "COST",
     "ADBE",
-    "CSCO",
     "MCD",
     "TMO",
+    "CSCO",
     "ACN",
-    "NFLX",
     "ABT",
+    "NKE",
+    "DHR",
+    "LIN",
+    "VZ",
     "CRM",
     "ORCL",
-    "DHR",
-    "NKE",
-    "VZ",
-    "BAC",
-    "DIS",
-    "WFC",
-    "CMCSA",
+    "NEE",
     "TXN",
-    "AMD",
-    "QCOM",
     "PM",
-    "INTC",
-    "IBM",
-    "INTU",
-    "UNP",
+    "WFC",
+    "BMY",
+    "UPS",
+    "QCOM",
     "RTX",
     "HON",
-    "GS",
-    "SPGI",
-    "AMGN",
-    "CAT",
+    "INTU",
     "LOW",
-    "MS",
-    "COP",
-    "BLK",
-    "NOW",
-    "PFE",
-    "AXP",
-    "SYK",
-    "BKNG",
-    "BMY",
-    "ISRG",
-    "T",
-    "LMT",
-    "PLD",
-    "ELV",
-    "VRTX",
+    "AMGN",
+    "IBM",
     "BA",
-    "GE",
-    "GILD",
-    "ADI",
-    "REGN",
-    "MMC",
-    "TJX",
-    "CI",
-    "SLB",
-    "MDLZ",
-    "DE",
-    "AMT",
-    "SCHW",
-    "ADP",
-    "CB",
-    "CVS",
-    "MO",
-    "ZTS",
-    "SO",
-    "DUK",
-    "BDX",
-    "LRCX",
-    "USB",
-    "PNC",
-    "FI",
-    "MU",
-    "EOG",
-    "TFC",
-    "BSX",
-    "SHW",
 ]
 
-# Test Universe (10 stocks for quick testing)
-TEST_UNIVERSE_10 = [
+# ============================================================================
+# NASDAQ 100
+# ============================================================================
+
+NASDAQ_100 = [
+    "AAPL",
+    "MSFT",
+    "GOOGL",
+    "GOOG",
+    "AMZN",
+    "NVDA",
+    "META",
+    "TSLA",
+    "AVGO",
+    "COST",
+    "NFLX",
+    "ASML",
+    "AMD",
+    "PEP",
+    "CSCO",
+    "ADBE",
+    "TMUS",
+    "CMCSA",
+    "INTC",
+    "INTU",
+    "TXN",
+    "QCOM",
+    "AMGN",
+    "HON",
+    "SBUX",
+    "AMAT",
+    "BKNG",
+    "ADP",
+    "GILD",
+    "MDLZ",
+    "ADI",
+    "REGN",
+    "VRTX",
+    "ISRG",
+    "PANW",
+    "MU",
+    "LRCX",
+    "PYPL",
+    "MELI",
+    "KLAC",
+    "SNPS",
+    "CDNS",
+    "ABNB",
+    "NXPI",
+    "MAR",
+    "MRVL",
+    "CRWD",
+    "MNST",
+    "FTNT",
+    "ORLY",
+    "ADSK",
+    "CSX",
+    "CTAS",
+    "DASH",
+    "WDAY",
+    "AEP",
+    "PCAR",
+    "CHTR",
+    "CPRT",
+    "ROST",
+    "ODFL",
+    "PAYX",
+    "FAST",
+    "AZN",
+    "KDP",
+    "KHC",
+    "EA",
+    "DXCM",
+    "IDXX",
+    "VRSK",
+    "CTSH",
+    "LULU",
+    "XEL",
+    "BIIB",
+    "TEAM",
+    "GEHC",
+    "MRNA",
+    "EXC",
+    "CCEP",
+    "ZS",
+    "ANSS",
+    "ON",
+    "FANG",
+    "CDW",
+    "CSGP",
+    "TTWO",
+    "DDOG",
+    "MDB",
+    "WBD",
+    "GFS",
+    "ILMN",
+    "ZM",
+    "ALGN",
+    "DLTR",
+    "WBA",
+    "ENPH",
+    "SGEN",
+    "LCID",
+    "RIVN",
+    "COIN",
+]
+
+# ============================================================================
+# DOW 30
+# ============================================================================
+
+DOW_30 = [
+    "AAPL",
+    "MSFT",
+    "UNH",
+    "GS",
+    "HD",
+    "CAT",
+    "MCD",
+    "AMGN",
+    "V",
+    "HON",
+    "CRM",
+    "BA",
+    "TRV",
+    "AXP",
+    "JPM",
+    "IBM",
+    "AMZN",
+    "PG",
+    "CVX",
+    "JNJ",
+    "WMT",
+    "DIS",
+    "MRK",
+    "NKE",
+    "KO",
+    "CSCO",
+    "VZ",
+    "MMM",
+    "DOW",
+    "INTC",
+]
+
+# ============================================================================
+# TEST UNIVERSES (for development)
+# ============================================================================
+
+TEST_10 = [
     "AAPL",
     "MSFT",
     "GOOGL",
@@ -247,93 +758,103 @@ TEST_UNIVERSE_10 = [
     "WMT",
 ]
 
-# Test Universe (5 stocks for very quick testing)
-TEST_UNIVERSE_5 = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA"]
+TEST_5 = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA"]
 
+VALUE_3 = ["VZ", "CMCSA", "UNP"]  # Known value stocks with good signals
 
 # ============================================================================
-# VALUE STOCKS TEST UNIVERSE
-# Based on actual buy signals from 2018-2022 backtest
-# These stocks DEFINITELY generated trades with MOS 10% / Moat 30 thresholds
+# UNIVERSE REGISTRY
 # ============================================================================
 
-VALUE_TEST_6 = [
-    "VZ",  # Verizon - MOS 50.1% (strongest signal!)
-    "CMCSA",  # Comcast - MOS 46.5%
-    "PFE",  # Pfizer - MOS 27.4%
-    "UNP",  # Union Pacific - MOS 22.7%
-    "MU",  # Micron - MOS 16.4%
-    "MO",  # Altria - MOS 11.1%
-]
+UNIVERSES = {
+    # S&P 500
+    "sp500_full": {
+        "name": "S&P 500 (Full)",
+        "tickers": SP500_FULL,
+        "description": "Complete S&P 500 index (~503 stocks)",
+    },
+    "sp500_top50": {
+        "name": "S&P 500 (Top 50)",
+        "tickers": SP500_TOP_50,
+        "description": "Top 50 S&P 500 stocks by market cap",
+    },
+    # Other Indices
+    "nasdaq100": {
+        "name": "NASDAQ 100",
+        "tickers": NASDAQ_100,
+        "description": "100 largest non-financial NASDAQ stocks",
+    },
+    "dow30": {
+        "name": "Dow Jones 30",
+        "tickers": DOW_30,
+        "description": "30 large publicly owned companies",
+    },
+    # Test Universes
+    "test_10": {
+        "name": "Test (10 stocks)",
+        "tickers": TEST_10,
+        "description": "Quick test universe",
+    },
+    "test_5": {
+        "name": "Test (5 stocks)",
+        "tickers": TEST_5,
+        "description": "Very quick test",
+    },
+    "value_3": {
+        "name": "Value Test (3 stocks)",
+        "tickers": VALUE_3,
+        "description": "Known value stocks for testing",
+    },
+}
 
-VALUE_TEST_10 = [
-    # Original 6 with strong buy signals
-    "VZ",  # Verizon - MOS 50.1%
-    "CMCSA",  # Comcast - MOS 46.5%
-    "PFE",  # Pfizer - MOS 27.4%
-    "UNP",  # Union Pacific - MOS 22.7%
-    "MU",  # Micron - MOS 16.4%
-    "MO",  # Altria - MOS 11.1%
-    # Additional stocks that had trades
-    "INTC",  # Intel - appeared in logs
-    "COP",  # ConocoPhillips - Energy (cyclical)
-    "EOG",  # EOG Resources - Energy (cyclical)
-    "META",  # Meta - Tech selloff 2022
-]
 
-VALUE_TEST_3 = [
-    "VZ",  # Verizon - Strongest MOS signal (50.1%)
-    "CMCSA",  # Comcast - Strong MOS signal (46.5%)
-    "UNP",  # Union Pacific - Quality Industrial (22.7%)
-]
-
-
-def get_universe(name: str = "test_10"):
+def get_universe(key: str = "test_10"):
     """
-    Get stock universe by name
+    Get stock universe by key
 
     Args:
-        name: Universe name
-            - 'russell_100': Russell 1000 Top 100 (100 stocks)
-            - 'sp_100': S&P 100 (100 stocks)
-            - 'test_10': Generic test (10 stocks)
-            - 'test_5': Generic test (5 stocks)
-            - 'value_3': Value stocks with guaranteed trades (3 stocks) ⭐ RECOMMENDED FOR DEBUGGING
-            - 'value_6': Value stocks with guaranteed trades (6 stocks)
-            - 'value_10': Value stocks with guaranteed trades (10 stocks)
+        key: Universe key (e.g., 'sp500_full', 'nasdaq100')
 
     Returns:
         List of ticker symbols
     """
-    universes = {
-        "russell_100": RUSSELL_1000_TOP_100,
-        "sp_100": SP_100,
-        "test_10": TEST_UNIVERSE_10,
-        "test_5": TEST_UNIVERSE_5,
-        "value_3": VALUE_TEST_3,
-        "value_6": VALUE_TEST_6,
-        "value_10": VALUE_TEST_10,
-    }
+    universe = UNIVERSES.get(key)
+    if universe:
+        return universe["tickers"]
 
-    return universes.get(name, TEST_UNIVERSE_10)
+    # Fallback to test
+    return TEST_10
+
+
+def get_universe_info(key: str = "test_10"):
+    """
+    Get full universe information
+
+    Returns:
+        Dict with name, tickers, description
+    """
+    return UNIVERSES.get(key, UNIVERSES["test_10"])
+
+
+def list_universes():
+    """Get list of all available universes"""
+    return [
+        {
+            "key": key,
+            "name": info["name"],
+            "count": len(info["tickers"]),
+            "description": info["description"],
+        }
+        for key, info in UNIVERSES.items()
+    ]
 
 
 if __name__ == "__main__":
     print("📊 Available Stock Universes\n")
 
-    for name in [
-        "value_3",
-        "value_6",
-        "value_10",
-        "test_5",
-        "test_10",
-        "sp_100",
-        "russell_100",
-    ]:
-        universe = get_universe(name)
-        print(f"{name.upper()}: {len(universe)} stocks")
-        if len(universe) <= 10:
-            print(f"   Stocks: {', '.join(universe)}")
-        else:
-            print(f"   First 10: {', '.join(universe[:10])}")
+    for universe in list_universes():
+        print(f"{universe['name']}")
+        print(f"   Key: {universe['key']}")
+        print(f"   Count: {universe['count']} stocks")
+        print(f"   {universe['description']}")
         print()

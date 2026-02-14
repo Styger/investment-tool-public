@@ -234,6 +234,64 @@ def run_analysis(
         print("Keine gültigen CAGR-Zeiträume gefunden.")
 
 
+def get_cagr_for_screening(ticker: str, period_years: int = 5) -> float:
+    """
+    Get average CAGR for screening purposes
+
+    Simplified version that returns a single CAGR value for screening.
+    Uses the most recent data available.
+
+    Args:
+        ticker: Stock ticker symbol
+        period_years: Period for CAGR calculation (default 5 years)
+
+    Returns:
+        float: Average CAGR as decimal (e.g., 0.15 for 15%)
+               Returns 0.10 (10%) as default if calculation fails
+    """
+    try:
+        # Get current year
+        from datetime import datetime
+
+        current_year = datetime.now().year
+
+        # We need period_years + 1 years of data
+        # e.g., for 5-year CAGR from 2019-2024, we need data from 2019-2024 (6 data points)
+        start_year = current_year - period_years
+        end_year = current_year
+
+        # Get data
+        data, mos_input = fmp_api.get_year_data_by_range(
+            ticker, start_year, years=period_years
+        )
+
+        if not mos_input or not data:
+            logging.warning(f"No data available for {ticker}")
+            return 0.10  # Default 10% growth
+
+        # Calculate CAGR using all available metrics
+        result = _mos_growth_estimate_auto(
+            data_dict=mos_input,
+            start_year=start_year,
+            end_year=end_year,
+            period_years=period_years,
+            known_start_year=start_year,
+            include_book=True,
+            include_eps=True,
+            include_revenue=True,
+            include_cashflow=True,
+            include_fcf=True,
+        )
+
+        # Return average CAGR as decimal
+        avg_cagr_pct = result.get("avg", 10.0)  # Default 10% if not found
+        return avg_cagr_pct / 100.0  # Convert percentage to decimal
+
+    except Exception as e:
+        logging.warning(f"CAGR calculation failed for {ticker}: {e}")
+        return 0.10  # Default 10% growth
+
+
 def _main():
     # all metrics (default)
     ticker = "aapl"

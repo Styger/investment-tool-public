@@ -18,6 +18,7 @@ from frontend.streamlit_modules.pages import (
     tencap_ui,
     ai_ui,
     backtesting_ui,
+    screening_ui,
 )
 
 # Page configurationselect_analysis_mode
@@ -57,6 +58,7 @@ def main():
         f"🤖 {get_text('ai.title')}": ai_ui.show_ai_analysis,
         f"⚙️ {get_text('settings.title')}": settings_ui.show_settings_page,
         f"📊 {get_text('backtesting.title')}": backtesting_ui.show_backtesting_page,
+        f"🔍 {get_text('screening.title')}": screening_ui.show_screening_page,
     }
 
     selected_mode = st.sidebar.selectbox(

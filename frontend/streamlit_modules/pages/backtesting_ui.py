@@ -666,6 +666,114 @@ def show_backtesting_page():
                 )
 
         # ====================================================================
+        # SAVE STRATEGY
+        # ====================================================================
+        st.divider()
+        st.subheader("💾 Save This Strategy")
+
+        st.info(
+            "💡 Save this strategy to use in Live Screening. "
+            "Screen the S&P 500 with these exact parameters!"
+        )
+
+        col1, col2 = st.columns([2, 1])
+
+        with col1:
+            if st.button("💾 Save Strategy", type="primary", width="stretch"):
+                st.session_state["show_save_modal"] = True
+
+        with col2:
+            if st.button("📊 Go to Screening", width="stretch"):
+                st.switch_page("pages/screening_ui.py")
+
+        # Save Strategy Modal
+        if st.session_state.get("show_save_modal", False):
+            with st.form("save_strategy_form"):
+                st.markdown("### 💾 Save Strategy")
+
+                strategy_name = st.text_input(
+                    "Strategy Name *",
+                    placeholder="e.g., Conservative Value, Aggressive Growth",
+                    help="Give your strategy a memorable name",
+                )
+
+                strategy_description = st.text_area(
+                    "Description",
+                    placeholder="What makes this strategy unique?",
+                    help="Optional: Describe your strategy approach",
+                )
+
+                share_strategy = st.checkbox(
+                    "🌍 Share with community",
+                    value=False,
+                    help="Make this strategy visible to other users",
+                )
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    submitted = st.form_submit_button("💾 Save", type="primary")
+
+                with col2:
+                    cancelled = st.form_submit_button("Cancel")
+
+                if cancelled:
+                    st.session_state["show_save_modal"] = False
+                    st.rerun()
+
+                if submitted:
+                    if not strategy_name:
+                        st.error("⚠️ Please enter a strategy name")
+                    else:
+                        try:
+                            from backend.storage.strategy_storage import StrategyStorage
+
+                            storage = StrategyStorage()
+
+                            # Prepare parameters
+                            strategy_params = {
+                                "mos_threshold": mos_threshold,
+                                "moat_threshold": moat_threshold,
+                                "sell_mos_threshold": sell_mos_threshold,
+                                "sell_moat_threshold": sell_moat_threshold,
+                                "use_mos": use_mos,
+                                "use_pbt": use_pbt,
+                                "use_tencap": use_tencap,
+                                "max_positions": max_positions,
+                                "rebalance_days": rebalance_days,
+                            }
+
+                            # Prepare backtest results summary
+                            backtest_summary = {
+                                "return_pct": results["return_pct"],
+                                "cagr": results["cagr"],
+                                "sharpe_ratio": metrics.get("sharpe_ratio", 0),
+                                "max_drawdown": metrics.get("max_drawdown", 0),
+                                "total_trades": metrics.get("total_trades", 0),
+                                "win_rate": metrics.get("win_rate", 0),
+                                "tested_period": f"{start_year}-{end_year}",
+                            }
+
+                            # Save strategy
+                            strategy_id = storage.save_strategy(
+                                name=strategy_name,
+                                description=strategy_description,
+                                parameters=strategy_params,
+                                shared=share_strategy,
+                                backtest_results=backtest_summary,
+                                universe=universe_name,
+                            )
+
+                            st.success(
+                                f"✅ Strategy '{strategy_name}' saved successfully!"
+                            )
+                            st.info("🔍 Go to Screening page to use this strategy")
+
+                            st.session_state["show_save_modal"] = False
+
+                        except Exception as e:
+                            st.error(f"❌ Failed to save strategy: {str(e)}")
+        # ====================================================================
         # DOWNLOAD OPTIONS
         # ====================================================================
         st.subheader("💾 Download Results")
