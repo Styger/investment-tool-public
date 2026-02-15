@@ -20,6 +20,247 @@ def show_backtesting_page():
     st.header("📊 ValueKit Backtesting System")
     st.write("Test value investing strategies with historical data")
 
+    # ========================================================================
+    # LOAD SAVED STRATEGY
+    # ========================================================================
+    st.subheader("💾 Load Saved Strategy")
+
+    try:
+        from backend.storage.strategy_storage import StrategyStorage
+
+        storage = StrategyStorage()
+
+        # Get actual logged-in user
+        current_user = st.session_state.get("username", "default_user")
+        strategies = storage.get_strategies(user_id=current_user, include_shared=True)
+
+        if strategies:
+            col1, col2 = st.columns([3, 1])
+
+            with col1:
+                # Create strategy options
+                strategy_options = {}
+                for strategy in strategies:
+                    # Add shared/private indicator
+                    shared_icon = "🌍" if strategy.get("shared") else "📌"
+
+                    # Add performance info
+                    perf = ""
+                    if strategy.get("backtest_results"):
+                        results_summary = strategy["backtest_results"]
+                        perf = f" - CAGR: {results_summary.get('cagr', 0):.1f}%, Win: {results_summary.get('win_rate', 0):.0f}%"
+
+                    label = f"{shared_icon} {strategy['name']}{perf}"
+                    strategy_options[label] = strategy
+
+                selected_label = st.selectbox(
+                    "Select Strategy",
+                    options=["-- New Backtest --"] + list(strategy_options.keys()),
+                    help="Load a saved strategy to see results instantly",
+                )
+
+            with col2:
+                st.markdown("<br>", unsafe_allow_html=True)  # Spacing
+                if st.button(
+                    "🔄 Refresh",
+                    help="Reload saved strategies",
+                    use_container_width=True,
+                ):
+                    st.rerun()
+
+            # ✅ GET SELECTED STRATEGY
+            selected_strategy = None
+            if selected_label != "-- New Backtest --":
+                selected_strategy = strategy_options[selected_label]
+
+            # ✅ LOAD & DELETE BUTTONS
+            st.divider()
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                load_disabled = selected_label == "-- New Backtest --"
+                load_button = st.button(
+                    "📥 Load Strategy",
+                    type="primary",
+                    use_container_width=True,
+                    disabled=load_disabled,
+                )
+
+            with col2:
+                # Only allow delete for user's own strategies
+                current_user = st.session_state.get("username", "default_user")
+
+                can_delete = (
+                    selected_label != "-- New Backtest --"
+                    and selected_strategy is not None
+                    and selected_strategy.get("user_id")
+                    == current_user  # Check actual user!
+                )
+
+                if st.button(
+                    "🗑️ Delete",
+                    type="secondary",
+                    use_container_width=True,
+                    disabled=not can_delete,
+                    help="Delete this strategy"
+                    if can_delete
+                    else "Cannot delete shared strategies",
+                ):
+                    if can_delete:
+                        st.session_state["confirm_delete_strategy"] = selected_strategy
+                        st.rerun()
+
+            # ✅ DELETE CONFIRMATION DIALOG
+            if "confirm_delete_strategy" in st.session_state:
+                strategy_to_delete = st.session_state["confirm_delete_strategy"]
+
+                st.divider()
+                st.error(f"⚠️ **Confirm Deletion**")
+                st.warning(
+                    f"Delete strategy: **{strategy_to_delete['name']}**?\n\nThis action cannot be undone!"
+                )
+
+                col1, col2, col3 = st.columns([1, 1, 2])
+
+                with col1:
+                    if st.button(
+                        "✅ Yes, Delete", type="primary", use_container_width=True
+                    ):
+                        try:
+                            from backend.storage.strategy_storage import StrategyStorage
+
+                            storage = StrategyStorage()
+
+                            success = storage.delete_strategy(
+                                strategy_id=strategy_to_delete["id"],
+                                user_id="default_user",
+                            )
+
+                            if success:
+                                st.success(f"✅ Deleted '{strategy_to_delete['name']}'")
+                                # Clear session state
+                                del st.session_state["confirm_delete_strategy"]
+                                if "backtest_results" in st.session_state:
+                                    del st.session_state["backtest_results"]
+                                if "loaded_strategy_name" in st.session_state:
+                                    del st.session_state["loaded_strategy_name"]
+                                if "loaded_strategy_params" in st.session_state:
+                                    del st.session_state["loaded_strategy_params"]
+
+                                import time
+
+                                time.sleep(1)  # Show success message
+                                st.rerun()
+                            else:
+                                st.error("❌ Failed to delete strategy")
+
+                        except Exception as e:
+                            st.error(f"❌ Error deleting strategy: {str(e)}")
+
+                with col2:
+                    if st.button("❌ Cancel", use_container_width=True):
+                        del st.session_state["confirm_delete_strategy"]
+                        st.rerun()
+
+            # Load strategy when button clicked
+            if load_button and selected_strategy:
+                # Restore full results to session state
+                if selected_strategy.get("full_results"):
+                    # Reconstruct results with charts
+                    loaded_results = selected_strategy["full_results"]
+
+                    # Restore charts from JSON
+                    if selected_strategy.get("charts_data"):
+                        import plotly.graph_objects as go
+                        from plotly.io import from_json
+
+                        charts = {}
+                        for key, chart_json in selected_strategy["charts_data"].items():
+                            if chart_json:
+                                charts[key] = from_json(chart_json)
+                            else:
+                                charts[key] = None
+
+                        loaded_results["charts"] = charts
+
+                    # Restore to session state
+                    st.session_state["backtest_results"] = loaded_results
+                    st.session_state["loaded_strategy_name"] = selected_strategy["name"]
+                    st.session_state["loaded_strategy_params"] = selected_strategy[
+                        "parameters"
+                    ]
+
+                    st.success(f"✅ Loaded: {selected_strategy['name']}")
+                    st.info("📊 Scroll down to see results instantly!")
+                    st.rerun()
+                else:
+                    st.warning(
+                        "⚠️ This strategy was saved without full results. Run a new backtest with these parameters."
+                    )
+                    # Still load parameters
+                    st.session_state["loaded_strategy_params"] = selected_strategy[
+                        "parameters"
+                    ]
+                    st.rerun()
+        else:
+            st.info(
+                "💡 No saved strategies yet. Run a backtest and save it to reuse later!"
+            )
+
+    except Exception as e:
+        st.error(f"❌ Error loading strategies: {str(e)}")
+
+    # Show loaded strategy info
+    if "loaded_strategy_name" in st.session_state:
+        st.success(
+            f"✅ Currently viewing: **{st.session_state['loaded_strategy_name']}**"
+        )
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if st.button("🔄 Re-Run with Same Parameters"):
+                # Parameters are already loaded, just click Run Backtest
+                st.info("Parameters loaded! Scroll down and click 'Run Backtest'")
+
+        with col2:
+            if st.button("🗑️ Clear Loaded Strategy"):
+                # Clear loaded strategy
+                if "loaded_strategy_name" in st.session_state:
+                    del st.session_state["loaded_strategy_name"]
+                if "loaded_strategy_params" in st.session_state:
+                    del st.session_state["loaded_strategy_params"]
+                if "backtest_results" in st.session_state:
+                    del st.session_state["backtest_results"]
+                st.rerun()
+
+    st.divider()
+
+    # Load persisted values
+    persist_data = st.session_state.persist.get("Backtesting", {})
+
+    # OVERRIDE with loaded strategy params if available
+    if "loaded_strategy_params" in st.session_state:
+        loaded_params = st.session_state["loaded_strategy_params"]
+        persist_data.update(
+            {
+                "mos_threshold": str(loaded_params.get("mos_threshold", 10.0)),
+                "moat_threshold": str(loaded_params.get("moat_threshold", 30.0)),
+                "sell_mos_threshold": str(
+                    loaded_params.get("sell_mos_threshold", -5.0)
+                ),
+                "sell_moat_threshold": str(
+                    loaded_params.get("sell_moat_threshold", 25.0)
+                ),
+                "use_mos": str(loaded_params.get("use_mos", True)),
+                "use_pbt": str(loaded_params.get("use_pbt", True)),
+                "use_tencap": str(loaded_params.get("use_tencap", True)),
+                "max_positions": str(loaded_params.get("max_positions", 20)),
+                "rebalance_days": str(loaded_params.get("rebalance_days", 90)),
+            }
+        )
+
     # Load persisted values
     persist_data = st.session_state.persist.get("Backtesting", {})
 
@@ -668,6 +909,52 @@ def show_backtesting_page():
         # ====================================================================
         # SAVE STRATEGY
         # ====================================================================
+        def make_json_serializable(obj):
+            """
+            Recursively convert numpy arrays, datetime objects, and other non-JSON types to JSON-serializable formats
+            """
+            import numpy as np
+            import pandas as pd
+            from datetime import datetime, date
+
+            # ✅ Handle datetime and date objects
+            if isinstance(obj, (datetime, date)):
+                return obj.isoformat()
+            # Handle numpy types
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            elif isinstance(obj, np.integer):
+                return int(obj)
+            elif isinstance(obj, np.floating):
+                return float(obj)
+            elif isinstance(obj, (np.bool_, bool)):
+                return bool(obj)
+            # Handle pandas types
+            elif isinstance(obj, pd.Timestamp):
+                return obj.isoformat()
+            elif isinstance(obj, pd.Series):
+                return obj.tolist()
+            elif isinstance(obj, pd.DataFrame):
+                return obj.to_dict("records")
+            # Handle collections recursively
+            elif isinstance(obj, dict):
+                return {
+                    key: make_json_serializable(value) for key, value in obj.items()
+                }
+            elif isinstance(obj, list):
+                return [make_json_serializable(item) for item in obj]
+            elif isinstance(obj, tuple):
+                return tuple(make_json_serializable(item) for item in obj)
+            # Handle None and primitive types
+            elif obj is None or isinstance(obj, (str, int, float)):
+                return obj
+            # Fallback: try to convert to string
+            else:
+                try:
+                    return str(obj)
+                except:
+                    return None
+
         st.divider()
         st.subheader("💾 Save This Strategy")
 
@@ -754,7 +1041,25 @@ def show_backtesting_page():
                                 "tested_period": f"{start_year}-{end_year}",
                             }
 
-                            # Save strategy
+                            #  Prepare full results for instant restore
+                            # Remove charts from full_results (too large, we'll store separately)
+                            full_results_copy = results.copy()
+                            charts_data = full_results_copy.pop("charts", {})
+
+                            #  Convert ALL numpy arrays to lists (recursively)
+                            full_results_json = make_json_serializable(
+                                full_results_copy
+                            )
+                            trades_json = make_json_serializable(trades)
+
+                            # Convert charts to JSON-serializable format
+                            # (Plotly charts are already JSON-serializable)
+                            charts_json = {
+                                key: fig.to_json() if fig is not None else None
+                                for key, fig in charts_data.items()
+                            }
+
+                            # Save strategy with FULL results
                             strategy_id = storage.save_strategy(
                                 name=strategy_name,
                                 description=strategy_description,
@@ -762,6 +1067,12 @@ def show_backtesting_page():
                                 shared=share_strategy,
                                 backtest_results=backtest_summary,
                                 universe=universe_name,
+                                full_results=full_results_json,
+                                trades_data=trades_json,
+                                charts_data=charts_json,
+                                user_id=st.session_state.get(
+                                    "username", "default_user"
+                                ),
                             )
 
                             st.success(
@@ -769,7 +1080,14 @@ def show_backtesting_page():
                             )
                             st.info("🔍 Go to Screening page to use this strategy")
 
+                            # ✅ Clear modal flag
                             st.session_state["show_save_modal"] = False
+
+                            # ✅ Force reload to show new strategy in dropdown
+                            import time
+
+                            time.sleep(1.5)  # Let user see success message
+                            st.rerun()
 
                         except Exception as e:
                             st.error(f"❌ Failed to save strategy: {str(e)}")

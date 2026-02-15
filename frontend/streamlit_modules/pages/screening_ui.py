@@ -26,7 +26,10 @@ def show_screening_page():
         from backend.storage.strategy_storage import StrategyStorage
 
         storage = StrategyStorage()
-        strategies = storage.get_strategies(user_id="default_user", include_shared=True)
+
+        # Get actual logged-in user
+        current_user = st.session_state.get("username", "default_user")
+        strategies = storage.get_strategies(user_id=current_user, include_shared=True)
 
         if not strategies:
             st.warning(
@@ -37,7 +40,7 @@ def show_screening_page():
             if st.button("📊 Go to Backtesting"):
                 st.switch_page("pages/backtesting.py")
 
-            st.stop()
+            return
 
     except Exception as e:
         st.error(f"❌ Error loading strategies: {str(e)}")
@@ -51,8 +54,8 @@ def show_screening_page():
     # Create strategy options
     strategy_options = {}
     for strategy in strategies:
-        # Add owner indicator
-        owner = " (You)" if strategy["user_id"] == "default_user" else " (Shared)"
+        # Add shared/private indicator
+        shared_icon = "🌍" if strategy.get("shared") else "📌"
 
         # Add performance if available
         perf = ""
@@ -60,16 +63,89 @@ def show_screening_page():
             results = strategy["backtest_results"]
             perf = f" - CAGR: {results.get('cagr', 0):.1f}%, Win: {results.get('win_rate', 0):.0f}%"
 
-        label = f"{strategy['name']}{owner}{perf}"
+        label = f"{shared_icon} {strategy['name']}{perf}"
         strategy_options[label] = strategy
 
-    selected_label = st.selectbox(
-        "Strategy",
-        options=list(strategy_options.keys()),
-        help="Select a saved strategy to use for screening",
-    )
+    col1, col2 = st.columns([3, 1])
+
+    with col1:
+        selected_label = st.selectbox(
+            "Strategy",
+            options=list(strategy_options.keys()),
+            help="Select a saved strategy to use for screening",
+        )
+
+    with col2:
+        st.markdown("<br>", unsafe_allow_html=True)  # Spacing
+        if st.button("🔄 Refresh", help="Reload strategies", use_container_width=True):
+            st.rerun()
 
     selected_strategy = strategy_options[selected_label]
+
+    current_user = st.session_state.get("username", "default_user")
+
+    can_delete = (
+        selected_label != "-- New Backtest --"
+        and selected_strategy is not None
+        and selected_strategy.get("user_id") == current_user  # ✅ Check actual user!
+    )
+
+    if st.button(
+        "🗑️ Delete This Strategy",
+        type="secondary",
+        disabled=not can_delete,
+        help="Delete this strategy"
+        if can_delete
+        else "Cannot delete shared strategies",
+    ):
+        if can_delete:
+            st.session_state["confirm_delete_screening"] = selected_strategy
+            st.rerun()
+
+    # Confirmation dialog
+    if "confirm_delete_screening" in st.session_state:
+        strategy_to_delete = st.session_state["confirm_delete_screening"]
+
+        st.divider()
+        st.error(f"⚠️ **Confirm Deletion**")
+        st.warning(
+            f"Delete strategy: **{strategy_to_delete['name']}**?\n\nThis action cannot be undone!"
+        )
+
+        col1, col2, col3 = st.columns([1, 1, 2])
+
+        with col1:
+            if st.button("✅ Yes, Delete", type="primary", use_container_width=True):
+                try:
+                    from backend.storage.strategy_storage import StrategyStorage
+
+                    storage = StrategyStorage()
+
+                    success = storage.delete_strategy(
+                        strategy_id=strategy_to_delete["id"], user_id="default_user"
+                    )
+
+                    if success:
+                        st.success(f"✅ Deleted '{strategy_to_delete['name']}'")
+                        # Clear session state
+                        del st.session_state["confirm_delete_screening"]
+                        if "screening_results" in st.session_state:
+                            del st.session_state["screening_results"]
+
+                        import time
+
+                        time.sleep(1)  # Show success message
+                        st.rerun()
+                    else:
+                        st.error("❌ Failed to delete strategy")
+
+                except Exception as e:
+                    st.error(f"❌ Error deleting strategy: {str(e)}")
+
+        with col2:
+            if st.button("❌ Cancel", use_container_width=True):
+                del st.session_state["confirm_delete_screening"]
+                st.rerun()
 
     # Show strategy details
     with st.expander("📋 Strategy Details", expanded=False):
@@ -148,11 +224,11 @@ def show_screening_page():
 
     st.info(
         "🎯 **What happens:**\n\n"
-        "We'll screen 50 S&P 500 stocks with your strategy parameters "
+        "We'll screen the selected stock universe with your strategy parameters "
         "and show which ones are BUY, HOLD, or SELL right now."
     )
 
-    if st.button("🔍 Screen S&P 500 Now", type="primary", width="stretch"):
+    if st.button("🔍 Screen  Now", type="primary", width="stretch"):
         with st.spinner("Screening market... This may take 1-2 minutes..."):
             try:
                 from backend.screening.screener import Screener

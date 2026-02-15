@@ -14,7 +14,7 @@ import uuid
 class StrategyStorage:
     """Manage strategy storage in SQLite database"""
 
-    def __init__(self, db_path: str = "backend/storage/strategies.db"):
+    def __init__(self, db_path: str = "backend/storage/strategies.db"):  # ✅ ADD THIS!
         """Initialize strategy storage"""
         self.db_path = db_path
 
@@ -30,19 +30,22 @@ class StrategyStorage:
         cursor = conn.cursor()
 
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS strategies (
-                id TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                description TEXT,
-                user_id TEXT NOT NULL,
-                shared INTEGER DEFAULT 0,
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL,
-                parameters TEXT NOT NULL,
-                backtest_results TEXT,
-                universe TEXT
-            )
-        """)
+                CREATE TABLE IF NOT EXISTS strategies (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    description TEXT,
+                    user_id TEXT NOT NULL,
+                    shared INTEGER DEFAULT 0,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    parameters TEXT NOT NULL,
+                    backtest_results TEXT,
+                    universe TEXT,
+                    full_results TEXT,
+                    trades_data TEXT,
+                    charts_data TEXT
+                )
+            """)
 
         conn.commit()
         conn.close()
@@ -56,9 +59,12 @@ class StrategyStorage:
         shared: bool = False,
         backtest_results: Dict = None,
         universe: str = "S&P 500",
+        full_results: Dict = None,  # ✅ NEW
+        trades_data: List = None,  # ✅ NEW
+        charts_data: Dict = None,  # ✅ NEW
     ) -> str:
         """
-        Save a strategy
+        Save a strategy with full backtest results
 
         Args:
             name: Strategy name
@@ -66,8 +72,11 @@ class StrategyStorage:
             user_id: User identifier
             description: Strategy description
             shared: Whether to share with community
-            backtest_results: Optional backtest results
+            backtest_results: Summary backtest results
             universe: Stock universe used
+            full_results: Complete backtest results dict
+            trades_data: List of all trades
+            charts_data: Chart data for reconstruction
 
         Returns:
             Strategy ID
@@ -82,8 +91,8 @@ class StrategyStorage:
             """
             INSERT INTO strategies 
             (id, name, description, user_id, shared, created_at, updated_at, 
-             parameters, backtest_results, universe)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             parameters, backtest_results, universe, full_results, trades_data, charts_data)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 strategy_id,
@@ -96,6 +105,9 @@ class StrategyStorage:
                 json.dumps(parameters),
                 json.dumps(backtest_results) if backtest_results else None,
                 universe,
+                json.dumps(full_results) if full_results else None,  # ✅ NEW
+                json.dumps(trades_data) if trades_data else None,  # ✅ NEW
+                json.dumps(charts_data) if charts_data else None,  # ✅ NEW
             ),
         )
 
@@ -147,6 +159,17 @@ class StrategyStorage:
             strategy["parameters"] = json.loads(strategy["parameters"])
             if strategy["backtest_results"]:
                 strategy["backtest_results"] = json.loads(strategy["backtest_results"])
+
+            # ✅ NEW: Parse full results
+            if strategy.get("full_results"):
+                strategy["full_results"] = json.loads(strategy["full_results"])
+
+            if strategy.get("trades_data"):
+                strategy["trades_data"] = json.loads(strategy["trades_data"])
+
+            if strategy.get("charts_data"):
+                strategy["charts_data"] = json.loads(strategy["charts_data"])
+
             strategy["shared"] = bool(strategy["shared"])
             strategies.append(strategy)
 
@@ -154,7 +177,7 @@ class StrategyStorage:
         return strategies
 
     def get_strategy(self, strategy_id: str) -> Optional[Dict]:
-        """Get a single strategy by ID"""
+        """Get a single strategy by ID with full results"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
@@ -165,8 +188,20 @@ class StrategyStorage:
         if row:
             strategy = dict(zip(columns, row))
             strategy["parameters"] = json.loads(strategy["parameters"])
+
             if strategy["backtest_results"]:
                 strategy["backtest_results"] = json.loads(strategy["backtest_results"])
+
+            # ✅ NEW: Parse full results
+            if strategy.get("full_results"):
+                strategy["full_results"] = json.loads(strategy["full_results"])
+
+            if strategy.get("trades_data"):
+                strategy["trades_data"] = json.loads(strategy["trades_data"])
+
+            if strategy.get("charts_data"):
+                strategy["charts_data"] = json.loads(strategy["charts_data"])
+
             strategy["shared"] = bool(strategy["shared"])
             conn.close()
             return strategy
