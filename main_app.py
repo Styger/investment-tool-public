@@ -29,6 +29,21 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# Initialize worker on first run
+if "worker_initialized" not in st.session_state:
+    from backend.jobs.worker_manager import ensure_worker_running
+
+    worker = ensure_worker_running()
+
+    # ✅ FORCE POLLING MODE (more reliable for Streamlit)
+    worker.start_worker(mode="polling")
+
+    status = worker.get_status()
+
+    print(f"✅ Worker initialized: {status}")
+    st.session_state["worker_initialized"] = True
+    st.session_state["worker_status"] = status
+
 
 def main():
     """Main application with simple authentication"""

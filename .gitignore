@@ -119,6 +119,14 @@ backend/ai/data/chroma_db/
 *.bin
 *.pickle
 
+# SQLite Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Job Queue Databases
+backend/jobs/*.db
+
 # Test Results
 test_results.txt
 *.log

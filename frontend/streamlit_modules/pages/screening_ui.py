@@ -6,9 +6,24 @@ Screen S&P 500 with saved strategies
 import streamlit as st
 import pandas as pd
 from datetime import date
+import time
 
 
 def show_screening_page():
+    """Main screening page with job queue support"""
+    # ====================================================================
+    # ROUTE TO JOBS PAGE IF REQUESTED
+    # ====================================================================
+    if st.session_state.get("current_page") == "screening_jobs":
+        from frontend.streamlit_modules.pages.screening_jobs_ui import (
+            show_screening_jobs_page,
+        )
+
+        show_screening_jobs_page()
+        return
+    # ====================================================================
+    # NORMAL SCREENING PAGE (only if NOT on jobs page)
+    # ====================================================================
     # Page config
     st.set_page_config(
         page_title="Live Screening - ValueKit",
@@ -82,13 +97,8 @@ def show_screening_page():
 
     selected_strategy = strategy_options[selected_label]
 
-    current_user = st.session_state.get("username", "default_user")
-
-    can_delete = (
-        selected_label != "-- New Backtest --"
-        and selected_strategy is not None
-        and selected_strategy.get("user_id") == current_user  # ✅ Check actual user!
-    )
+    # Delete strategy functionality
+    can_delete = selected_strategy.get("user_id") == current_user
 
     if st.button(
         "🗑️ Delete This Strategy",
@@ -122,19 +132,17 @@ def show_screening_page():
                     storage = StrategyStorage()
 
                     success = storage.delete_strategy(
-                        strategy_id=strategy_to_delete["id"], user_id="default_user"
+                        strategy_id=strategy_to_delete["id"],
+                        user_id=current_user,
                     )
 
                     if success:
                         st.success(f"✅ Deleted '{strategy_to_delete['name']}'")
-                        # Clear session state
                         del st.session_state["confirm_delete_screening"]
                         if "screening_results" in st.session_state:
                             del st.session_state["screening_results"]
 
-                        import time
-
-                        time.sleep(1)  # Show success message
+                        time.sleep(1)
                         st.rerun()
                     else:
                         st.error("❌ Failed to delete strategy")
@@ -183,8 +191,6 @@ def show_screening_page():
 
     st.divider()
 
-    st.divider()
-
     # ====================================================================
     # UNIVERSE SELECTION
     # ====================================================================
@@ -218,9 +224,32 @@ def show_screening_page():
     st.divider()
 
     # ====================================================================
-    # SCREENING
+    # SCREENING OPTIONS
     # ====================================================================
-    st.subheader("🔍 Screen Market")
+    col1, col2 = st.columns([3, 1])
+
+    with col1:
+        st.subheader("🔍 Screen Market")
+
+    with col2:
+        st.markdown("<br>", unsafe_allow_html=True)  # Spacing
+        # NAVIGATE TO JOBS PAGE
+        if st.button(
+            "📊 My Jobs", use_container_width=True, help="View screening jobs"
+        ):
+            st.session_state["current_page"] = "screening_jobs"
+            st.rerun()
+
+    # Choose screening mode
+    screening_mode = st.radio(
+        "Screening Mode",
+        options=[
+            "⚡ Instant (Wait for Results)",
+            "🚀 Background Job (Come Back Later)",
+        ],
+        index=1,  # Default to background
+        help="Instant: Wait 1-2 minutes for results. Background: Submit job and check later.",
+    )
 
     st.info(
         "🎯 **What happens:**\n\n"
@@ -228,29 +257,72 @@ def show_screening_page():
         "and show which ones are BUY, HOLD, or SELL right now."
     )
 
-    if st.button("🔍 Screen  Now", type="primary", width="stretch"):
-        with st.spinner("Screening market... This may take 1-2 minutes..."):
-            try:
-                from backend.screening.screener import Screener
+    # ====================================================================
+    # INSTANT SCREENING (OLD METHOD)
+    # ====================================================================
+    if screening_mode == "⚡ Instant (Wait for Results)":
+        if st.button("🔍 Screen Now", type="primary", use_container_width=True):
+            with st.spinner("Screening market... This may take 1-2 minutes..."):
+                try:
+                    from backend.screening.screener import Screener
 
-                # Run screening
-                results_df = Screener.screen_market(
-                    strategy_params=selected_strategy["parameters"],
-                    universe_key=selected_universe_key,
-                )
-                if results_df.empty:
-                    st.error(
-                        "❌ No results found. Please try again or check your data connection."
+                    # Run screening
+                    results_df = Screener.screen_market(
+                        strategy_params=selected_strategy["parameters"],
+                        universe_key=selected_universe_key,
                     )
-                else:
-                    # Store results in session state
-                    st.session_state["screening_results"] = results_df
-                    st.session_state["screening_date"] = date.today()
-                    st.session_state["screening_strategy"] = selected_strategy["name"]
-                    st.rerun()
+
+                    if results_df.empty:
+                        st.error(
+                            "❌ No results found. Please try again or check your data connection."
+                        )
+                    else:
+                        # Store results in session state
+                        st.session_state["screening_results"] = results_df
+                        st.session_state["screening_date"] = date.today()
+                        st.session_state["screening_strategy"] = selected_strategy[
+                            "name"
+                        ]
+                        st.rerun()
+
+                except Exception as e:
+                    st.error(f"❌ Screening failed: {str(e)}")
+                    with st.expander("🔍 Error Details"):
+                        import traceback
+
+                        st.code(traceback.format_exc())
+
+    # ====================================================================
+    # BACKGROUND JOB (NEW METHOD)
+    # ====================================================================
+    else:  # Background Job
+        if st.button(
+            "🚀 Submit Screening Job", type="primary", use_container_width=True
+        ):
+            try:
+                from backend.jobs.screening_queue import ScreeningJobQueue
+
+                queue = ScreeningJobQueue()
+
+                # Submit job
+                job_id = queue.submit_job(
+                    user_id=current_user,
+                    strategy_id=selected_strategy["id"],
+                    strategy_name=selected_strategy["name"],
+                    universe_key=selected_universe_key,
+                    universe_name=selected_universe_info["name"],
+                    parameters=selected_strategy["parameters"],
+                )
+
+                st.success(f"✅ Screening job submitted! Job ID: `{job_id[:8]}...`")
+
+                # NAVIGATE TO JOBS PAGE
+                time.sleep(1.5)
+                st.session_state["current_page"] = "screening_jobs"
+                st.rerun()
 
             except Exception as e:
-                st.error(f"❌ Screening failed: {str(e)}")
+                st.error(f"❌ Failed to submit job: {str(e)}")
                 with st.expander("🔍 Error Details"):
                     import traceback
 
